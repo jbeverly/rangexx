@@ -1,0 +1,12 @@
+package range.db;
+
+message AdjacencyLists {
+	message Adjacency {
+		required string id = 1;
+	}
+	message Edges {
+		repeated Adjacency edges = 1;
+	}
+	required Edges forwardEdges = 1;
+	required Edges reverseEdges = 2;
+}
