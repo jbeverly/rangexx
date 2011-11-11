@@ -38,9 +38,18 @@ class GraphCursorInterface {
         virtual ~GraphCursorInterface() = default;
 
         //######################################################################
-        virtual node_t fetch(const std::string name) const = 0;
+        virtual node_t fetch(const std::string& name) const = 0;
         virtual node_t next() const = 0;
         virtual node_t prev() const = 0;
+
+        virtual node_t next(node_t node) const = 0;
+        virtual node_t prev(node_t node) const = 0;
+
+        virtual node_t first() const = 0;
+        virtual node_t last() const = 0;
+
+        virtual void insert(node_t node) = 0;
+        virtual void remove(node_t node) = 0;
 
     //##########################################################################
     //##########################################################################
@@ -67,8 +76,12 @@ class GraphInterface
     //##########################################################################
     //##########################################################################
     public:
-        typedef boost::shared_ptr<NodeIface> node_t;
+        typedef NodeIface::node_t node_t;
         typedef boost::shared_ptr<GraphCursorInterface> cursor_t;
+
+        typedef GraphIterator iterator_t;
+        typedef const_GraphIterator const_iterator_t;
+
         //######################################################################
         virtual ~GraphInterface() = default;
 
@@ -77,13 +90,21 @@ class GraphInterface
         virtual size_t E() = 0;
 
         //######################################################################
-        virtual std::vector<boost::shared_ptr<NodeIface>>
+        virtual std::vector<node_t>
             forward_edges(const NodeIface& node) const = 0;
-        virtual std::vector<boost::shared_ptr<NodeIface>>
+        virtual std::vector<node_t>
             reverse_edges(const NodeIface& node) const = 0;
 
         //######################################################################
-        virtual boost::shared_ptr<NodeIface> getNode(std::string name) = 0;
+        virtual node_t getNode(const std::string& name) = 0;
+
+        
+        //######################################################################
+        virtual GraphIterator begin() = 0;
+        virtual const_GraphIterator cbegin() const = 0;
+
+        virtual GraphIterator end() = 0;
+        virtual const_GraphIterator cend() const = 0;
 
 
     //##########################################################################
@@ -92,13 +113,14 @@ class GraphInterface
         friend GraphIterator;
         friend const_GraphIterator;
         virtual cursor_t get_cursor() const = 0;
+        virtual cursor_t get_cursor(node_t node) const = 0;
 };
 
 //##############################################################################
 //##############################################################################
 class GraphIterator : public boost::iterator_facade<
                                                     GraphIterator,
-                                                    GraphInterface,
+                                                    NodeIface,
                                                     std::bidirectional_iterator_tag,
                                                     NodeIface&
                                                    >
@@ -117,6 +139,10 @@ class GraphIterator : public boost::iterator_facade<
             : cursor_(graph.get_cursor()), node_(cursor_->next())
         { }
 
+        inline GraphIterator(GraphInterface& graph, node_t node)
+            : cursor_(graph.get_cursor(node)), node_(node)
+        { }
+
         //######################################################################
         ~GraphIterator() = default;
 
@@ -124,13 +150,14 @@ class GraphIterator : public boost::iterator_facade<
     //##########################################################################
     //##########################################################################
     private:
+        friend class boost::iterator_core_access;
         //######################################################################
         cursor_t cursor_;
         node_t node_;
 
         //######################################################################
-        NodeIface& dereference();
-        bool equal(GraphIterator& other) const;
+        NodeIface& dereference() const;
+        bool equal(const GraphIterator& other) const;
         void increment();
         void decrement();
 
@@ -139,8 +166,8 @@ class GraphIterator : public boost::iterator_facade<
 //##############################################################################
 //##############################################################################
 class const_GraphIterator : public boost::iterator_facade<
-                                                    GraphIterator,
-                                                    GraphInterface,
+                                                    const_GraphIterator,
+                                                    NodeIface,
                                                     std::bidirectional_iterator_tag,
                                                     const NodeIface&
                                                    >
@@ -159,6 +186,10 @@ class const_GraphIterator : public boost::iterator_facade<
             : cursor_(graph.get_cursor()), node_(cursor_->next())
         { }
 
+        inline const_GraphIterator(const GraphInterface& graph, const node_t node)
+            : cursor_(graph.get_cursor(node)), node_(node)
+        { }
+
         //######################################################################
         ~const_GraphIterator() = default;
 
@@ -166,15 +197,16 @@ class const_GraphIterator : public boost::iterator_facade<
     //##########################################################################
     //##########################################################################
     private:
+        friend class boost::iterator_core_access;
         //######################################################################
         cursor_t cursor_;
         node_t node_;
 
         //######################################################################
         const NodeIface& dereference() const;
-        bool equal(const_GraphIterator& other) const;
-        void increment() const;
-        void decrement() const;
+        bool equal(const const_GraphIterator& other) const;
+        void increment();
+        void decrement();
 
 };
 

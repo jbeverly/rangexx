@@ -59,7 +59,7 @@ class GraphDB : graph::GraphInterface {
             reverse_edges(const graph::NodeIface& node) const override;
 
         //######################################################################
-        virtual node_t getNode(std::string name) override;
+        virtual node_t getNode(const std::string& name) override;
 
     //##########################################################################
     //##########################################################################

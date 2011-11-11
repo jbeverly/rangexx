@@ -28,14 +28,14 @@ namespace graph {
 
 //##############################################################################
 graph::NodeIface&
-GraphIterator::dereference()
+GraphIterator::dereference() const
 {
     return *node_;
 }
 
 //##############################################################################
 bool
-GraphIterator::equal(GraphIterator& other) const
+GraphIterator::equal(const GraphIterator& other) const
 {
     return other.node_ == node_;
 }
@@ -44,14 +44,14 @@ GraphIterator::equal(GraphIterator& other) const
 void
 GraphIterator::increment()
 {
-    // TBD
+    node_ = cursor_->next();
 }
 
 //##############################################################################
 void
 GraphIterator::decrement()
 {
-    // TBD
+    node_ = cursor_->prev();
 }
 
 
@@ -68,23 +68,23 @@ const_GraphIterator::dereference() const
 
 //##############################################################################
 bool
-const_GraphIterator::equal(const_GraphIterator& other) const
+const_GraphIterator::equal(const const_GraphIterator& other) const
 {
     return other.node_ == node_;
 }
 
 //##############################################################################
 void
-const_GraphIterator::increment() const
+const_GraphIterator::increment()
 {
-    // TBD
+    node_ = cursor_->next();
 }
 
 //##############################################################################
 void
-const_GraphIterator::decrement() const
+const_GraphIterator::decrement()
 {
-    // TBD
+    node_ = cursor_->prev();
 }
 
 

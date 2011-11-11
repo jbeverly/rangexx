@@ -53,7 +53,7 @@ class ProtobufNode : public graph::NodeIface {
             reverse_edges() const override;
 
         //######################################################################
-        virtual std::string name() override;
+        virtual std::string name() const override;
 
     //##########################################################################
     //##########################################################################

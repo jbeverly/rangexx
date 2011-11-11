@@ -31,17 +31,14 @@ class NodeIface {
     //##########################################################################
     //##########################################################################
     public:
+        typedef boost::shared_ptr<NodeIface> node_t;
         //######################################################################
         virtual ~NodeIface() = default;
 
         //######################################################################
-        virtual std::vector<boost::shared_ptr<NodeIface>>
-            forward_edges() const = 0;
-
-        virtual std::vector<boost::shared_ptr<NodeIface>>
-            reverse_edges() const = 0;
-
-        virtual std::string name() = 0;
+        virtual std::vector<node_t> forward_edges() const = 0;
+        virtual std::vector<node_t> reverse_edges() const = 0;
+        virtual std::string name() const = 0;
 
 
     //##########################################################################

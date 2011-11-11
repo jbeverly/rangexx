@@ -54,12 +54,18 @@ GraphDB::reverse_edges(const graph::NodeIface& node) const
     return node.reverse_edges();
 }
 
+graph::GraphInterface::cursor_t 
+GraphDB::get_cursor() const
+{
+    return instance_->get_cursor();
+}
+
 //##############################################################################
 //##############################################################################
 GraphDB::node_t
-GraphDB::getNode(std::string name)
+GraphDB::getNode(const std::string& name)
 {
-    return instance_->get_cursor()->fetch(name);
+    return get_cursor()->fetch(name);
 }
 
 //GraphDB
