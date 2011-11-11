@@ -54,10 +54,22 @@ GraphDB::reverse_edges(const graph::NodeIface& node) const
     return node.reverse_edges();
 }
 
+//##############################################################################
+//##############################################################################
 graph::GraphInterface::cursor_t 
 GraphDB::get_cursor() const
 {
     return instance_->get_cursor();
+}
+
+//##############################################################################
+//##############################################################################
+GraphDB::cursor_t
+GraphDB::get_cursor(GraphDB::node_t node) const
+{
+    cursor_t cur = instance_->get_cursor();
+    cur->fetch(node->name());
+    return cur;
 }
 
 //##############################################################################
@@ -68,7 +80,39 @@ GraphDB::getNode(const std::string& name)
     return get_cursor()->fetch(name);
 }
 
-//GraphDB
+//##############################################################################
+//##############################################################################
+GraphDB::iterator_t
+GraphDB::begin()
+{
+    return iterator_t(*this, instance_->get_cursor()->first());
+}
+
+//##############################################################################
+//##############################################################################
+GraphDB::const_iterator_t
+GraphDB::cbegin() const
+{
+    return const_iterator_t(*this, instance_->get_cursor()->first());
+}
+
+//##############################################################################
+//##############################################################################
+GraphDB::iterator_t
+GraphDB::end()
+{
+    return iterator_t(*this, instance_->get_cursor()->last());
+}
+
+//##############################################################################
+//##############################################################################
+GraphDB::const_iterator_t
+GraphDB::cend() const
+{
+    return const_iterator_t(*this, instance_->get_cursor()->last());
+}
+
+
 
 
 } // namespace db

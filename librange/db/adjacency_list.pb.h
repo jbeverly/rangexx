@@ -37,6 +37,7 @@ void protobuf_ShutdownFile_adjacency_5flist_2eproto();
 class AdjacencyLists;
 class AdjacencyLists_Adjacency;
 class AdjacencyLists_Edges;
+class AdjacencyLists_GraphVersions;
 
 // ===================================================================
 
@@ -94,10 +95,17 @@ class AdjacencyLists_Adjacency : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required string id = 1;
+  // required int64 version = 1;
+  inline bool has_version() const;
+  inline void clear_version();
+  static const int kVersionFieldNumber = 1;
+  inline ::google::protobuf::int64 version() const;
+  inline void set_version(::google::protobuf::int64 value);
+
+  // required string id = 2;
   inline bool has_id() const;
   inline void clear_id();
-  static const int kIdFieldNumber = 1;
+  static const int kIdFieldNumber = 2;
   inline const ::std::string& id() const;
   inline void set_id(const ::std::string& value);
   inline void set_id(const char* value);
@@ -108,15 +116,18 @@ class AdjacencyLists_Adjacency : public ::google::protobuf::Message {
 
   // @@protoc_insertion_point(class_scope:range.db.AdjacencyLists.Adjacency)
  private:
+  inline void set_has_version();
+  inline void clear_has_version();
   inline void set_has_id();
   inline void clear_has_id();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
+  ::google::protobuf::int64 version_;
   ::std::string* id_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
 
   friend void  protobuf_AddDesc_adjacency_5flist_2eproto();
   friend void protobuf_AssignDesc_adjacency_5flist_2eproto();
@@ -212,6 +223,91 @@ class AdjacencyLists_Edges : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
+class AdjacencyLists_GraphVersions : public ::google::protobuf::Message {
+ public:
+  AdjacencyLists_GraphVersions();
+  virtual ~AdjacencyLists_GraphVersions();
+
+  AdjacencyLists_GraphVersions(const AdjacencyLists_GraphVersions& from);
+
+  inline AdjacencyLists_GraphVersions& operator=(const AdjacencyLists_GraphVersions& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const AdjacencyLists_GraphVersions& default_instance();
+
+  void Swap(AdjacencyLists_GraphVersions* other);
+
+  // implements Message ----------------------------------------------
+
+  AdjacencyLists_GraphVersions* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const AdjacencyLists_GraphVersions& from);
+  void MergeFrom(const AdjacencyLists_GraphVersions& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated int64 version = 1;
+  inline int version_size() const;
+  inline void clear_version();
+  static const int kVersionFieldNumber = 1;
+  inline ::google::protobuf::int64 version(int index) const;
+  inline void set_version(int index, ::google::protobuf::int64 value);
+  inline void add_version(::google::protobuf::int64 value);
+  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
+      version() const;
+  inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
+      mutable_version();
+
+  // @@protoc_insertion_point(class_scope:range.db.AdjacencyLists.GraphVersions)
+ private:
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedField< ::google::protobuf::int64 > version_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_adjacency_5flist_2eproto();
+  friend void protobuf_AssignDesc_adjacency_5flist_2eproto();
+  friend void protobuf_ShutdownFile_adjacency_5flist_2eproto();
+
+  void InitAsDefaultInstance();
+  static AdjacencyLists_GraphVersions* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class AdjacencyLists : public ::google::protobuf::Message {
  public:
   AdjacencyLists();
@@ -266,41 +362,62 @@ class AdjacencyLists : public ::google::protobuf::Message {
 
   typedef AdjacencyLists_Adjacency Adjacency;
   typedef AdjacencyLists_Edges Edges;
+  typedef AdjacencyLists_GraphVersions GraphVersions;
 
   // accessors -------------------------------------------------------
 
-  // required .range.db.AdjacencyLists.Edges forwardEdges = 1;
-  inline bool has_forwardedges() const;
-  inline void clear_forwardedges();
-  static const int kForwardEdgesFieldNumber = 1;
-  inline const ::range::db::AdjacencyLists_Edges& forwardedges() const;
-  inline ::range::db::AdjacencyLists_Edges* mutable_forwardedges();
-  inline ::range::db::AdjacencyLists_Edges* release_forwardedges();
-  inline void set_allocated_forwardedges(::range::db::AdjacencyLists_Edges* forwardedges);
+  // required int64 list_version = 1;
+  inline bool has_list_version() const;
+  inline void clear_list_version();
+  static const int kListVersionFieldNumber = 1;
+  inline ::google::protobuf::int64 list_version() const;
+  inline void set_list_version(::google::protobuf::int64 value);
 
-  // required .range.db.AdjacencyLists.Edges reverseEdges = 2;
-  inline bool has_reverseedges() const;
-  inline void clear_reverseedges();
-  static const int kReverseEdgesFieldNumber = 2;
-  inline const ::range::db::AdjacencyLists_Edges& reverseedges() const;
-  inline ::range::db::AdjacencyLists_Edges* mutable_reverseedges();
-  inline ::range::db::AdjacencyLists_Edges* release_reverseedges();
-  inline void set_allocated_reverseedges(::range::db::AdjacencyLists_Edges* reverseedges);
+  // required int32 crc32 = 2;
+  inline bool has_crc32() const;
+  inline void clear_crc32();
+  static const int kCrc32FieldNumber = 2;
+  inline ::google::protobuf::int32 crc32() const;
+  inline void set_crc32(::google::protobuf::int32 value);
+
+  // required .range.db.AdjacencyLists.Edges forward = 3;
+  inline bool has_forward() const;
+  inline void clear_forward();
+  static const int kForwardFieldNumber = 3;
+  inline const ::range::db::AdjacencyLists_Edges& forward() const;
+  inline ::range::db::AdjacencyLists_Edges* mutable_forward();
+  inline ::range::db::AdjacencyLists_Edges* release_forward();
+  inline void set_allocated_forward(::range::db::AdjacencyLists_Edges* forward);
+
+  // required .range.db.AdjacencyLists.Edges reverse = 4;
+  inline bool has_reverse() const;
+  inline void clear_reverse();
+  static const int kReverseFieldNumber = 4;
+  inline const ::range::db::AdjacencyLists_Edges& reverse() const;
+  inline ::range::db::AdjacencyLists_Edges* mutable_reverse();
+  inline ::range::db::AdjacencyLists_Edges* release_reverse();
+  inline void set_allocated_reverse(::range::db::AdjacencyLists_Edges* reverse);
 
   // @@protoc_insertion_point(class_scope:range.db.AdjacencyLists)
  private:
-  inline void set_has_forwardedges();
-  inline void clear_has_forwardedges();
-  inline void set_has_reverseedges();
-  inline void clear_has_reverseedges();
+  inline void set_has_list_version();
+  inline void clear_has_list_version();
+  inline void set_has_crc32();
+  inline void clear_has_crc32();
+  inline void set_has_forward();
+  inline void clear_has_forward();
+  inline void set_has_reverse();
+  inline void clear_has_reverse();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::range::db::AdjacencyLists_Edges* forwardedges_;
-  ::range::db::AdjacencyLists_Edges* reverseedges_;
+  ::google::protobuf::int64 list_version_;
+  ::range::db::AdjacencyLists_Edges* forward_;
+  ::range::db::AdjacencyLists_Edges* reverse_;
+  ::google::protobuf::int32 crc32_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_adjacency_5flist_2eproto();
   friend void protobuf_AssignDesc_adjacency_5flist_2eproto();
@@ -316,15 +433,37 @@ class AdjacencyLists : public ::google::protobuf::Message {
 
 // AdjacencyLists_Adjacency
 
-// required string id = 1;
-inline bool AdjacencyLists_Adjacency::has_id() const {
+// required int64 version = 1;
+inline bool AdjacencyLists_Adjacency::has_version() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void AdjacencyLists_Adjacency::set_has_id() {
+inline void AdjacencyLists_Adjacency::set_has_version() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void AdjacencyLists_Adjacency::clear_has_id() {
+inline void AdjacencyLists_Adjacency::clear_has_version() {
   _has_bits_[0] &= ~0x00000001u;
+}
+inline void AdjacencyLists_Adjacency::clear_version() {
+  version_ = GOOGLE_LONGLONG(0);
+  clear_has_version();
+}
+inline ::google::protobuf::int64 AdjacencyLists_Adjacency::version() const {
+  return version_;
+}
+inline void AdjacencyLists_Adjacency::set_version(::google::protobuf::int64 value) {
+  set_has_version();
+  version_ = value;
+}
+
+// required string id = 2;
+inline bool AdjacencyLists_Adjacency::has_id() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void AdjacencyLists_Adjacency::set_has_id() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void AdjacencyLists_Adjacency::clear_has_id() {
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void AdjacencyLists_Adjacency::clear_id() {
   if (id_ != &::google::protobuf::internal::kEmptyString) {
@@ -417,81 +556,154 @@ AdjacencyLists_Edges::mutable_edges() {
 
 // -------------------------------------------------------------------
 
+// AdjacencyLists_GraphVersions
+
+// repeated int64 version = 1;
+inline int AdjacencyLists_GraphVersions::version_size() const {
+  return version_.size();
+}
+inline void AdjacencyLists_GraphVersions::clear_version() {
+  version_.Clear();
+}
+inline ::google::protobuf::int64 AdjacencyLists_GraphVersions::version(int index) const {
+  return version_.Get(index);
+}
+inline void AdjacencyLists_GraphVersions::set_version(int index, ::google::protobuf::int64 value) {
+  version_.Set(index, value);
+}
+inline void AdjacencyLists_GraphVersions::add_version(::google::protobuf::int64 value) {
+  version_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
+AdjacencyLists_GraphVersions::version() const {
+  return version_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
+AdjacencyLists_GraphVersions::mutable_version() {
+  return &version_;
+}
+
+// -------------------------------------------------------------------
+
 // AdjacencyLists
 
-// required .range.db.AdjacencyLists.Edges forwardEdges = 1;
-inline bool AdjacencyLists::has_forwardedges() const {
+// required int64 list_version = 1;
+inline bool AdjacencyLists::has_list_version() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void AdjacencyLists::set_has_forwardedges() {
+inline void AdjacencyLists::set_has_list_version() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void AdjacencyLists::clear_has_forwardedges() {
+inline void AdjacencyLists::clear_has_list_version() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void AdjacencyLists::clear_forwardedges() {
-  if (forwardedges_ != NULL) forwardedges_->::range::db::AdjacencyLists_Edges::Clear();
-  clear_has_forwardedges();
+inline void AdjacencyLists::clear_list_version() {
+  list_version_ = GOOGLE_LONGLONG(0);
+  clear_has_list_version();
 }
-inline const ::range::db::AdjacencyLists_Edges& AdjacencyLists::forwardedges() const {
-  return forwardedges_ != NULL ? *forwardedges_ : *default_instance_->forwardedges_;
+inline ::google::protobuf::int64 AdjacencyLists::list_version() const {
+  return list_version_;
 }
-inline ::range::db::AdjacencyLists_Edges* AdjacencyLists::mutable_forwardedges() {
-  set_has_forwardedges();
-  if (forwardedges_ == NULL) forwardedges_ = new ::range::db::AdjacencyLists_Edges;
-  return forwardedges_;
+inline void AdjacencyLists::set_list_version(::google::protobuf::int64 value) {
+  set_has_list_version();
+  list_version_ = value;
 }
-inline ::range::db::AdjacencyLists_Edges* AdjacencyLists::release_forwardedges() {
-  clear_has_forwardedges();
-  ::range::db::AdjacencyLists_Edges* temp = forwardedges_;
-  forwardedges_ = NULL;
+
+// required int32 crc32 = 2;
+inline bool AdjacencyLists::has_crc32() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void AdjacencyLists::set_has_crc32() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void AdjacencyLists::clear_has_crc32() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void AdjacencyLists::clear_crc32() {
+  crc32_ = 0;
+  clear_has_crc32();
+}
+inline ::google::protobuf::int32 AdjacencyLists::crc32() const {
+  return crc32_;
+}
+inline void AdjacencyLists::set_crc32(::google::protobuf::int32 value) {
+  set_has_crc32();
+  crc32_ = value;
+}
+
+// required .range.db.AdjacencyLists.Edges forward = 3;
+inline bool AdjacencyLists::has_forward() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void AdjacencyLists::set_has_forward() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void AdjacencyLists::clear_has_forward() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void AdjacencyLists::clear_forward() {
+  if (forward_ != NULL) forward_->::range::db::AdjacencyLists_Edges::Clear();
+  clear_has_forward();
+}
+inline const ::range::db::AdjacencyLists_Edges& AdjacencyLists::forward() const {
+  return forward_ != NULL ? *forward_ : *default_instance_->forward_;
+}
+inline ::range::db::AdjacencyLists_Edges* AdjacencyLists::mutable_forward() {
+  set_has_forward();
+  if (forward_ == NULL) forward_ = new ::range::db::AdjacencyLists_Edges;
+  return forward_;
+}
+inline ::range::db::AdjacencyLists_Edges* AdjacencyLists::release_forward() {
+  clear_has_forward();
+  ::range::db::AdjacencyLists_Edges* temp = forward_;
+  forward_ = NULL;
   return temp;
 }
-inline void AdjacencyLists::set_allocated_forwardedges(::range::db::AdjacencyLists_Edges* forwardedges) {
-  delete forwardedges_;
-  forwardedges_ = forwardedges;
-  if (forwardedges) {
-    set_has_forwardedges();
+inline void AdjacencyLists::set_allocated_forward(::range::db::AdjacencyLists_Edges* forward) {
+  delete forward_;
+  forward_ = forward;
+  if (forward) {
+    set_has_forward();
   } else {
-    clear_has_forwardedges();
+    clear_has_forward();
   }
 }
 
-// required .range.db.AdjacencyLists.Edges reverseEdges = 2;
-inline bool AdjacencyLists::has_reverseedges() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
+// required .range.db.AdjacencyLists.Edges reverse = 4;
+inline bool AdjacencyLists::has_reverse() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void AdjacencyLists::set_has_reverseedges() {
-  _has_bits_[0] |= 0x00000002u;
+inline void AdjacencyLists::set_has_reverse() {
+  _has_bits_[0] |= 0x00000008u;
 }
-inline void AdjacencyLists::clear_has_reverseedges() {
-  _has_bits_[0] &= ~0x00000002u;
+inline void AdjacencyLists::clear_has_reverse() {
+  _has_bits_[0] &= ~0x00000008u;
 }
-inline void AdjacencyLists::clear_reverseedges() {
-  if (reverseedges_ != NULL) reverseedges_->::range::db::AdjacencyLists_Edges::Clear();
-  clear_has_reverseedges();
+inline void AdjacencyLists::clear_reverse() {
+  if (reverse_ != NULL) reverse_->::range::db::AdjacencyLists_Edges::Clear();
+  clear_has_reverse();
 }
-inline const ::range::db::AdjacencyLists_Edges& AdjacencyLists::reverseedges() const {
-  return reverseedges_ != NULL ? *reverseedges_ : *default_instance_->reverseedges_;
+inline const ::range::db::AdjacencyLists_Edges& AdjacencyLists::reverse() const {
+  return reverse_ != NULL ? *reverse_ : *default_instance_->reverse_;
 }
-inline ::range::db::AdjacencyLists_Edges* AdjacencyLists::mutable_reverseedges() {
-  set_has_reverseedges();
-  if (reverseedges_ == NULL) reverseedges_ = new ::range::db::AdjacencyLists_Edges;
-  return reverseedges_;
+inline ::range::db::AdjacencyLists_Edges* AdjacencyLists::mutable_reverse() {
+  set_has_reverse();
+  if (reverse_ == NULL) reverse_ = new ::range::db::AdjacencyLists_Edges;
+  return reverse_;
 }
-inline ::range::db::AdjacencyLists_Edges* AdjacencyLists::release_reverseedges() {
-  clear_has_reverseedges();
-  ::range::db::AdjacencyLists_Edges* temp = reverseedges_;
-  reverseedges_ = NULL;
+inline ::range::db::AdjacencyLists_Edges* AdjacencyLists::release_reverse() {
+  clear_has_reverse();
+  ::range::db::AdjacencyLists_Edges* temp = reverse_;
+  reverse_ = NULL;
   return temp;
 }
-inline void AdjacencyLists::set_allocated_reverseedges(::range::db::AdjacencyLists_Edges* reverseedges) {
-  delete reverseedges_;
-  reverseedges_ = reverseedges;
-  if (reverseedges) {
-    set_has_reverseedges();
+inline void AdjacencyLists::set_allocated_reverse(::range::db::AdjacencyLists_Edges* reverse) {
+  delete reverse_;
+  reverse_ = reverse;
+  if (reverse) {
+    set_has_reverse();
   } else {
-    clear_has_reverseedges();
+    clear_has_reverse();
   }
 }
 

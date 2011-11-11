@@ -2,11 +2,17 @@ package range.db;
 
 message AdjacencyLists {
 	message Adjacency {
-		required string id = 1;
+		required int64 version = 1;
+		required string id = 2;
 	}
 	message Edges {
 		repeated Adjacency edges = 1;
 	}
-	required Edges forwardEdges = 1;
-	required Edges reverseEdges = 2;
+	message GraphVersions {
+		repeated int64 version = 1;
+	}
+	required int64 list_version = 1;
+	required int32 crc32 = 2;
+	required Edges forward = 3;
+	required Edges reverse = 4;
 }

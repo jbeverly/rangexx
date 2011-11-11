@@ -31,35 +31,46 @@ namespace db {
 //##############################################################################
 class ProtobufNode : public graph::NodeIface {
     //##########################################################################
+    typedef graph::NodeIface::node_t node_t;
     typedef boost::shared_ptr<GraphInstanceInterface> instance_t;
     
     //##########################################################################
     //##########################################################################
     public:
         //######################################################################
-        inline ProtobufNode() : name_(0), instance_(0) {}
+        inline ProtobufNode()
+            : name_(0), instance_(0), lists(), lists_initialized(false)
+        {
+        }
+
+        inline ProtobufNode(const std::string& name, instance_t instance)
+            : name_(name), instance_(instance), lists(), lists_initialized(false)
+        {
+        }
 
         //######################################################################
-        inline ProtobufNode(std::string name, instance_t instance)
-            : name_(name), instance_(instance)
-        { }
-        
-        //######################################################################
-        virtual std::vector<boost::shared_ptr<NodeIface>>
-            forward_edges() const override;
-
-        //######################################################################
-        virtual std::vector<boost::shared_ptr<NodeIface>>
-            reverse_edges() const override;
+        virtual std::vector<node_t> forward_edges() const override;
+        virtual std::vector<node_t> reverse_edges() const override;
 
         //######################################################################
         virtual std::string name() const override;
+
+        //######################################################################
+        instance_t set_instance(instance_t instance);
+        instance_t get_instance() const;
+        
+        //######################################################################
 
     //##########################################################################
     //##########################################################################
     private:
         std::string name_;
         instance_t instance_;
+        mutable AdjacencyLists lists;
+        mutable bool lists_initialized;
+        
+        //######################################################################
+        void init_lists() const;
 
 };
 

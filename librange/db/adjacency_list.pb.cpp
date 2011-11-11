@@ -30,6 +30,9 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* AdjacencyLists_Edges_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   AdjacencyLists_Edges_reflection_ = NULL;
+const ::google::protobuf::Descriptor* AdjacencyLists_GraphVersions_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  AdjacencyLists_GraphVersions_reflection_ = NULL;
 
 }  // namespace
 
@@ -41,9 +44,11 @@ void protobuf_AssignDesc_adjacency_5flist_2eproto() {
       "adjacency_list.proto");
   GOOGLE_CHECK(file != NULL);
   AdjacencyLists_descriptor_ = file->message_type(0);
-  static const int AdjacencyLists_offsets_[2] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AdjacencyLists, forwardedges_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AdjacencyLists, reverseedges_),
+  static const int AdjacencyLists_offsets_[4] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AdjacencyLists, list_version_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AdjacencyLists, crc32_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AdjacencyLists, forward_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AdjacencyLists, reverse_),
   };
   AdjacencyLists_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -57,7 +62,8 @@ void protobuf_AssignDesc_adjacency_5flist_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(AdjacencyLists));
   AdjacencyLists_Adjacency_descriptor_ = AdjacencyLists_descriptor_->nested_type(0);
-  static const int AdjacencyLists_Adjacency_offsets_[1] = {
+  static const int AdjacencyLists_Adjacency_offsets_[2] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AdjacencyLists_Adjacency, version_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AdjacencyLists_Adjacency, id_),
   };
   AdjacencyLists_Adjacency_reflection_ =
@@ -86,6 +92,21 @@ void protobuf_AssignDesc_adjacency_5flist_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(AdjacencyLists_Edges));
+  AdjacencyLists_GraphVersions_descriptor_ = AdjacencyLists_descriptor_->nested_type(2);
+  static const int AdjacencyLists_GraphVersions_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AdjacencyLists_GraphVersions, version_),
+  };
+  AdjacencyLists_GraphVersions_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      AdjacencyLists_GraphVersions_descriptor_,
+      AdjacencyLists_GraphVersions::default_instance_,
+      AdjacencyLists_GraphVersions_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AdjacencyLists_GraphVersions, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(AdjacencyLists_GraphVersions, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(AdjacencyLists_GraphVersions));
 }
 
 namespace {
@@ -104,6 +125,8 @@ void protobuf_RegisterTypes(const ::std::string&) {
     AdjacencyLists_Adjacency_descriptor_, &AdjacencyLists_Adjacency::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     AdjacencyLists_Edges_descriptor_, &AdjacencyLists_Edges::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    AdjacencyLists_GraphVersions_descriptor_, &AdjacencyLists_GraphVersions::default_instance());
 }
 
 }  // namespace
@@ -115,6 +138,8 @@ void protobuf_ShutdownFile_adjacency_5flist_2eproto() {
   delete AdjacencyLists_Adjacency_reflection_;
   delete AdjacencyLists_Edges::default_instance_;
   delete AdjacencyLists_Edges_reflection_;
+  delete AdjacencyLists_GraphVersions::default_instance_;
+  delete AdjacencyLists_GraphVersions_reflection_;
 }
 
 void protobuf_AddDesc_adjacency_5flist_2eproto() {
@@ -124,21 +149,25 @@ void protobuf_AddDesc_adjacency_5flist_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\024adjacency_list.proto\022\010range.db\"\321\001\n\016Adj"
-    "acencyLists\0224\n\014forwardEdges\030\001 \002(\0132\036.rang"
-    "e.db.AdjacencyLists.Edges\0224\n\014reverseEdge"
-    "s\030\002 \002(\0132\036.range.db.AdjacencyLists.Edges\032"
-    "\027\n\tAdjacency\022\n\n\002id\030\001 \002(\t\032:\n\005Edges\0221\n\005edg"
-    "es\030\001 \003(\0132\".range.db.AdjacencyLists.Adjac"
-    "ency", 244);
+    "\n\024adjacency_list.proto\022\010range.db\"\237\002\n\016Adj"
+    "acencyLists\022\024\n\014list_version\030\001 \002(\003\022\r\n\005crc"
+    "32\030\002 \002(\005\022/\n\007forward\030\003 \002(\0132\036.range.db.Adj"
+    "acencyLists.Edges\022/\n\007reverse\030\004 \002(\0132\036.ran"
+    "ge.db.AdjacencyLists.Edges\032(\n\tAdjacency\022"
+    "\017\n\007version\030\001 \002(\003\022\n\n\002id\030\002 \002(\t\032:\n\005Edges\0221\n"
+    "\005edges\030\001 \003(\0132\".range.db.AdjacencyLists.A"
+    "djacency\032 \n\rGraphVersions\022\017\n\007version\030\001 \003"
+    "(\003", 322);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "adjacency_list.proto", &protobuf_RegisterTypes);
   AdjacencyLists::default_instance_ = new AdjacencyLists();
   AdjacencyLists_Adjacency::default_instance_ = new AdjacencyLists_Adjacency();
   AdjacencyLists_Edges::default_instance_ = new AdjacencyLists_Edges();
+  AdjacencyLists_GraphVersions::default_instance_ = new AdjacencyLists_GraphVersions();
   AdjacencyLists::default_instance_->InitAsDefaultInstance();
   AdjacencyLists_Adjacency::default_instance_->InitAsDefaultInstance();
   AdjacencyLists_Edges::default_instance_->InitAsDefaultInstance();
+  AdjacencyLists_GraphVersions::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_adjacency_5flist_2eproto);
 }
 
@@ -152,6 +181,7 @@ struct StaticDescriptorInitializer_adjacency_5flist_2eproto {
 // ===================================================================
 
 #ifndef _MSC_VER
+const int AdjacencyLists_Adjacency::kVersionFieldNumber;
 const int AdjacencyLists_Adjacency::kIdFieldNumber;
 #endif  // !_MSC_VER
 
@@ -171,6 +201,7 @@ AdjacencyLists_Adjacency::AdjacencyLists_Adjacency(const AdjacencyLists_Adjacenc
 
 void AdjacencyLists_Adjacency::SharedCtor() {
   _cached_size_ = 0;
+  version_ = GOOGLE_LONGLONG(0);
   id_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
@@ -210,6 +241,7 @@ AdjacencyLists_Adjacency* AdjacencyLists_Adjacency::New() const {
 
 void AdjacencyLists_Adjacency::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    version_ = GOOGLE_LONGLONG(0);
     if (has_id()) {
       if (id_ != &::google::protobuf::internal::kEmptyString) {
         id_->clear();
@@ -226,10 +258,26 @@ bool AdjacencyLists_Adjacency::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required string id = 1;
+      // required int64 version = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &version_)));
+          set_has_version();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(18)) goto parse_id;
+        break;
+      }
+
+      // required string id = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_id:
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_id()));
           ::google::protobuf::internal::WireFormat::VerifyUTF8String(
@@ -260,13 +308,18 @@ bool AdjacencyLists_Adjacency::MergePartialFromCodedStream(
 
 void AdjacencyLists_Adjacency::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // required string id = 1;
+  // required int64 version = 1;
+  if (has_version()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(1, this->version(), output);
+  }
+
+  // required string id = 2;
   if (has_id()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->id().data(), this->id().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     ::google::protobuf::internal::WireFormatLite::WriteString(
-      1, this->id(), output);
+      2, this->id(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -277,14 +330,19 @@ void AdjacencyLists_Adjacency::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* AdjacencyLists_Adjacency::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // required string id = 1;
+  // required int64 version = 1;
+  if (has_version()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(1, this->version(), target);
+  }
+
+  // required string id = 2;
   if (has_id()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->id().data(), this->id().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->id(), target);
+        2, this->id(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -298,7 +356,14 @@ int AdjacencyLists_Adjacency::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required string id = 1;
+    // required int64 version = 1;
+    if (has_version()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
+          this->version());
+    }
+
+    // required string id = 2;
     if (has_id()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
@@ -332,6 +397,9 @@ void AdjacencyLists_Adjacency::MergeFrom(const ::google::protobuf::Message& from
 void AdjacencyLists_Adjacency::MergeFrom(const AdjacencyLists_Adjacency& from) {
   GOOGLE_CHECK_NE(&from, this);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_version()) {
+      set_version(from.version());
+    }
     if (from.has_id()) {
       set_id(from.id());
     }
@@ -352,13 +420,14 @@ void AdjacencyLists_Adjacency::CopyFrom(const AdjacencyLists_Adjacency& from) {
 }
 
 bool AdjacencyLists_Adjacency::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
+  if ((_has_bits_[0] & 0x00000003) != 0x00000003) return false;
 
   return true;
 }
 
 void AdjacencyLists_Adjacency::Swap(AdjacencyLists_Adjacency* other) {
   if (other != this) {
+    std::swap(version_, other->version_);
     std::swap(id_, other->id_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
@@ -584,8 +653,221 @@ void AdjacencyLists_Edges::Swap(AdjacencyLists_Edges* other) {
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
-const int AdjacencyLists::kForwardEdgesFieldNumber;
-const int AdjacencyLists::kReverseEdgesFieldNumber;
+const int AdjacencyLists_GraphVersions::kVersionFieldNumber;
+#endif  // !_MSC_VER
+
+AdjacencyLists_GraphVersions::AdjacencyLists_GraphVersions()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void AdjacencyLists_GraphVersions::InitAsDefaultInstance() {
+}
+
+AdjacencyLists_GraphVersions::AdjacencyLists_GraphVersions(const AdjacencyLists_GraphVersions& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void AdjacencyLists_GraphVersions::SharedCtor() {
+  _cached_size_ = 0;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+AdjacencyLists_GraphVersions::~AdjacencyLists_GraphVersions() {
+  SharedDtor();
+}
+
+void AdjacencyLists_GraphVersions::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void AdjacencyLists_GraphVersions::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* AdjacencyLists_GraphVersions::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return AdjacencyLists_GraphVersions_descriptor_;
+}
+
+const AdjacencyLists_GraphVersions& AdjacencyLists_GraphVersions::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_adjacency_5flist_2eproto();
+  return *default_instance_;
+}
+
+AdjacencyLists_GraphVersions* AdjacencyLists_GraphVersions::default_instance_ = NULL;
+
+AdjacencyLists_GraphVersions* AdjacencyLists_GraphVersions::New() const {
+  return new AdjacencyLists_GraphVersions;
+}
+
+void AdjacencyLists_GraphVersions::Clear() {
+  version_.Clear();
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool AdjacencyLists_GraphVersions::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // repeated int64 version = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_version:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 1, 8, input, this->mutable_version())));
+        } else if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag)
+                   == ::google::protobuf::internal::WireFormatLite::
+                      WIRETYPE_LENGTH_DELIMITED) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitiveNoInline<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, this->mutable_version())));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(8)) goto parse_version;
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void AdjacencyLists_GraphVersions::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // repeated int64 version = 1;
+  for (int i = 0; i < this->version_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(
+      1, this->version(i), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* AdjacencyLists_GraphVersions::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // repeated int64 version = 1;
+  for (int i = 0; i < this->version_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteInt64ToArray(1, this->version(i), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int AdjacencyLists_GraphVersions::ByteSize() const {
+  int total_size = 0;
+
+  // repeated int64 version = 1;
+  {
+    int data_size = 0;
+    for (int i = 0; i < this->version_size(); i++) {
+      data_size += ::google::protobuf::internal::WireFormatLite::
+        Int64Size(this->version(i));
+    }
+    total_size += 1 * this->version_size() + data_size;
+  }
+
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void AdjacencyLists_GraphVersions::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const AdjacencyLists_GraphVersions* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const AdjacencyLists_GraphVersions*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void AdjacencyLists_GraphVersions::MergeFrom(const AdjacencyLists_GraphVersions& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  version_.MergeFrom(from.version_);
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void AdjacencyLists_GraphVersions::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void AdjacencyLists_GraphVersions::CopyFrom(const AdjacencyLists_GraphVersions& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool AdjacencyLists_GraphVersions::IsInitialized() const {
+
+  return true;
+}
+
+void AdjacencyLists_GraphVersions::Swap(AdjacencyLists_GraphVersions* other) {
+  if (other != this) {
+    version_.Swap(&other->version_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata AdjacencyLists_GraphVersions::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = AdjacencyLists_GraphVersions_descriptor_;
+  metadata.reflection = AdjacencyLists_GraphVersions_reflection_;
+  return metadata;
+}
+
+
+// -------------------------------------------------------------------
+
+#ifndef _MSC_VER
+const int AdjacencyLists::kListVersionFieldNumber;
+const int AdjacencyLists::kCrc32FieldNumber;
+const int AdjacencyLists::kForwardFieldNumber;
+const int AdjacencyLists::kReverseFieldNumber;
 #endif  // !_MSC_VER
 
 AdjacencyLists::AdjacencyLists()
@@ -594,8 +876,8 @@ AdjacencyLists::AdjacencyLists()
 }
 
 void AdjacencyLists::InitAsDefaultInstance() {
-  forwardedges_ = const_cast< ::range::db::AdjacencyLists_Edges*>(&::range::db::AdjacencyLists_Edges::default_instance());
-  reverseedges_ = const_cast< ::range::db::AdjacencyLists_Edges*>(&::range::db::AdjacencyLists_Edges::default_instance());
+  forward_ = const_cast< ::range::db::AdjacencyLists_Edges*>(&::range::db::AdjacencyLists_Edges::default_instance());
+  reverse_ = const_cast< ::range::db::AdjacencyLists_Edges*>(&::range::db::AdjacencyLists_Edges::default_instance());
 }
 
 AdjacencyLists::AdjacencyLists(const AdjacencyLists& from)
@@ -606,8 +888,10 @@ AdjacencyLists::AdjacencyLists(const AdjacencyLists& from)
 
 void AdjacencyLists::SharedCtor() {
   _cached_size_ = 0;
-  forwardedges_ = NULL;
-  reverseedges_ = NULL;
+  list_version_ = GOOGLE_LONGLONG(0);
+  crc32_ = 0;
+  forward_ = NULL;
+  reverse_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -617,8 +901,8 @@ AdjacencyLists::~AdjacencyLists() {
 
 void AdjacencyLists::SharedDtor() {
   if (this != default_instance_) {
-    delete forwardedges_;
-    delete reverseedges_;
+    delete forward_;
+    delete reverse_;
   }
 }
 
@@ -645,11 +929,13 @@ AdjacencyLists* AdjacencyLists::New() const {
 
 void AdjacencyLists::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (has_forwardedges()) {
-      if (forwardedges_ != NULL) forwardedges_->::range::db::AdjacencyLists_Edges::Clear();
+    list_version_ = GOOGLE_LONGLONG(0);
+    crc32_ = 0;
+    if (has_forward()) {
+      if (forward_ != NULL) forward_->::range::db::AdjacencyLists_Edges::Clear();
     }
-    if (has_reverseedges()) {
-      if (reverseedges_ != NULL) reverseedges_->::range::db::AdjacencyLists_Edges::Clear();
+    if (has_reverse()) {
+      if (reverse_ != NULL) reverse_->::range::db::AdjacencyLists_Edges::Clear();
     }
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -662,26 +948,58 @@ bool AdjacencyLists::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required .range.db.AdjacencyLists.Edges forwardEdges = 1;
+      // required int64 list_version = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_forwardedges()));
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &list_version_)));
+          set_has_list_version();
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(18)) goto parse_reverseEdges;
+        if (input->ExpectTag(16)) goto parse_crc32;
         break;
       }
 
-      // required .range.db.AdjacencyLists.Edges reverseEdges = 2;
+      // required int32 crc32 = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_crc32:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &crc32_)));
+          set_has_crc32();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(26)) goto parse_forward;
+        break;
+      }
+
+      // required .range.db.AdjacencyLists.Edges forward = 3;
+      case 3: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_reverseEdges:
+         parse_forward:
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_reverseedges()));
+               input, mutable_forward()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(34)) goto parse_reverse;
+        break;
+      }
+
+      // required .range.db.AdjacencyLists.Edges reverse = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_reverse:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_reverse()));
         } else {
           goto handle_uninterpreted;
         }
@@ -707,16 +1025,26 @@ bool AdjacencyLists::MergePartialFromCodedStream(
 
 void AdjacencyLists::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // required .range.db.AdjacencyLists.Edges forwardEdges = 1;
-  if (has_forwardedges()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      1, this->forwardedges(), output);
+  // required int64 list_version = 1;
+  if (has_list_version()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(1, this->list_version(), output);
   }
 
-  // required .range.db.AdjacencyLists.Edges reverseEdges = 2;
-  if (has_reverseedges()) {
+  // required int32 crc32 = 2;
+  if (has_crc32()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->crc32(), output);
+  }
+
+  // required .range.db.AdjacencyLists.Edges forward = 3;
+  if (has_forward()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      2, this->reverseedges(), output);
+      3, this->forward(), output);
+  }
+
+  // required .range.db.AdjacencyLists.Edges reverse = 4;
+  if (has_reverse()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      4, this->reverse(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -727,18 +1055,28 @@ void AdjacencyLists::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* AdjacencyLists::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // required .range.db.AdjacencyLists.Edges forwardEdges = 1;
-  if (has_forwardedges()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteMessageNoVirtualToArray(
-        1, this->forwardedges(), target);
+  // required int64 list_version = 1;
+  if (has_list_version()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(1, this->list_version(), target);
   }
 
-  // required .range.db.AdjacencyLists.Edges reverseEdges = 2;
-  if (has_reverseedges()) {
+  // required int32 crc32 = 2;
+  if (has_crc32()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->crc32(), target);
+  }
+
+  // required .range.db.AdjacencyLists.Edges forward = 3;
+  if (has_forward()) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
-        2, this->reverseedges(), target);
+        3, this->forward(), target);
+  }
+
+  // required .range.db.AdjacencyLists.Edges reverse = 4;
+  if (has_reverse()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        4, this->reverse(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -752,18 +1090,32 @@ int AdjacencyLists::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required .range.db.AdjacencyLists.Edges forwardEdges = 1;
-    if (has_forwardedges()) {
+    // required int64 list_version = 1;
+    if (has_list_version()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          this->forwardedges());
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
+          this->list_version());
     }
 
-    // required .range.db.AdjacencyLists.Edges reverseEdges = 2;
-    if (has_reverseedges()) {
+    // required int32 crc32 = 2;
+    if (has_crc32()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->crc32());
+    }
+
+    // required .range.db.AdjacencyLists.Edges forward = 3;
+    if (has_forward()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          this->reverseedges());
+          this->forward());
+    }
+
+    // required .range.db.AdjacencyLists.Edges reverse = 4;
+    if (has_reverse()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->reverse());
     }
 
   }
@@ -793,11 +1145,17 @@ void AdjacencyLists::MergeFrom(const ::google::protobuf::Message& from) {
 void AdjacencyLists::MergeFrom(const AdjacencyLists& from) {
   GOOGLE_CHECK_NE(&from, this);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_forwardedges()) {
-      mutable_forwardedges()->::range::db::AdjacencyLists_Edges::MergeFrom(from.forwardedges());
+    if (from.has_list_version()) {
+      set_list_version(from.list_version());
     }
-    if (from.has_reverseedges()) {
-      mutable_reverseedges()->::range::db::AdjacencyLists_Edges::MergeFrom(from.reverseedges());
+    if (from.has_crc32()) {
+      set_crc32(from.crc32());
+    }
+    if (from.has_forward()) {
+      mutable_forward()->::range::db::AdjacencyLists_Edges::MergeFrom(from.forward());
+    }
+    if (from.has_reverse()) {
+      mutable_reverse()->::range::db::AdjacencyLists_Edges::MergeFrom(from.reverse());
     }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
@@ -816,21 +1174,23 @@ void AdjacencyLists::CopyFrom(const AdjacencyLists& from) {
 }
 
 bool AdjacencyLists::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000003) != 0x00000003) return false;
+  if ((_has_bits_[0] & 0x0000000f) != 0x0000000f) return false;
 
-  if (has_forwardedges()) {
-    if (!this->forwardedges().IsInitialized()) return false;
+  if (has_forward()) {
+    if (!this->forward().IsInitialized()) return false;
   }
-  if (has_reverseedges()) {
-    if (!this->reverseedges().IsInitialized()) return false;
+  if (has_reverse()) {
+    if (!this->reverse().IsInitialized()) return false;
   }
   return true;
 }
 
 void AdjacencyLists::Swap(AdjacencyLists* other) {
   if (other != this) {
-    std::swap(forwardedges_, other->forwardedges_);
-    std::swap(reverseedges_, other->reverseedges_);
+    std::swap(list_version_, other->list_version_);
+    std::swap(crc32_, other->crc32_);
+    std::swap(forward_, other->forward_);
+    std::swap(reverse_, other->reverse_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

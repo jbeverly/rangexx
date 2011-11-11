@@ -38,6 +38,8 @@ class GraphDB : graph::GraphInterface {
         //######################################################################
         typedef boost::shared_ptr<GraphInstanceInterface> instance_t;
         typedef GraphInstanceInterface::node_t node_t;
+        typedef graph::GraphInterface::iterator_t iterator_t;
+        typedef graph::GraphInterface::const_iterator_t const_iterator_t;
 
         //######################################################################
         GraphDB() : name_(0), instance_(0) {}
@@ -61,6 +63,13 @@ class GraphDB : graph::GraphInterface {
         //######################################################################
         virtual node_t getNode(const std::string& name) override;
 
+        //######################################################################
+        virtual graph::GraphIterator begin() override;
+        virtual graph::const_GraphIterator cbegin() const override;
+
+        virtual graph::GraphIterator end() = 0;
+        virtual graph::const_GraphIterator cend() const override;
+
     //##########################################################################
     //##########################################################################
     private:
@@ -73,6 +82,7 @@ class GraphDB : graph::GraphInterface {
 
         //######################################################################
         virtual graph::GraphInterface::cursor_t get_cursor() const override;
+        virtual graph::GraphInterface::cursor_t get_cursor(node_t node) const override;
 };
 
 } // namespace db
