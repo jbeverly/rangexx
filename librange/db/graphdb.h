@@ -21,6 +21,7 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #include "../graph/node_interface.h"
 #include "../graph/graph_interface.h"
@@ -31,27 +32,29 @@ namespace db {
 
 //##############################################################################
 //##############################################################################
-class GraphDB : graph::GraphInterface {
+class GraphDB : public graph::GraphInterface, public boost::enable_shared_from_this<GraphDB>  {
     //##########################################################################
     //##########################################################################
     public:
         //######################################################################
         typedef boost::shared_ptr<GraphInstanceInterface> instance_t;
-        typedef GraphInstanceInterface::node_t node_t;
+        typedef graph::NodeIface::node_t node_t;
         typedef graph::GraphInterface::iterator_t iterator_t;
         typedef graph::GraphInterface::const_iterator_t const_iterator_t;
 
         //######################################################################
-        GraphDB() : name_(0), instance_(0) {}
+        GraphDB() : name_(0), instance_(0), wanted_version_(-1) {}
 
         //######################################################################
         inline GraphDB(std::string name, instance_t instance)
-            : name_(name), instance_(instance)
+            : name_(name), instance_(instance), wanted_version_(-1)
         { }
 
         //######################################################################
-        virtual size_t V() override;
-        virtual size_t E() override;
+        virtual size_t V() const override;
+        virtual size_t E() const override;
+
+        virtual uint64_t version() const override;
 
         //######################################################################
         virtual std::vector<node_t>
@@ -61,14 +64,30 @@ class GraphDB : graph::GraphInterface {
             reverse_edges(const graph::NodeIface& node) const override;
 
         //######################################################################
-        virtual node_t getNode(const std::string& name) override;
+        virtual node_t get_node(const std::string& name) const override;
+
+        virtual graph::const_GraphIterator cbegin() const override;
+        virtual graph::const_GraphIterator cend() const override;
 
         //######################################################################
         virtual graph::GraphIterator begin() override;
-        virtual graph::const_GraphIterator cbegin() const override;
+        virtual graph::GraphIterator end() override;
 
-        virtual graph::GraphIterator end() = 0;
-        virtual graph::const_GraphIterator cend() const override;
+        //######################################################################
+        // mutators
+        //######################################################################
+        virtual node_t remove(node_t node) override;
+        
+        //######################################################################
+        virtual node_t create(const std::string& name) override;
+
+        virtual bool set_wanted_version(uint64_t version) override;
+        virtual uint64_t get_wanted_version() const override;
+
+        virtual bool record_change(record_type object_type,
+                const std::string& object_key,
+                uint64_t object_version) override;
+
 
     //##########################################################################
     //##########################################################################
@@ -79,6 +98,7 @@ class GraphDB : graph::GraphInterface {
         //######################################################################
         std::string name_;
         instance_t instance_;
+        uint64_t wanted_version_;
 
         //######################################################################
         virtual graph::GraphInterface::cursor_t get_cursor() const override;

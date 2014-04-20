@@ -18,10 +18,11 @@
 #define _RANGE_DB_PBUFF_NODE_H
 
 #include <boost/shared_array.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #include "../graph/node_interface.h"
 
-#include "adjacency_list.pb.h"
+#include "nodeinfo.pb.h"
 #include "db_interface.h"
 
 namespace range {
@@ -29,22 +30,25 @@ namespace db {
 
 //##############################################################################
 //##############################################################################
-class ProtobufNode : public graph::NodeIface {
+class ProtobufNode : public graph::NodeIface, public boost::enable_shared_from_this<ProtobufNode> {
+    public:
     //##########################################################################
     typedef graph::NodeIface::node_t node_t;
     typedef boost::shared_ptr<GraphInstanceInterface> instance_t;
+    typedef boost::shared_ptr<graph::GraphInterface> graph_t;
     
-    //##########################################################################
-    //##########################################################################
-    public:
         //######################################################################
         inline ProtobufNode()
-            : name_(0), instance_(0), lists(), lists_initialized(false)
+            : name_(0), instance_(0), graph_(), wanted_version_(-1), type_(node_type::UNKNOWN), 
+                info_initialized(false), info()
         {
         }
 
-        inline ProtobufNode(const std::string& name, instance_t instance)
-            : name_(name), instance_(instance), lists(), lists_initialized(false)
+        inline ProtobufNode(const std::string& name, instance_t instance, 
+                            graph_t graph, uint64_t version = -1)
+            : name_(name), instance_(instance), graph_(graph),
+                wanted_version_(version), type_(node_type::UNKNOWN),
+                info_initialized(false)
         {
         }
 
@@ -54,23 +58,71 @@ class ProtobufNode : public graph::NodeIface {
 
         //######################################################################
         virtual std::string name() const override;
+        virtual node_type type() const override;
+        virtual uint64_t version() const override;
+        virtual uint64_t get_wanted_version() const override;
+        virtual uint32_t crc32() const override;
+        virtual bool is_valid() const override;
+        virtual std::unordered_map<std::string, std::vector<std::string>> tags() const override;
 
         //######################################################################
-        instance_t set_instance(instance_t instance);
+        //######################################################################
+        virtual bool add_forward_edge(
+                node_t other, bool update_other_reverse_edge = true) override;
+
+        virtual bool add_reverse_edge(
+                node_t other, bool update_other_forward_edge = false) override;
+
+        virtual bool remove_forward_edge(
+                node_t other, bool update_other_reverse_edge = true) override;
+
+        virtual bool remove_reverse_edge(
+                node_t other, bool update_other_forward_edge = false) override;
+
+        virtual bool update_tag(
+                const std::string& key, const std::vector<std::string>& values) override;
+
+        virtual bool delete_tag(const std::string& key) override;
+
+        virtual bool set_wanted_version(uint64_t version) override;
+
+        virtual node_type set_type(node_type type) override;
+
+        virtual bool commit() override;
+
+        virtual void add_graph_version(uint64_t version) override;
+        virtual std::vector<uint64_t> graph_versions() const override;
+
+        //######################################################################
         instance_t get_instance() const;
+        instance_t get_graph() const;
+
+        instance_t set_instance(instance_t instance);
+        instance_t set_graph(instance_t instance);
         
         //######################################################################
+        virtual void shutdown() override {
+            google::protobuf::ShutdownProtobufLibrary();
+        }
 
     //##########################################################################
     //##########################################################################
     private:
         std::string name_;
         instance_t instance_;
-        mutable AdjacencyLists lists;
-        mutable bool lists_initialized;
-        
+        graph_t graph_;
+
+        uint64_t wanted_version_;
+        static const auto rectype = GraphInstanceInterface::record_type::NODE;
+
+        mutable node_type type_;
+        mutable bool info_initialized;
+        mutable NodeInfo info;
+
         //######################################################################
-        void init_lists() const;
+        inline void init_info() const;
+        inline GraphInstanceInterface::lock_t info_lock(bool writable = false);
+        inline std::vector<node_t> get_edges(const NodeInfo_Edges& edges) const;
 
 };
 

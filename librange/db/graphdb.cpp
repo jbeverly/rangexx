@@ -14,7 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <iterator>
+#include <algorithm>
+
 #include <boost/make_shared.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 
 #include "graphdb.h"
 #include "pbuff_node.h"
@@ -25,7 +29,7 @@ namespace db {
 //##############################################################################
 //##############################################################################
 size_t
-GraphDB::V()
+GraphDB::V() const
 {
     return instance_->n_vertices();
 }
@@ -33,9 +37,25 @@ GraphDB::V()
 //##############################################################################
 //##############################################################################
 size_t
-GraphDB::E()
+GraphDB::E() const
 {
     return instance_->n_edges();
+}
+
+//##############################################################################
+//##############################################################################
+uint64_t
+GraphDB::version() const
+{
+    return instance_->version();
+}
+
+//##############################################################################
+//##############################################################################
+uint64_t
+GraphDB::get_wanted_version() const
+{
+    return wanted_version_;
 }
 
 //##############################################################################
@@ -75,7 +95,7 @@ GraphDB::get_cursor(GraphDB::node_t node) const
 //##############################################################################
 //##############################################################################
 GraphDB::node_t
-GraphDB::getNode(const std::string& name)
+GraphDB::get_node(const std::string& name) const
 {
     return get_cursor()->fetch(name);
 }
@@ -85,7 +105,8 @@ GraphDB::getNode(const std::string& name)
 GraphDB::iterator_t
 GraphDB::begin()
 {
-    return iterator_t(*this, instance_->get_cursor()->first());
+    cursor_t c = instance_->get_cursor();
+    return iterator_t(*this, c->first());
 }
 
 //##############################################################################
@@ -93,7 +114,8 @@ GraphDB::begin()
 GraphDB::const_iterator_t
 GraphDB::cbegin() const
 {
-    return const_iterator_t(*this, instance_->get_cursor()->first());
+    cursor_t c = instance_->get_cursor();
+    return const_iterator_t(*this, c->first());
 }
 
 //##############################################################################
@@ -101,7 +123,8 @@ GraphDB::cbegin() const
 GraphDB::iterator_t
 GraphDB::end()
 {
-    return iterator_t(*this, instance_->get_cursor()->last());
+    cursor_t c = instance_->get_cursor();
+    return iterator_t(*this, c->next(c->last()));
 }
 
 //##############################################################################
@@ -109,9 +132,80 @@ GraphDB::end()
 GraphDB::const_iterator_t
 GraphDB::cend() const
 {
-    return const_iterator_t(*this, instance_->get_cursor()->last());
+    cursor_t c = instance_->get_cursor();
+    return const_iterator_t(*this, c->next(c->last()));
 }
 
+//##############################################################################
+//##############################################################################
+GraphDB::node_t
+GraphDB::create(const std::string& name)
+{
+    auto lock = instance_->write_lock(GraphInstanceInterface::record_type::NODE, name);
+    if (lock) {
+        node_t node = boost::make_shared<ProtobufNode>(name, instance_, shared_from_this());
+        for (uint64_t node_version : boost::adaptors::reverse(node->graph_versions())) {
+            if (this->version() == node_version) {
+                return nullptr;
+            }
+        }
+        if (node->version() == 0) {
+            node->commit();
+            std::for_each(std::begin(*this), std::end(*this), 
+                    [this](graph::NodeIface& v) { v.add_graph_version(this->version()); });
+            return node;
+        }
+    }
+    return nullptr;
+}
+
+//##############################################################################
+//##############################################################################
+bool
+GraphDB::set_wanted_version(uint64_t ver) 
+{
+    if (wanted_version_ <= version()) {
+        wanted_version_ = ver;
+        return true;
+    }
+    return false;
+}
+
+//##############################################################################
+//##############################################################################
+GraphDB::node_t
+GraphDB::remove(node_t node)
+{
+    auto vers = node->graph_versions();
+    auto found = std::find_if(vers.rbegin(), vers.rend(),
+            [this](uint64_t v){return v == this->version();});
+
+    if (found == vers.rend()) {
+        return nullptr;
+    }
+
+    for (auto affected : node->reverse_edges()) {
+        affected->remove_forward_edge(node, false);
+    }
+
+    for (auto affected: node->forward_edges()) {
+        affected->remove_reverse_edge(node, false);
+    }
+    std::for_each(std::begin(*this), std::end(*this),
+            [this](graph::NodeIface& v) { v.add_graph_version(this->version()); });
+
+    return node;
+}
+
+//##############################################################################
+// MOCKED
+//##############################################################################
+bool
+GraphDB::record_change(record_type object_type, const std::string &object_key, uint64_t object_version)
+{
+    std::string foo = std::to_string(static_cast<long long>(object_type)) + object_key + std::to_string(object_version);
+    return true;
+}
 
 
 

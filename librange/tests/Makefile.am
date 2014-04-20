@@ -1,15 +1,16 @@
 AUTOMAKE_OPTIONS = color-tests
 export LD_LIBRARY_PATH=@GMOCK_LD_LIBRARY_PATH@:@GTEST_LD_LIBRARY_PATH@:@PROTOBUF_LD_LIBRARY_PATH@:@DB_CXX_LD_LIBRARY_PATH@
 
-AM_CPPFLAGS = @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ -I$(top_builddir)/librange
-AM_LDFLAGS = @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_LDFLAGS@
-LDADD = @GTEST_LIBS@ @GMOCK_LIBS@ $(top_builddir)/librange/librange.la
+AM_CPPFLAGS = @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ -I$(top_builddir)/librange
+AM_LDFLAGS = @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_LDFLAGS@ @DB_CXX_LDFLAGS@ @DB_STL_LDFLAGS@ 
+LDADD = @GTEST_LIBS@ @GMOCK_LIBS@ @DB_CXX_LIBS@ @DB_STL_LIBS@ $(top_builddir)/librange/librange.la
 
-check_PROGRAMS = graph_iterator
-graph_iterator_SOURCES = graph_iterator.cpp 
+AM_DEFAULT_SOURCE_EXT = .cpp
 
+check_PROGRAMS = test_graph_iterator test_pbuff_node
 
-TESTS = graph_iterator
+TESTS = test_graph_iterator \
+		test_pbuff_node
 
 .PHONY: valgrind
 valgrind: $(TESTS)

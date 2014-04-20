@@ -14,27 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGE_DB_DB_EXCEPTIONS_H
-#define _RANGE_DB_DB_EXCEPTIONS_H
+
+#ifndef _RANGE_DB_CONFIG_INTERFACE_H
+#define _RANGE_DB_CONFIG_INTERFACE_H
 
 #include <string>
-#include "../core/exceptions.h"
 
 namespace range {
 namespace db {
 
-struct Exception : public ::range::Exception {
-        explicit Exception(const std::string& what) : ::range::Exception(what) { }
+class ConfigIface {
+    public:
+        virtual ~ConfigIface() = default;
+
+        virtual const std::string& db_home() const = 0;
+        virtual size_t cache_size() const = 0;
+
+
+
+    protected:
+        ConfigIface() = default;
 };
-struct InstanceUnitializedException : public Exception { 
-        explicit InstanceUnitializedException(const std::string& what) : Exception(what) { }
-};
-struct DatabaseEnvironmentException : public Exception {
-        explicit DatabaseEnvironmentException(const std::string& what) : Exception(what) { }
-};
+
 
 } // namespace db
 } // namespace range
 
-
 #endif
+

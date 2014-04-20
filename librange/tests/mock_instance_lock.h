@@ -14,27 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGE_DB_DB_EXCEPTIONS_H
-#define _RANGE_DB_DB_EXCEPTIONS_H
 
-#include <string>
-#include "../core/exceptions.h"
+#ifndef _RANGE_TESTS_MOCK_INSTANCE_LOCK_H
+#define _RANGE_TESTS_MOCK_INSTANCE_LOCK_H
 
-namespace range {
-namespace db {
 
-struct Exception : public ::range::Exception {
-        explicit Exception(const std::string& what) : ::range::Exception(what) { }
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+#include "../db/db_interface.h"
+
+//##############################################################################
+//##############################################################################
+class MockInstanceLock : public range::db::GraphInstanceLock {
+    public:
+        MOCK_METHOD0(unlock, void(void));
+
+        virtual ~MockInstanceLock() noexcept override {
+            try {
+                unlock();
+            }
+            catch(...) {
+                return;
+            }
+        }
 };
-struct InstanceUnitializedException : public Exception { 
-        explicit InstanceUnitializedException(const std::string& what) : Exception(what) { }
-};
-struct DatabaseEnvironmentException : public Exception {
-        explicit DatabaseEnvironmentException(const std::string& what) : Exception(what) { }
-};
-
-} // namespace db
-} // namespace range
-
 
 #endif

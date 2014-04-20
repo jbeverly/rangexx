@@ -1,0 +1,5 @@
+package range.db;
+
+message GraphList {
+	repeated string name = 1;
+}
