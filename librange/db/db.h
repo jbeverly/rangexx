@@ -15,6 +15,8 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <boost/enable_shared_from_this.hpp>
+
 #include <db_cxx.h>
 #include <dbstl_common.h>
 #include <dbstl_map.h>
@@ -28,11 +30,14 @@ namespace db {
 //##############################################################################
 class BerkeleyDBGraph;
 class BerkeleyDBLock;
+class BerkeleyDBCursor;
 
 //##############################################################################
 //##############################################################################
 class BerkeleyDB : public BackendInterface {
     public: 
+        typedef dbstl::db_map<std::string, std::string> map_t;
+
         BerkeleyDB() = delete;
         explicit BerkeleyDB(const ConfigIface& config);
         virtual ~BerkeleyDB() noexcept override;
@@ -46,7 +51,7 @@ class BerkeleyDB : public BackendInterface {
     private:
         friend BerkeleyDBGraph;
         friend BerkeleyDBLock;
-        typedef dbstl::db_map<std::string, std::string> map_t;
+        friend BerkeleyDBCursor;
 
         const ConfigIface& conf_;
         DbEnv * env_;
@@ -66,26 +71,7 @@ class BerkeleyDB : public BackendInterface {
 
 //##############################################################################
 //##############################################################################
-class BerkeleyDBCursor : public graph::GraphCursorInterface {
-    public:
-        BerkeleyDBCursor(const BerkeleyDBGraph& graph_instance) : graph_(graph_instance) { }
-
-        virtual node_t fetch(const std::string& name) const override;
-        virtual node_t next() const override;
-        virtual node_t prev() const override;
-        virtual node_t next(node_t node) const override;
-        virtual node_t prev(node_t node) const override;
-        virtual node_t first() const override;
-        virtual node_t last() const override;
-
-    private:
-        const BerkeleyDBGraph& graph_;
-};
-
-
-//##############################################################################
-//##############################################################################
-class BerkeleyDBGraph : public GraphInstanceInterface {
+class BerkeleyDBGraph : public GraphInstanceInterface, public boost::enable_shared_from_this<BerkeleyDBGraph> {
     public:
         BerkeleyDBGraph() = delete;
         
@@ -111,9 +97,39 @@ class BerkeleyDBGraph : public GraphInstanceInterface {
         uint64_t wanted_version_;
 
         DbEnv * env() { return backend_.env_; }
-        std::string key_name(record_type type, const std::string& name) const; 
+        static std::string key_prefix(record_type type); 
+        static std::string key_name(record_type type, const std::string& name); 
 
 };
+
+//##############################################################################
+//##############################################################################
+class BerkeleyDBCursor : public graph::GraphCursorInterface {
+    public:
+        typedef BerkeleyDB::map_t map_t;
+
+        BerkeleyDBCursor(boost::shared_ptr<const BerkeleyDBGraph> graph_instance) : graph_(graph_instance), iter() { }
+
+        virtual node_t fetch(const std::string& name) const override;
+        virtual node_t next() const override;
+        virtual node_t prev() const override;
+        virtual node_t next(node_t node) const override;
+        virtual node_t prev(node_t node) const override;
+        virtual node_t first() const override;
+        virtual node_t last() const override;
+
+    private:
+        friend BerkeleyDBGraph;
+
+        boost::shared_ptr<const BerkeleyDBGraph> graph_;
+        mutable map_t::const_iterator iter;
+
+        const map_t& get_const_map() const;
+
+        static const std::string node_prefix;
+};
+
+
 
 
 //##############################################################################

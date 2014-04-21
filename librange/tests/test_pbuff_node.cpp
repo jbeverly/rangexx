@@ -48,14 +48,14 @@ class TestProtobufNode : public ::testing::Test {
         {
             inst = boost::make_shared<MockInstance>();
             cursor = boost::make_shared<MockCursor>();
-            graph = boost::make_shared<MockGraph>();
+            //graph = boost::make_shared<MockGraph>();
             EXPECT_CALL(*inst, version())
                 .Times(AtLeast(0))
                 .WillRepeatedly(Return(0));
         }
 
 
-        boost::shared_ptr<MockGraph> graph;
+        //boost::shared_ptr<MockGraph> graph;
         boost::shared_ptr<MockInstance> inst;
         boost::shared_ptr<MockCursor> cursor;
         static const auto rectype = range::db::GraphInstanceInterface::record_type::NODE;
@@ -107,8 +107,8 @@ TEST_F(TestProtobufNode, TestNodeCreation) {
         .Times(1)
         .WillOnce(Return(true)); 
 
-    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst, graph);
-    range::graph::NodeIface::node_t node2 = boost::make_shared<range::db::ProtobufNode>("test2", inst, graph);
+    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
+    range::graph::NodeIface::node_t node2 = boost::make_shared<range::db::ProtobufNode>("test2", inst);
 
 
     EXPECT_EQ(range::graph::NodeIface::node_type::UNKNOWN, node1->type());
@@ -170,8 +170,8 @@ TEST_F(TestProtobufNode, TestNodeAdjListInitialization) {
         .Times(1)
         .WillOnce(Return(test2.SerializeAsString()));
 
-    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst, graph);
-    range::graph::NodeIface::node_t node2 = boost::make_shared<range::db::ProtobufNode>("test2", inst, graph);
+    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
+    range::graph::NodeIface::node_t node2 = boost::make_shared<range::db::ProtobufNode>("test2", inst);
 
     EXPECT_EQ(1, node1->forward_edges().size());
     EXPECT_EQ(node2->name(), node1->forward_edges()[0]->name());
@@ -249,8 +249,8 @@ TEST_F(TestProtobufNode, TestNodeTypeSetter) {
         .WillOnce(Return(true));
 
 
-    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst, graph);
-    range::graph::NodeIface::node_t node2 = boost::make_shared<range::db::ProtobufNode>("test2", inst, graph);
+    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
+    range::graph::NodeIface::node_t node2 = boost::make_shared<range::db::ProtobufNode>("test2", inst);
 
     EXPECT_EQ(range::graph::NodeIface::node_type::UNKNOWN, node1->type());
     EXPECT_EQ(range::graph::NodeIface::node_type::UNKNOWN, node2->type());
@@ -269,7 +269,7 @@ TEST_F(TestProtobufNode, TestNodeTypeGetter) {
         .Times(1)
         .WillOnce(Return(std::string("\b\x1\x10\0\x18\x1\"\v\n\t\n\x5test2\x10\x1*\0\x32\0", 23))); 
 
-    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst, graph);
+    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
     EXPECT_EQ(range::graph::NodeIface::node_type::CLUSTER, node1->type());
 }
 
@@ -428,9 +428,9 @@ TEST_F(TestProtobufNode, TestNodeVersionEdgeRemoval) {
         .WillOnce(Return(""))
         .WillOnce(Return(buffer3_type));
 
-    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst, graph);
-    range::graph::NodeIface::node_t node2 = boost::make_shared<range::db::ProtobufNode>("test2", inst, graph);
-    range::graph::NodeIface::node_t node3 = boost::make_shared<range::db::ProtobufNode>("test3", inst, graph);
+    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
+    range::graph::NodeIface::node_t node2 = boost::make_shared<range::db::ProtobufNode>("test2", inst);
+    range::graph::NodeIface::node_t node3 = boost::make_shared<range::db::ProtobufNode>("test3", inst);
 
     node1->set_type(range::graph::NodeIface::node_type::CLUSTER);
     node2->set_type(range::graph::NodeIface::node_type::CLUSTER);
@@ -522,7 +522,7 @@ TEST_F(TestProtobufNode, TestNodeKeys) {
         .Times(1)
         .WillOnce(Return(true));
 
-    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst, graph);
+    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
 
     std::vector<std::string> values;
     values.push_back("One");
@@ -568,7 +568,7 @@ TEST_F(TestProtobufNode, TestNodeKeysParse) {
         .Times(1)
         .WillOnce(Return(buffer));
 
-    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst, graph);
+    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
 
     auto tags = node1->tags();
     auto found = tags.find("Foo");
@@ -617,7 +617,7 @@ TEST_F(TestProtobufNode, TestNodeRemoval) {
         .Times(1)
         .WillOnce(Return(true));
 
-    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst, graph);
+    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
 
     node1->delete_tag("Foo");
 
@@ -682,7 +682,7 @@ TEST_F(TestProtobufNode, TestNodeVersionedRemoval) {
         .WillOnce(Return(buffer1))
         .WillOnce(Return(buffer2));
 
-    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst, graph);
+    range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
 
      EXPECT_CALL(*inst, write_record(rectype, "test1", test.SerializeAsString()))
         .Times(1)

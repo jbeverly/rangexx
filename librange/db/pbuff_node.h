@@ -35,20 +35,18 @@ class ProtobufNode : public graph::NodeIface, public boost::enable_shared_from_t
     //##########################################################################
     typedef graph::NodeIface::node_t node_t;
     typedef boost::shared_ptr<GraphInstanceInterface> instance_t;
-    typedef boost::shared_ptr<graph::GraphInterface> graph_t;
     
         //######################################################################
         inline ProtobufNode()
-            : name_(0), instance_(0), graph_(), wanted_version_(-1), type_(node_type::UNKNOWN), 
+            : name_(0), instance_(0), wanted_version_(-1), type_(node_type::UNKNOWN), 
                 info_initialized(false), info()
         {
         }
 
         inline ProtobufNode(const std::string& name, instance_t instance, 
-                            graph_t graph, uint64_t version = -1)
-            : name_(name), instance_(instance), graph_(graph),
-                wanted_version_(version), type_(node_type::UNKNOWN),
-                info_initialized(false)
+                            uint64_t version = -1)
+            : name_(name), instance_(instance), wanted_version_(version),
+                type_(node_type::UNKNOWN), info_initialized(false)
         {
         }
 
@@ -114,7 +112,6 @@ class ProtobufNode : public graph::NodeIface, public boost::enable_shared_from_t
     private:
         std::string name_;
         instance_t instance_;
-        graph_t graph_;
 
         uint64_t wanted_version_;
         static const auto rectype = GraphInstanceInterface::record_type::NODE;

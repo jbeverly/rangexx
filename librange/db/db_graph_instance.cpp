@@ -71,7 +71,7 @@ BerkeleyDBGraph::version() const
 BerkeleyDBGraph::cursor_t
 BerkeleyDBGraph::get_cursor() const
 {
-    return boost::make_shared<BerkeleyDBCursor>(*this);
+    return boost::make_shared<BerkeleyDBCursor>(shared_from_this());
 }
 
 //##############################################################################
@@ -131,9 +131,17 @@ BerkeleyDBGraph::set_wanted_version(uint64_t version)
 //##############################################################################
 //##############################################################################
 std::string
-BerkeleyDBGraph::key_name(record_type type, const std::string& name) const
+BerkeleyDBGraph::key_prefix(record_type type)
 {
-    std::string lookup { std::to_string(static_cast<uint32_t>(type)) + '\a' + '\a' + name };
+    return std::to_string(static_cast<int>(type)) + '\a' + '\a'; 
+}
+
+//##############################################################################
+//##############################################################################
+std::string
+BerkeleyDBGraph::key_name(record_type type, const std::string& name)
+{
+    std::string lookup { key_prefix(type) + name };
     return lookup;
 }
 

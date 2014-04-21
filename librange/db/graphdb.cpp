@@ -143,7 +143,7 @@ GraphDB::create(const std::string& name)
 {
     auto lock = instance_->write_lock(GraphInstanceInterface::record_type::NODE, name);
     if (lock) {
-        node_t node = boost::make_shared<ProtobufNode>(name, instance_, shared_from_this());
+        node_t node = boost::make_shared<ProtobufNode>(name, instance_);
         for (uint64_t node_version : boost::adaptors::reverse(node->graph_versions())) {
             if (this->version() == node_version) {
                 return nullptr;

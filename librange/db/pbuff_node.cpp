@@ -219,7 +219,7 @@ ProtobufNode::get_edges(const NodeInfo_Edges& direction) const
         for (int ver_idx = ver_size - 1; ver_idx >= 0; --ver_idx) {
             if (direction.edges(i).versions(ver_idx) == cmp_version) {
                 pbuffnode_t n = boost::make_shared<ProtobufNode>( 
-                        direction.edges(i).id(), instance_, graph_, wanted_version_
+                        direction.edges(i).id(), instance_, wanted_version_
                         );
                 found_edges.push_back(n);
                 break;
