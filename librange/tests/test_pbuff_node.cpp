@@ -746,7 +746,7 @@ main(int argc, char **argv)
 {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     ::testing::InitGoogleTest(&argc, argv);
-    range::db::ProtobufNode::shutdown();
+    range::db::ProtobufNode::s_shutdown();
     return RUN_ALL_TESTS();
 }
 

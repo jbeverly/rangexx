@@ -111,7 +111,7 @@ BerkeleyDB::init_graph_info()
 
     for(auto name : listGraphInstances()) {
         try {
-            graph_db_instances[name] = dbstl::open_db(env_, "graph_info", DB_HASH, 0, DB_CHKSUM, 0664, NULL, 0, "graph_info");
+            graph_db_instances[name] = dbstl::open_db(env_, "graph_info", DB_HASH, DB_MULTIVERSION, DB_CHKSUM, 0664, NULL, 0, "graph_info");
             graph_map_instances[name] = map_t(graph_db_instances[name], env_);
         } catch(dbstl::DbstlException& e) {
             throw InstanceUnitializedException("Unable to open instance: " + name + ": " + e.what());
@@ -144,29 +144,24 @@ BerkeleyDB::listGraphInstances() const
 //##############################################################################
 void
 BerkeleyDB::add_graph_instance(const std::string& name) {
-    auto txn = dbstl::begin_txn(DB_TXN_SYNC, env_);
-    {
-        auto iter = graph_info_map->begin(dbstl::ReadModifyWriteOption::read_modify_write(), false, dbstl::BulkRetrievalOption::no_bulk_retrieval(), false);
+    BerkeleyDBLock lock { *this, *graph_info_map, true };
 
-        try {    
-            graph_db_instances[name] = dbstl::open_db(env_, "graph_info", DB_HASH, DB_CREATE, DB_CHKSUM, 0664, txn, 0, "graph_info");
-            graph_map_instances[name] = map_t(graph_db_instances[name], env_);
-        } catch(dbstl::DbstlException& e) {
-            dbstl::abort_txn(env_, txn);
-            throw InstanceUnitializedException("Unable to create instance: " + name + ": " + e.what());
-        }
-
-        GraphList listbuf;
-        std::string graph_list = (*graph_info_map)["graph_list"];
-        if (graph_list.size() > 0) {
-            listbuf.ParseFromString(graph_list);
-        } 
-
-        listbuf.add_name()->assign(name);
-
-        (*graph_info_map)["graph_list"] = listbuf.SerializeAsString();
+    try {    
+        graph_db_instances[name] = dbstl::open_db(env_, "graph_info", DB_HASH, DB_CREATE | DB_MULTIVERSION, DB_CHKSUM, 0664, lock.txn(), 0, "graph_info");
+        graph_map_instances[name] = map_t(graph_db_instances[name], env_);
+    } catch(dbstl::DbstlException& e) {
+        throw InstanceUnitializedException("Unable to create instance: " + name + ": " + e.what());
     }
-    dbstl::commit_txn(env_, txn, 0);
+
+    GraphList listbuf;
+    std::string graph_list = (*graph_info_map)["graph_list"];
+    if (graph_list.size() > 0) {
+        listbuf.ParseFromString(graph_list);
+    } 
+
+    listbuf.add_name()->assign(name);
+
+    (*graph_info_map)["graph_list"] = listbuf.SerializeAsString();
 }
 
 //##############################################################################

@@ -27,6 +27,8 @@ namespace db {
 
 //##############################################################################
 class BerkeleyDBGraph;
+class BerkeleyDBLock;
+
 //##############################################################################
 //##############################################################################
 class BerkeleyDB : public BackendInterface {
@@ -43,6 +45,7 @@ class BerkeleyDB : public BackendInterface {
 
     private:
         friend BerkeleyDBGraph;
+        friend BerkeleyDBLock;
         typedef dbstl::db_map<std::string, std::string> map_t;
 
         const ConfigIface& conf_;
@@ -63,12 +66,31 @@ class BerkeleyDB : public BackendInterface {
 
 //##############################################################################
 //##############################################################################
+class BerkeleyDBCursor : public graph::GraphCursorInterface {
+    public:
+        BerkeleyDBCursor(const BerkeleyDBGraph& graph_instance) : graph_(graph_instance) { }
+
+        virtual node_t fetch(const std::string& name) const override;
+        virtual node_t next() const override;
+        virtual node_t prev() const override;
+        virtual node_t next(node_t node) const override;
+        virtual node_t prev(node_t node) const override;
+        virtual node_t first() const override;
+        virtual node_t last() const override;
+
+    private:
+        const BerkeleyDBGraph& graph_;
+};
+
+
+//##############################################################################
+//##############################################################################
 class BerkeleyDBGraph : public GraphInstanceInterface {
     public:
         BerkeleyDBGraph() = delete;
         
         //######################################################################
-        BerkeleyDBGraph(BerkeleyDB& backend) : backend_(backend) { }
+        BerkeleyDBGraph(const std::string& name, BerkeleyDB& backend) : name_(name), backend_(backend), wanted_version_(-1) { }
         virtual ~BerkeleyDBGraph() override;
 
         virtual size_t n_vertices() const override;
@@ -82,11 +104,43 @@ class BerkeleyDBGraph : public GraphInstanceInterface {
         virtual bool write_record(record_type type, const std::string& key, const std::string& data) override;
         virtual uint64_t set_wanted_version(uint64_t version) override;
 
+    private:
+        friend BerkeleyDBCursor;
+        std::string name_;
+        BerkeleyDB& backend_;
+        uint64_t wanted_version_;
+
+        DbEnv * env() { return backend_.env_; }
+        std::string key_name(record_type type, const std::string& name) const; 
+
+};
+
+
+//##############################################################################
+//##############################################################################
+class BerkeleyDBLock : public GraphInstanceLock {
+    public:
+        //######################################################################
+        BerkeleyDBLock() = delete;
+        BerkeleyDBLock(BerkeleyDBLock&& other) : backend_(other.backend_), txn_(std::move(other.txn_)), iter_(std::move(other.iter_)) { }
+        
+        //######################################################################
+        BerkeleyDBLock(BerkeleyDB& backend, BerkeleyDB::map_t& map,
+                        bool read_write=false);
+ 
+        //######################################################################
+        //######################################################################
+        virtual ~BerkeleyDBLock() override;
+        virtual void unlock() override;
+
+        DbTxn * txn() { return txn_; }
 
     private:
         BerkeleyDB& backend_;
-
+        DbTxn * txn_;
+        BerkeleyDB::map_t::iterator iter_;
 };
+
 
 } // namespace db
 } // namespace range

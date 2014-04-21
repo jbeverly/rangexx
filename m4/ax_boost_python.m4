@@ -25,6 +25,7 @@
 # LICENSE
 #
 #   Copyright (c) 2008 Michael Tindal
+#   Copyright (c) 2013 Daniel Mullner <muellner@math.stanford.edu>
 #
 #   This program is free software; you can redistribute it and/or modify it
 #   under the terms of the GNU General Public License as published by the
@@ -58,7 +59,8 @@ AC_DEFUN([AX_BOOST_PYTHON],
 [AC_REQUIRE([AX_PYTHON_DEVEL])dnl
 AC_CACHE_CHECK(whether the Boost::Python library is available,
 ac_cv_boost_python,
-[AC_LANG_PUSH([C++])
+[AC_LANG_SAVE
+ AC_LANG_CPLUSPLUS
  CPPFLAGS_SAVE="$CPPFLAGS"
  if test x$PYTHON_CPPFLAGS != x; then
    CPPFLAGS="$PYTHON_CPPFLAGS $CPPFLAGS"
@@ -69,7 +71,7 @@ ac_cv_boost_python,
  BOOST_PYTHON_MODULE(test) { throw "Boost::Python test."; }]],
 	[[return 0;]])],
 	ac_cv_boost_python=yes, ac_cv_boost_python=no)
- AC_LANG_POP
+ AC_LANG_RESTORE
  CPPFLAGS="$CPPFLAGS_SAVE"
 ])
 if test "$ac_cv_boost_python" = "yes"; then

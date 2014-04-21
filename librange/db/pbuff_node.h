@@ -102,6 +102,10 @@ class ProtobufNode : public graph::NodeIface, public boost::enable_shared_from_t
         
         //######################################################################
         virtual void shutdown() override {
+            s_shutdown();
+        }
+
+        static inline void s_shutdown() {
             google::protobuf::ShutdownProtobufLibrary();
         }
 

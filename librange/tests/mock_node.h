@@ -47,6 +47,7 @@ class MockNode : public range::graph::NodeIface {
         MOCK_METHOD0(commit, bool(void));
         MOCK_METHOD1(add_graph_version, void (uint64_t));
         MOCK_CONST_METHOD0(graph_versions, std::vector<uint64_t> ());
+        MOCK_METHOD0(shutdown, void(void));
 };
 
 #endif

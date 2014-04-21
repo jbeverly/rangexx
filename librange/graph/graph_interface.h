@@ -28,28 +28,55 @@ namespace range {
 namespace graph {
 
 //##############################################################################
-//##############################################################################
+/// Graph Cursors enale us to iterate over the keys within a graph and find 
+/// nodes within a graph. 
+/// You are required to implement a cursor for any graph type, so that it can 
+/// and return that cursor from your graph's begin/end/etc methods
 class GraphCursorInterface {
-    //##########################################################################
-    //##########################################################################
     public:
-        typedef boost::shared_ptr<NodeIface> node_t;
+        typedef NodeIface::node_t node_t;                                       ///< handy alias for node_t
         //######################################################################
-        virtual ~GraphCursorInterface() = default;
+        virtual ~GraphCursorInterface() noexcept = default;                     ///< gcc 4.7 doesn't set noexcept(true) on destructors for some reason
+
+        
+        //######################################################################
+        // Const interfaces 
+        //######################################################################
 
         //######################################################################
+        /// This should be implemented so that it not only fetches the node,
+        /// but set the cursor _at_ the fetched node (so that next/prev are in
+        /// relation to the fetched node)
+        /// 
+        /// @param name name of the node to fetch
+        /// @return node if found, nullptr if note found, throws on errors.
         virtual node_t fetch(const std::string& name) const = 0;
+        
+        //######################################################################
+        /// @return next available node
         virtual node_t next() const = 0;
+
+        //######################################################################
+        /// @return previous available node
         virtual node_t prev() const = 0;
 
+        //######################################################################
+        /// @param[in] node node to seek to
+        /// @return the node prior to the node passed, or the first node
         virtual node_t next(node_t node) const = 0;
+
+        //######################################################################
+        /// @param[in] node node to seek to
+        /// @return the node after the node passed (or nullptr)
         virtual node_t prev(node_t node) const = 0;
 
+        //######################################################################
+        /// @return the first node 
         virtual node_t first() const = 0;
+        
+        //######################################################################
+        /// @return the last node
         virtual node_t last() const = 0;
-
-        virtual void insert(node_t node) = 0;
-        virtual void remove(node_t node) = 0;
 
     //##########################################################################
     //##########################################################################
@@ -62,50 +89,117 @@ class GraphIterator;
 class const_GraphIterator;
 
 //##############################################################################
-//##############################################################################
+/// Interface of a graph.
+///
 class GraphInterface
 {
-    
-    //##########################################################################
-    //##########################################################################
     protected:
         //######################################################################
         GraphInterface() = default;
    
 
-    //##########################################################################
-    //##########################################################################
     public:
-        typedef NodeIface::node_t node_t;
-        typedef boost::shared_ptr<GraphCursorInterface> cursor_t;
+        typedef NodeIface::node_t node_t;                                       ///< handy alias
+        typedef boost::shared_ptr<GraphCursorInterface> cursor_t;               ///< shared pointer to cursor
 
-        typedef GraphIterator iterator_t;
-        typedef const_GraphIterator const_iterator_t;
+        typedef GraphIterator iterator_t;                                       ///< handy alias (less handy now with auto...)
+        typedef const_GraphIterator const_iterator_t;                           ///< handy alias (less handy now with auto...)
+
+        enum class record_type : uint8_t {
+            NODE,                                                               ///< something like graph::NodeType
+            GRAPH_META,                                                         ///< Metadata about the graph instance
+            RESERVED=254,                                                       ///< 2-254 reserved for future
+            UNKNOWN=255,                                                        ///< Unknown type
+        };
 
         //######################################################################
-        virtual ~GraphInterface() = default;
+        virtual ~GraphInterface() noexcept = default;
 
         //######################################################################
-        virtual size_t V() = 0;
-        virtual size_t E() = 0;
+        //######################################################################
+        // Const interfaces 
 
         //######################################################################
+        /// @return number of vertices in graph
+        virtual size_t V() const = 0;
+        
+        //######################################################################
+        /// @return number of edges in the graph
+        virtual size_t E() const = 0;
+
+        //######################################################################
+        /// Note that for backends not supporting versioning, this should always
+        /// return 0
+        ///
+        /// @return version of this graph
+        virtual uint64_t version() const = 0;
+
+        //######################################################################
+        /// @param node node from which to fetch forward edges
+        /// @return vector of forward edge nodes
         virtual std::vector<node_t>
             forward_edges(const NodeIface& node) const = 0;
+        
+        //######################################################################
+        /// @param node node from which to fetch reverse edges
+        /// @return vector of reverse edge nodes
         virtual std::vector<node_t>
             reverse_edges(const NodeIface& node) const = 0;
 
         //######################################################################
-        virtual node_t getNode(const std::string& name) = 0;
-
-        
+        /// @param name name of the node to fetch 
+        /// @return node, or nullptr if node not found, throws on errors
+        virtual node_t get_node(const std::string& name) const = 0;
+ 
         //######################################################################
-        virtual GraphIterator begin() = 0;
+        /// Note that for backends not supporting versioning, this should 
+        /// always return false.
+        /// 
+        /// @return currently set wanted version 
+        virtual uint64_t get_wanted_version() const = 0;
+
+        //######################################################################
+        /// @return const iterator begin
         virtual const_GraphIterator cbegin() const = 0;
 
-        virtual GraphIterator end() = 0;
+        //######################################################################
+        /// @return const iterator end
         virtual const_GraphIterator cend() const = 0;
+        
+        //######################################################################
+        //#####################################################################
+        // Mutating interfaces
+        
+        ///#####################################################################
+        /// @param node node to remove
+        virtual node_t remove(node_t node) = 0;
+        
+        ///#####################################################################
+        /// @param name name of new node to create, not will be "blank"
+        /// @return the newly created node 
+        virtual node_t create(const std::string& name) = 0;
 
+        //#####################################################################
+        /// @return iterator begin
+        virtual GraphIterator begin() = 0;
+
+        //#####################################################################
+        /// @return iterator end
+        virtual GraphIterator end() = 0;
+
+        //######################################################################
+        /// Note that for backends not supporting versioning, this should 
+        /// always return false.
+        /// 
+        /// @param[in] version version number of the graph for all queries, (-1 == latest)
+        /// @return true if version exists and is queryable , false otherwise 
+        virtual bool set_wanted_version(uint64_t version) = 0;
+
+        //######################################################################
+        /// @param[in] type type of the object you've changed
+        /// @param[in] object_key key of the object you've changed
+        /// @param[in] object_version new version of the object you've changed
+        virtual bool record_change(record_type object_type, const std::string& object_key, uint64_t object_version) = 0;
 
     //##########################################################################
     //##########################################################################
@@ -117,7 +211,7 @@ class GraphInterface
 };
 
 //##############################################################################
-//##############################################################################
+/// iterator
 class GraphIterator : public boost::iterator_facade<
                                                     GraphIterator,
                                                     NodeIface,
@@ -164,7 +258,7 @@ class GraphIterator : public boost::iterator_facade<
 };
 
 //##############################################################################
-//##############################################################################
+/// Const iterator
 class const_GraphIterator : public boost::iterator_facade<
                                                     const_GraphIterator,
                                                     NodeIface,

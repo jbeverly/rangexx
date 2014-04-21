@@ -33,7 +33,8 @@ namespace db {
 //##############################################################################
 class GraphInstanceLock {
     public:
-        GraphInstanceLock(const GraphInstanceLock& other) = default;
+        GraphInstanceLock(const GraphInstanceLock& other) = delete;
+        GraphInstanceLock(GraphInstanceLock&& other) = default;
         virtual ~GraphInstanceLock() = default;
         virtual void unlock() = 0;
     protected:
@@ -48,7 +49,8 @@ class GraphInstanceInterface {
     //##########################################################################
     public:
         typedef std::unique_ptr<GraphInstanceLock> lock_t;                      ///< alias for unique_ptr to lock interface type
-        typedef boost::shared_ptr<graph::GraphCursorInterface> cursor_t;        ///< alias for shared_ptr to cursor interfacetype
+        typedef graph::GraphCursorInterface cursor_iface_t;                     ///< alias for shared_ptr to cursor interfacetype
+        typedef boost::shared_ptr<cursor_iface_t> cursor_t;                     ///< alias for shared_ptr to cursor interfacetype
         typedef graph::GraphInterface::record_type record_type;
 
         //######################################################################

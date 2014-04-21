@@ -24,6 +24,7 @@
 #
 #   Copyright (c) 2008 Thomas Porschberg <thomas@randspringer.de>
 #   Copyright (c) 2008 Michael Tindal
+#   Copyright (c) 2013 Daniel Casimiro <dan.casimiro@gmail.com>
 #
 #   Copying and distribution of this file, with or without modification, are
 #   permitted in any medium without royalty provided the copyright notice
@@ -107,7 +108,7 @@ AC_DEFUN([AX_BOOST_LOG],
 			fi
 
 			if test "x$ax_lib" = "x"; then
-				AC_MSG_ERROR(Could not find a version of the Boost::Log library!)
+				AC_MSG_ERROR(Could not find a version of the library!)
 			fi
 
 			if test "x$link_log" = "xno"; then

@@ -26,11 +26,17 @@ namespace db {
 struct Exception : public ::range::Exception {
         explicit Exception(const std::string& what) : ::range::Exception(what) { }
 };
+
 struct InstanceUnitializedException : public Exception { 
         explicit InstanceUnitializedException(const std::string& what) : Exception(what) { }
 };
+
 struct DatabaseEnvironmentException : public Exception {
         explicit DatabaseEnvironmentException(const std::string& what) : Exception(what) { }
+};
+
+struct DatabaseLockingException : public Exception {
+        explicit DatabaseLockingException(const std::string& what) : Exception(what) { }
 };
 
 } // namespace db
