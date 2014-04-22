@@ -14,29 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef _RANGE_TESTS_MOCK_DB_CONFIG_H
+#define _RANGE_TESTS_MOCK_DB_CONFIG_H
 
-#ifndef _RANGE_DB_CONFIG_INTERFACE_H
-#define _RANGE_DB_CONFIG_INTERFACE_H
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-#include <string>
+#include "../db/config_interface.h"
 
-namespace range {
-namespace db {
-
-class ConfigIface {
+class MockDbConfig : public range::db::ConfigIface {
     public:
-        virtual ~ConfigIface() = default;
-
-        virtual const std::string& db_home() const = 0;
-        virtual size_t cache_size() const = 0;
-
-    protected:
-        ConfigIface() = default;
+        MOCK_CONST_METHOD0(db_home, const std::string&(void));
+        MOCK_CONST_METHOD0(cache_size, size_t(void));
 };
 
-
-} // namespace db
-} // namespace range
 
 #endif
 

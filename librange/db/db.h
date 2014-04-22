@@ -43,10 +43,14 @@ class BerkeleyDB : public BackendInterface {
         virtual ~BerkeleyDB() noexcept override;
 
         //######################################################################
-        virtual graph_instance_t getGraphInstance(const std::string& name) override;
-        virtual graph_instance_t createGraphInstance(const std::string& name) override;
+        virtual graph_instance_t
+            getGraphInstance(const std::string& name) override;
+        virtual graph_instance_t
+            createGraphInstance(const std::string& name) override;
         virtual std::vector<std::string> listGraphInstances() const override;
-        virtual void shutdown() override;
+        virtual void shutdown() override { s_shutdown(); }
+
+        static void s_shutdown();
 
     private:
         friend BerkeleyDBGraph;
@@ -61,7 +65,8 @@ class BerkeleyDB : public BackendInterface {
         std::unordered_map<std::string, Db*> graph_db_instances;
         std::unordered_map<std::string, map_t> graph_map_instances;
 
-        static const uint32_t env_open_flags = DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK | DB_INIT_TXN | DB_RECOVER | DB_REGISTER | DB_FAILCHK;
+        static const uint32_t env_open_flags = DB_CREATE | DB_INIT_MPOOL 
+                    | DB_INIT_LOCK | DB_INIT_TXN | DB_RECOVER | DB_REGISTER;
         static const uint32_t env_set_flags = DB_REGION_INIT | DB_DIRECT_DB;
 
         void init_graph_info();
@@ -71,32 +76,59 @@ class BerkeleyDB : public BackendInterface {
 
 //##############################################################################
 //##############################################################################
-class BerkeleyDBGraph : public GraphInstanceInterface, public boost::enable_shared_from_this<BerkeleyDBGraph> {
+class BerkeleyDBGraph 
+    :   public GraphInstanceInterface,
+        public boost::enable_shared_from_this<BerkeleyDBGraph>
+{
     public:
         BerkeleyDBGraph() = delete;
         
         //######################################################################
-        BerkeleyDBGraph(const std::string& name, BerkeleyDB& backend) : name_(name), backend_(backend), wanted_version_(-1) { }
-        virtual ~BerkeleyDBGraph() override;
+        BerkeleyDBGraph(const std::string& name, BerkeleyDB& backend)
+            : name_(name), backend_(backend), wanted_version_(-1) { }
 
+        //######################################################################
+        virtual ~BerkeleyDBGraph() override;
+        
+        //######################################################################
         virtual size_t n_vertices() const override;
+        //######################################################################
         virtual size_t n_edges() const override;
+        //######################################################################
         virtual size_t n_redges() const override;
+        //######################################################################
         virtual uint64_t version() const override;
+        //######################################################################
         virtual cursor_t get_cursor() const override;
-        virtual std::string get_record(record_type type, const std::string& key) const override;
-        virtual lock_t read_lock(record_type type, const std::string& key) const override;
-        virtual lock_t write_lock(record_type type, const std::string& key) override;
-        virtual bool write_record(record_type type, const std::string& key, const std::string& data) override;
+        //######################################################################
+        virtual std::string
+            get_record(record_type type, const std::string& key) const override;
+        //######################################################################
+        virtual lock_t
+            read_lock(record_type type, const std::string& key) const override;
+        //######################################################################
+        virtual lock_t
+            write_lock(record_type type, const std::string& key) override;
+        //######################################################################
+        virtual bool
+            write_record(record_type type, const std::string& key,
+                    uint64_t object_version, const std::string& data) override;
+        //######################################################################
         virtual uint64_t set_wanted_version(uint64_t version) override;
 
-    private:
+    private: 
+        //######################################################################
         friend BerkeleyDBCursor;
         std::string name_;
         BerkeleyDB& backend_;
         uint64_t wanted_version_;
 
+        //######################################################################
         DbEnv * env() { return backend_.env_; }
+        bool inculcate_change(record_type type, const std::string& object_name,
+                uint64_t object_version);
+
+        //######################################################################
         static std::string key_prefix(record_type type); 
         static std::string key_name(record_type type, const std::string& name); 
 
@@ -107,25 +139,38 @@ class BerkeleyDBGraph : public GraphInstanceInterface, public boost::enable_shar
 class BerkeleyDBCursor : public graph::GraphCursorInterface {
     public:
         typedef BerkeleyDB::map_t map_t;
+        typedef boost::shared_ptr<const BerkeleyDBGraph> const_graph_sptr;
 
-        BerkeleyDBCursor(boost::shared_ptr<const BerkeleyDBGraph> graph_instance) : graph_(graph_instance), iter() { }
+        //######################################################################
+        BerkeleyDBCursor(const_graph_sptr graph_instance)
+            : graph_(graph_instance), iter() { }
 
+        //######################################################################
         virtual node_t fetch(const std::string& name) const override;
+        //######################################################################
         virtual node_t next() const override;
+        //######################################################################
         virtual node_t prev() const override;
+        //######################################################################
         virtual node_t next(node_t node) const override;
+        //######################################################################
         virtual node_t prev(node_t node) const override;
+        //######################################################################
         virtual node_t first() const override;
+        //######################################################################
         virtual node_t last() const override;
 
     private:
+        //######################################################################
         friend BerkeleyDBGraph;
 
         boost::shared_ptr<const BerkeleyDBGraph> graph_;
         mutable map_t::const_iterator iter;
 
+        //######################################################################
         const map_t& get_const_map() const;
 
+        //######################################################################
         static const std::string node_prefix;
 };
 
@@ -138,7 +183,13 @@ class BerkeleyDBLock : public GraphInstanceLock {
     public:
         //######################################################################
         BerkeleyDBLock() = delete;
-        BerkeleyDBLock(BerkeleyDBLock&& other) : backend_(other.backend_), txn_(std::move(other.txn_)), iter_(std::move(other.iter_)) { }
+
+        //######################################################################
+        BerkeleyDBLock(BerkeleyDBLock&& other)
+            : backend_(other.backend_), txn_(std::move(other.txn_)),
+            iter_(std::move(other.iter_))
+        {
+        }
         
         //######################################################################
         BerkeleyDBLock(BerkeleyDB& backend, BerkeleyDB::map_t& map,
@@ -149,9 +200,11 @@ class BerkeleyDBLock : public GraphInstanceLock {
         virtual ~BerkeleyDBLock() override;
         virtual void unlock() override;
 
+        //######################################################################
         DbTxn * txn() { return txn_; }
 
     private:
+        //######################################################################
         BerkeleyDB& backend_;
         DbTxn * txn_;
         BerkeleyDB::map_t::iterator iter_;

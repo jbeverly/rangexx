@@ -99,8 +99,10 @@ class GraphInstanceInterface {
         /// @param[in] type type of to write
         /// @param[in] key key of record to write
         /// @param[in] data date to write
+        /// @param[in] object_version the version of the object being written 
         /// @return true if successfull, false otherwise. throws on error
-        virtual bool write_record(record_type type, const std::string& key, const std::string& data) = 0;
+        virtual bool write_record(record_type type, const std::string& key,
+                uint64_t object_version, const std::string& data) = 0;
         
         //######################################################################
         /// @param[in] version graph version you want to query

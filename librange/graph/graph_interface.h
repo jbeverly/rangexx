@@ -196,10 +196,10 @@ class GraphInterface
         virtual bool set_wanted_version(uint64_t version) = 0;
 
         //######################################################################
-        /// @param[in] type type of the object you've changed
-        /// @param[in] object_key key of the object you've changed
-        /// @param[in] object_version new version of the object you've changed
-        virtual bool record_change(record_type object_type, const std::string& object_key, uint64_t object_version) = 0;
+        // @param[in] type type of the object you've changed
+        // @param[in] object_key key of the object you've changed
+        // @param[in] object_version new version of the object you've changed
+        //virtual bool record_change(record_type object_type, const std::string& object_key, uint64_t object_version) = 0;
 
     //##########################################################################
     //##########################################################################

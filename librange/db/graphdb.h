@@ -84,9 +84,9 @@ class GraphDB : public graph::GraphInterface, public boost::enable_shared_from_t
         virtual bool set_wanted_version(uint64_t version) override;
         virtual uint64_t get_wanted_version() const override;
 
-        virtual bool record_change(record_type object_type,
+        /* virtual bool record_change(record_type object_type,
                 const std::string& object_key,
-                uint64_t object_version) override;
+                uint64_t object_version) override; */
 
 
     //##########################################################################

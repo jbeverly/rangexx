@@ -1,0 +1,18 @@
+package range.db;
+
+message ChangeList {
+	message Change {
+		message TimeStamp {
+			required uint64 seconds = 1;
+			required uint32 msec = 2;
+		}
+		message Item {
+			required string key = 1;
+			required uint64 version = 2;
+		}
+		required TimeStamp timestamp = 1;
+		repeated Item items = 2;
+	}
+	required uint64 current_version = 1;
+	repeated Change change = 2;
+}

@@ -99,11 +99,11 @@ TEST_F(TestProtobufNode, TestNodeCreation) {
     test2.set_crc32(range::util::crc32(test2.SerializeAsString()));
 
 
-    EXPECT_CALL(*inst, write_record(rectype, "test1", test1.SerializeAsString()))
+    EXPECT_CALL(*inst, write_record(rectype, "test1", 1, test1.SerializeAsString()))
         .Times(1)
         .WillOnce(Return(true));
 
-    EXPECT_CALL(*inst, write_record(rectype, "test2", test2.SerializeAsString()))
+    EXPECT_CALL(*inst, write_record(rectype, "test2", 1, test2.SerializeAsString()))
         .Times(1)
         .WillOnce(Return(true)); 
 
@@ -240,11 +240,11 @@ TEST_F(TestProtobufNode, TestNodeTypeSetter) {
     test2.set_crc32(0);
     test2.set_crc32(range::util::crc32(test2.SerializeAsString()));
 
-    EXPECT_CALL(*inst, write_record(rectype, "test1", test1.SerializeAsString()))
+    EXPECT_CALL(*inst, write_record(rectype, "test1", 2, test1.SerializeAsString()))
         .Times(1)
         .WillOnce(Return(true));
 
-    EXPECT_CALL(*inst, write_record(rectype, "test2", test2.SerializeAsString()))
+    EXPECT_CALL(*inst, write_record(rectype, "test2", 2, test2.SerializeAsString()))
         .Times(1)
         .WillOnce(Return(true));
 
@@ -374,39 +374,39 @@ TEST_F(TestProtobufNode, TestNodeVersionEdgeRemoval) {
     //##########################################################################
     std::string buffer3_reverse_edge1 = test3.SerializeAsString();
 
-    EXPECT_CALL(*inst, write_record(rectype, "test1", buffer1_type))
+    EXPECT_CALL(*inst, write_record(rectype, "test1", 1, buffer1_type))
         .Times(1)
         .WillOnce(Return(true));
 
-    EXPECT_CALL(*inst, write_record(rectype, "test1", buffer1_edge1))
+    EXPECT_CALL(*inst, write_record(rectype, "test1", 2, buffer1_edge1))
         .Times(1)
         .WillOnce(Return(true));
 
-    EXPECT_CALL(*inst, write_record(rectype, "test1", buffer1_edge2))
+    EXPECT_CALL(*inst, write_record(rectype, "test1", 3, buffer1_edge2))
         .Times(1)
         .WillOnce(Return(true));
 
-    EXPECT_CALL(*inst, write_record(rectype, "test1", buffer1_removed))
+    EXPECT_CALL(*inst, write_record(rectype, "test1", 4, buffer1_removed))
         .Times(1)
         .WillOnce(Return(true));
 
-    EXPECT_CALL(*inst, write_record(rectype, "test2", buffer2_type))
+    EXPECT_CALL(*inst, write_record(rectype, "test2", 1, buffer2_type))
         .Times(1)
         .WillOnce(Return(true)); 
 
-    EXPECT_CALL(*inst, write_record(rectype, "test2", buffer2_reverse_edge1))
+    EXPECT_CALL(*inst, write_record(rectype, "test2", 2, buffer2_reverse_edge1))
         .Times(1)
         .WillOnce(Return(true)); 
 
-    EXPECT_CALL(*inst, write_record(rectype, "test2", buffer2_removed))
+    EXPECT_CALL(*inst, write_record(rectype, "test2", 3, buffer2_removed))
         .Times(1)
         .WillOnce(Return(true)); 
 
-    EXPECT_CALL(*inst, write_record(rectype, "test3", buffer3_type))
+    EXPECT_CALL(*inst, write_record(rectype, "test3", 1, buffer3_type))
         .Times(1)
         .WillOnce(Return(true)); 
 
-    EXPECT_CALL(*inst, write_record(rectype, "test3", buffer3_reverse_edge1))
+    EXPECT_CALL(*inst, write_record(rectype, "test3", 2, buffer3_reverse_edge1))
         .Times(1)
         .WillOnce(Return(true)); 
 
@@ -518,7 +518,7 @@ TEST_F(TestProtobufNode, TestNodeKeys) {
 
     std::string buffer = test.SerializeAsString();
 
-    EXPECT_CALL(*inst, write_record(rectype, "test1", buffer))
+    EXPECT_CALL(*inst, write_record(rectype, "test1", 1, buffer))
         .Times(1)
         .WillOnce(Return(true));
 
@@ -613,7 +613,7 @@ TEST_F(TestProtobufNode, TestNodeRemoval) {
         .Times(1)
         .WillOnce(Return(buffer));
 
-    EXPECT_CALL(*inst, write_record(rectype, "test1", new_buffer))
+    EXPECT_CALL(*inst, write_record(rectype, "test1", 2, new_buffer))
         .Times(1)
         .WillOnce(Return(true));
 
@@ -684,7 +684,7 @@ TEST_F(TestProtobufNode, TestNodeVersionedRemoval) {
 
     range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
 
-     EXPECT_CALL(*inst, write_record(rectype, "test1", test.SerializeAsString()))
+     EXPECT_CALL(*inst, write_record(rectype, "test1", 2, test.SerializeAsString()))
         .Times(1)
         .WillOnce(Return(true));
 
@@ -708,7 +708,7 @@ TEST_F(TestProtobufNode, TestNodeVersionedRemoval) {
     test.set_crc32(0);
     test.set_crc32(range::util::crc32(test.SerializeAsString()));
 
-    EXPECT_CALL(*inst, write_record(rectype, "test1", test.SerializeAsString()))
+    EXPECT_CALL(*inst, write_record(rectype, "test1", 3, test.SerializeAsString()))
         .Times(1)
         .WillOnce(Return(true));
 

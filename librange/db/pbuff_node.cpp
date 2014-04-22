@@ -38,7 +38,7 @@ write_record(const std::string& name, NodeInfo& info, ProtobufNode::instance_t i
     info.set_crc32(crc);
 
     auto rectype = GraphInstanceInterface::record_type::NODE;
-    if(!instance->write_record(rectype, name, info.SerializeAsString())) {
+    if(!instance->write_record(rectype, name, info.list_version(), info.SerializeAsString())) {
         return false;
     }
     return true;

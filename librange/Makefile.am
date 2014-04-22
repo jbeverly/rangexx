@@ -25,6 +25,13 @@ db/graph_list.pb.h: db/graph_list.proto
 
 db/graph_list.pb.cpp: db/graph_list.pb.h
 
+db/changelist.pb.h: db/changelist.proto
+	$(PROTOC) -I=db/ --cpp_out=db/ db/changelist.proto && mv db/changelist.pb.cc db/changelist.pb.cpp
+
+db/changelist.pb.cpp: db/changelist.pb.h
+
+
+
 BUILT_SOURCES = db/nodeinfo.pb.h db/nodeinfo.pb.cpp db/graph_list.pb.h db/graph_list.pb.cpp
 
 librange_util_la_includedir = $(includedir)
@@ -33,8 +40,8 @@ librange_util_la_SOURCES = util/crc32.cpp
 librange_util_la_LIBADD = $(AM_LIBADD)
 
 librange_db_la_includedir = $(includedir)
-nobase_librange_db_la_include_HEADERS = db/db.h db/nodeinfo.pb.h db/pbuff_node.h db/graphdb.h db/db_interface.h db/db_exceptions.h db/config_interface.h db/graph_list.pb.h
-librange_db_la_SOURCES = db/db_cursor.cpp db/db_graph_instance.cpp db/db_lock.cpp db/db_backend.cpp db/graphdb.cpp db/nodeinfo.pb.cpp db/graph_list.pb.cpp db/pbuff_node.cpp $(top_builddir)/range_config.h 
+nobase_librange_db_la_include_HEADERS = db/changelist.pb.h db/db.h db/nodeinfo.pb.h db/pbuff_node.h db/graphdb.h db/db_interface.h db/db_exceptions.h db/config_interface.h db/graph_list.pb.h
+librange_db_la_SOURCES = db/changelist.pb.cpp db/db_cursor.cpp db/db_graph_instance.cpp db/db_lock.cpp db/db_backend.cpp db/graphdb.cpp db/nodeinfo.pb.cpp db/graph_list.pb.cpp db/pbuff_node.cpp $(top_builddir)/range_config.h 
 librange_db_la_LIBADD = $(AM_LIBADD)
 
 librange_graph_la_includedir = $(includedir)

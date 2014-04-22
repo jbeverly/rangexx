@@ -67,8 +67,7 @@ class MockInstance : public range::db::GraphInstanceInterface {
             return lock_out;
         }
 
-        MOCK_METHOD3(write_record, bool(record_type, const std::string& key, const std::string&));
-        MOCK_METHOD3(record_change, bool(record_type, const std::string&, uint64_t));
+        MOCK_METHOD4(write_record, bool(record_type, const std::string&, uint64_t, const std::string&));
         MOCK_METHOD1(set_wanted_version, uint64_t(uint64_t));
 };
 

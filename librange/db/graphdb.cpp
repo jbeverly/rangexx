@@ -172,6 +172,8 @@ GraphDB::set_wanted_version(uint64_t ver)
 }
 
 //##############################################################################
+// FIXME: this should have a transaction handler, to create one single changelist
+//             entry
 //##############################################################################
 GraphDB::node_t
 GraphDB::remove(node_t node)
@@ -200,12 +202,14 @@ GraphDB::remove(node_t node)
 //##############################################################################
 // MOCKED
 //##############################################################################
+/*
 bool
 GraphDB::record_change(record_type object_type, const std::string &object_key, uint64_t object_version)
 {
     std::string foo = std::to_string(static_cast<long long>(object_type)) + object_key + std::to_string(object_version);
     return true;
 }
+*/
 
 
 
