@@ -4,14 +4,13 @@ export LD_LIBRARY_PATH:=@GMOCK_LD_LIBRARY_PATH@:@GTEST_LD_LIBRARY_PATH@:@PROTOBU
 AM_CPPFLAGS = @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ -I$(top_builddir)/librange
 AM_LDFLAGS = @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_LDFLAGS@ @DB_CXX_LDFLAGS@ @DB_STL_LDFLAGS@ 
 LDADD = @GTEST_LIBS@ @GMOCK_LIBS@ @DB_CXX_LIBS@ @DB_STL_LIBS@ $(top_builddir)/librange/librange.la
+LIBADD = $(top_builddir)/librange/librange.la
 
 AM_DEFAULT_SOURCE_EXT = .cpp
 
 check_PROGRAMS = test_graph_iterator test_pbuff_node test_db
 
-TESTS = test_graph_iterator \
-		test_pbuff_node \
-		test_db
+TESTS = $(check_PROGRAMS)
 
 .PHONY: valgrind
 

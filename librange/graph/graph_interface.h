@@ -108,6 +108,7 @@ class GraphInterface
         enum class record_type : uint8_t {
             NODE,                                                               ///< something like graph::NodeType
             GRAPH_META,                                                         ///< Metadata about the graph instance
+            NODE_META,                                                          ///< Metadata about a node (do not inculcate record)
             RESERVED=254,                                                       ///< 2-254 reserved for future
             UNKNOWN=255,                                                        ///< Unknown type
         };

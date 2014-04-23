@@ -31,12 +31,34 @@ namespace db {
 //##############################################################################
 // RAII base-class, just wrap whatever you need in your constructor/destructor
 //##############################################################################
+class GraphTransaction {
+    public:
+        GraphTransaction(const GraphTransaction& other) = delete;
+        GraphTransaction(GraphTransaction& other) = delete;
+        GraphTransaction(GraphTransaction&& other) = default;
+
+        virtual ~GraphTransaction() = default;
+
+        virtual void abort() = 0;
+        virtual void commit() = 0;
+        virtual void flush() = 0;
+    protected:
+        GraphTransaction() = default;
+};
+
+//##############################################################################
+// RAII base-class, just wrap whatever you need in your constructor/destructor
+//##############################################################################
 class GraphInstanceLock {
     public:
         GraphInstanceLock(const GraphInstanceLock& other) = delete;
+        GraphInstanceLock(GraphInstanceLock& other) = delete;
         GraphInstanceLock(GraphInstanceLock&& other) = default;
+
         virtual ~GraphInstanceLock() = default;
+
         virtual void unlock() = 0;
+        virtual bool readonly() = 0;
     protected:
         GraphInstanceLock() = default;
 };
@@ -48,7 +70,8 @@ class GraphInstanceInterface {
     //##########################################################################
     //##########################################################################
     public:
-        typedef std::unique_ptr<GraphInstanceLock> lock_t;                      ///< alias for unique_ptr to lock interface type
+        typedef boost::shared_ptr<GraphTransaction> txn_t;
+        typedef boost::shared_ptr<GraphInstanceLock> lock_t;                    ///< alias for unique_ptr to lock interface type
         typedef graph::GraphCursorInterface cursor_iface_t;                     ///< alias for shared_ptr to cursor interfacetype
         typedef boost::shared_ptr<cursor_iface_t> cursor_t;                     ///< alias for shared_ptr to cursor interfacetype
         typedef graph::GraphInterface::record_type record_type;
@@ -84,16 +107,28 @@ class GraphInstanceInterface {
         virtual std::string get_record(record_type type, const std::string& key) const = 0;
         
         //######################################################################
+        /// Obtain a read-lock.
+        ///
         /// @param[in] type type of record you're locking for read
         /// @param[in] key key of the record you're locking for read
         /// @return RAII lock object
         virtual lock_t read_lock(record_type type, const std::string& key) const = 0;
 
         //######################################################################
+        /// Obtain a write-lock. 
+        ///
         /// @param[in] type type of record you're locking for write
         /// @param[in] key key of the record you're locking for write
         /// @return RAII lock object
         virtual lock_t write_lock(record_type type, const std::string& key) = 0;
+
+        //######################################################################
+        /// Start a write transaction. Read transactions are hidden from users
+        /// of this class, but write transactions (grouping a bunch of changes
+        /// together as one single graph-version chagne) are still necessary
+        ///
+        /// @return a transaction object
+        virtual txn_t start_txn() = 0;
 
         //######################################################################
         /// @param[in] type type of to write

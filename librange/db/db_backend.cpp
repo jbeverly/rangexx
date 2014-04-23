@@ -31,7 +31,8 @@ namespace db {
 //##############################################################################
 BerkeleyDB::BerkeleyDB(const ConfigIface& config) 
     : conf_(config), env_(nullptr), graph_info(nullptr),
-        graph_info_map(nullptr), graph_db_instances(), graph_map_instances()
+        graph_info_map(nullptr), graph_db_instances(), graph_map_instances(),
+        weak_table(lock_table)
 { 
     try { 
         dbstl::dbstl_startup();

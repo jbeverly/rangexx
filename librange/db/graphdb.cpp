@@ -142,6 +142,8 @@ GraphDB::node_t
 GraphDB::create(const std::string& name)
 {
     auto lock = instance_->write_lock(GraphInstanceInterface::record_type::NODE, name);
+    auto txn = instance_->start_txn();
+
     if (lock) {
         node_t node = boost::make_shared<ProtobufNode>(name, instance_);
         for (uint64_t node_version : boost::adaptors::reverse(node->graph_versions())) {
@@ -151,10 +153,10 @@ GraphDB::create(const std::string& name)
         }
         if (node->version() == 0) {
             node->commit();
-            std::for_each(std::begin(*this), std::end(*this), 
-                    [this](graph::NodeIface& v) { v.add_graph_version(this->version()); });
-            return node;
         }
+        std::for_each(std::begin(*this), std::end(*this), 
+                [this, txn](graph::NodeIface& v) { v.add_graph_version(this->version() + 1); txn->flush(); });
+        return node;
     }
     return nullptr;
 }
@@ -186,6 +188,8 @@ GraphDB::remove(node_t node)
         return nullptr;
     }
 
+    auto txn = instance_->start_txn();
+
     for (auto affected : node->reverse_edges()) {
         affected->remove_forward_edge(node, false);
     }
@@ -194,7 +198,7 @@ GraphDB::remove(node_t node)
         affected->remove_reverse_edge(node, false);
     }
     std::for_each(std::begin(*this), std::end(*this),
-            [this](graph::NodeIface& v) { v.add_graph_version(this->version()); });
+            [this, txn](graph::NodeIface& v) { v.add_graph_version(this->version() + 1); txn->flush(); });
 
     return node;
 }

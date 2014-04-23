@@ -79,8 +79,6 @@ build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = test_graph_iterator$(EXEEXT) test_pbuff_node$(EXEEXT) \
 	test_db$(EXEEXT)
-TESTS = test_graph_iterator$(EXEEXT) test_pbuff_node$(EXEEXT) \
-	test_db$(EXEEXT)
 subdir = librange/tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp $(top_srcdir)/test-driver
@@ -548,7 +546,9 @@ AUTOMAKE_OPTIONS = color-tests
 AM_CPPFLAGS = @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ -I$(top_builddir)/librange
 AM_LDFLAGS = @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_LDFLAGS@ @DB_CXX_LDFLAGS@ @DB_STL_LDFLAGS@ 
 LDADD = @GTEST_LIBS@ @GMOCK_LIBS@ @DB_CXX_LIBS@ @DB_STL_LIBS@ $(top_builddir)/librange/librange.la
+LIBADD = $(top_builddir)/librange/librange.la
 AM_DEFAULT_SOURCE_EXT = .cpp
+TESTS = $(check_PROGRAMS)
 all: all-am
 
 .SUFFIXES:

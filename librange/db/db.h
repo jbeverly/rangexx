@@ -15,7 +15,11 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <unordered_map>
+#include <thread>
+
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/weak_ptr.hpp>
 
 #include <db_cxx.h>
 #include <dbstl_common.h>
@@ -30,7 +34,11 @@ namespace db {
 //##############################################################################
 class BerkeleyDBGraph;
 class BerkeleyDBLock;
+class BerkeleyDBTxn;
 class BerkeleyDBCursor;
+
+template <class PtrType, class BackendType>
+class BerkeleyDBWeakDeleter;
 
 //##############################################################################
 //##############################################################################
@@ -53,6 +61,7 @@ class BerkeleyDB : public BackendInterface {
         static void s_shutdown();
 
     private:
+        friend BerkeleyDBWeakDeleter<BerkeleyDBLock, BerkeleyDB>;
         friend BerkeleyDBGraph;
         friend BerkeleyDBLock;
         friend BerkeleyDBCursor;
@@ -61,6 +70,9 @@ class BerkeleyDB : public BackendInterface {
         DbEnv * env_;
         
         Db * graph_info; 
+
+        std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBLock>> lock_table; 
+        std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBLock>>& weak_table; 
         std::unique_ptr<map_t> graph_info_map;
         std::unordered_map<std::string, Db*> graph_db_instances;
         std::unordered_map<std::string, map_t> graph_map_instances;
@@ -81,11 +93,15 @@ class BerkeleyDBGraph
         public boost::enable_shared_from_this<BerkeleyDBGraph>
 {
     public:
+        typedef std::tuple<record_type, std::string, uint64_t, std::string> change_t;
+        typedef std::vector<change_t> changelist_t;
+
+        //######################################################################
         BerkeleyDBGraph() = delete;
         
         //######################################################################
         BerkeleyDBGraph(const std::string& name, BerkeleyDB& backend)
-            : name_(name), backend_(backend), wanted_version_(-1) { }
+            : name_(name), backend_(backend), wanted_version_(-1), weak_table(transaction_table) { }
 
         //######################################################################
         virtual ~BerkeleyDBGraph() override;
@@ -109,6 +125,10 @@ class BerkeleyDBGraph
         //######################################################################
         virtual lock_t
             write_lock(record_type type, const std::string& key) override;
+
+        //######################################################################
+        virtual txn_t start_txn() override;
+
         //######################################################################
         virtual bool
             write_record(record_type type, const std::string& key,
@@ -119,14 +139,20 @@ class BerkeleyDBGraph
     private: 
         //######################################################################
         friend BerkeleyDBCursor;
+        friend BerkeleyDBTxn;
+        friend BerkeleyDBWeakDeleter<BerkeleyDBTxn, BerkeleyDBGraph>;
         std::string name_;
         BerkeleyDB& backend_;
         uint64_t wanted_version_;
 
+        std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBTxn>> transaction_table; 
+        std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBTxn>>& weak_table; 
+
         //######################################################################
         DbEnv * env() { return backend_.env_; }
-        bool inculcate_change(record_type type, const std::string& object_name,
-                uint64_t object_version);
+
+        void inculcate_change(std::thread::id id);
+        changelist_t commit_txn(std::thread::id);
 
         //######################################################################
         static std::string key_prefix(record_type type); 
@@ -174,8 +200,59 @@ class BerkeleyDBCursor : public graph::GraphCursorInterface {
         static const std::string node_prefix;
 };
 
+//##############################################################################
+//##############################################################################
+class BerkeleyDBTxn : public range::db::GraphTransaction
+{
+    public:
+        typedef BerkeleyDBGraph::change_t change_t;
+        typedef BerkeleyDBGraph::changelist_t changelist_t;
+        
+        //######################################################################
+        BerkeleyDBTxn() = delete;
 
+        BerkeleyDBTxn(std::thread::id id, BerkeleyDBGraph& instance);
+        virtual ~BerkeleyDBTxn() override;
 
+        virtual void abort(void) override;
+        virtual void commit(void) override;
+        virtual void flush(void) override;
+
+        changelist_t changelist() const;
+
+    private:
+        friend BerkeleyDBGraph;
+
+        void add_change(change_t change);
+
+        changelist_t changes_; 
+        std::thread::id id_;
+        BerkeleyDBGraph& instance_;
+};
+
+//##############################################################################
+//##############################################################################
+template <class PtrType, class BackendType>
+class BerkeleyDBWeakDeleter {
+    private:
+        friend BerkeleyDB;
+        friend BerkeleyDBGraph;
+        friend BerkeleyDBTxn;
+
+        BackendType& backend_;
+        BerkeleyDBWeakDeleter(BackendType& backend) : backend_(backend) { }
+
+    public:
+        void operator()(PtrType * rptr)
+        {
+            std::thread::id id = std::this_thread::get_id();
+            auto it = backend_.weak_table.find(id);
+            if (it != backend_.weak_table.end()) {
+                backend_.weak_table.erase(it);
+            }
+            delete rptr;
+        }
+};
 
 //##############################################################################
 //##############################################################################
@@ -199,6 +276,7 @@ class BerkeleyDBLock : public GraphInstanceLock {
         //######################################################################
         virtual ~BerkeleyDBLock() override;
         virtual void unlock() override;
+        virtual bool readonly() override;
 
         //######################################################################
         DbTxn * txn() { return txn_; }
@@ -208,6 +286,10 @@ class BerkeleyDBLock : public GraphInstanceLock {
         BerkeleyDB& backend_;
         DbTxn * txn_;
         BerkeleyDB::map_t::iterator iter_;
+        bool readonly_;
+
+        //######################################################################
+        //void cleanup(void);
 };
 
 

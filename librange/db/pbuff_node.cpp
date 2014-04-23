@@ -27,17 +27,18 @@ namespace range {
 namespace db {
 
 typedef boost::shared_ptr<ProtobufNode> pbuffnode_t;
+typedef GraphInstanceInterface::record_type rectype_t;
 
 //##############################################################################
 //##############################################################################
 static inline bool
-write_record(const std::string& name, NodeInfo& info, ProtobufNode::instance_t instance)
+write_record(const std::string& name, NodeInfo& info,
+        ProtobufNode::instance_t instance, rectype_t rectype = rectype_t::NODE)
 {
     info.set_crc32(0);
     uint32_t crc = range::util::crc32(info.SerializeAsString());
     info.set_crc32(crc);
 
-    auto rectype = GraphInstanceInterface::record_type::NODE;
     if(!instance->write_record(rectype, name, info.list_version(), info.SerializeAsString())) {
         return false;
     }
@@ -158,21 +159,28 @@ inline void
 ProtobufNode::init_info() const
 {
     if (instance_) {
-        if (!info_initialized) {
-            std::string buffer;
-
+        if(!info_initialized) { 
+            NodeInfo tmp;
             {
                 auto lock = instance_->read_lock(rectype, name_);
-                buffer = instance_->get_record(rectype, name_);
+                std::string buffer { instance_->get_record(rectype, name_) };
+
+                if (buffer.length() > 0) {
+                    tmp.ParseFromString(buffer);
+                }
             }
 
-            if (buffer.length() > 0) {
-                info.ParseFromString(buffer);
+            if (tmp.IsInitialized())                                                // newer node in db
+            {
+                info = tmp;
                 type_ = node_type(info.node_type());
-            } else {                                                            ///< New node
-                init_default_nodeinfo(info, instance_->version());
+                info_initialized = info.IsInitialized();
             }
-            info_initialized = true;
+            else                                                                    // new node
+            {                                            
+                init_default_nodeinfo(info, instance_->version());
+                info_initialized = info.IsInitialized();
+            }
         }
     }
     else {
@@ -338,6 +346,7 @@ ProtobufNode::add_forward_edge(node_t other, bool update_other_reverse_edge)
 {
     {
         auto lock = info_lock(true);
+        auto txn = instance_->start_txn();
 
         for (int edge_idx = 0; edge_idx < info.forward().edges_size(); ++edge_idx) {
             if (other->name() == info.forward().edges(edge_idx).id()) {
@@ -377,6 +386,7 @@ ProtobufNode::add_reverse_edge(node_t other, bool update_other_forward_edge)
 {
     {
         auto lock = info_lock(true);
+        auto txn = instance_->start_txn();
 
         for (int edge_idx = 0; edge_idx < info.reverse().edges_size(); ++edge_idx) {
             if (other->name() == info.reverse().edges(edge_idx).id()) {
@@ -417,6 +427,7 @@ ProtobufNode::remove_forward_edge(node_t other, bool update_other_reverse_edge)
 {
     {
         auto lock = info_lock(true);
+        auto txn = instance_->start_txn();
 
         int edge_idx = 0;
         for (edge_idx = 0; edge_idx < info.forward().edges_size(); ++edge_idx) {
@@ -471,6 +482,7 @@ ProtobufNode::remove_reverse_edge(node_t other, bool update_other_forward_edge)
 {
     {
         auto lock = info_lock(true);
+        auto txn = instance_->start_txn();
 
         int edge_idx = 0;
         for (edge_idx = 0; edge_idx < info.reverse().edges_size(); ++edge_idx) {
@@ -672,7 +684,7 @@ ProtobufNode::add_graph_version(uint64_t version)
     }
 
     info.add_graph_versions(version);
-    write_record(name_, info, instance_);
+    write_record(name_, info, instance_, rectype_t::NODE_META);
     return;
 }
 
@@ -681,6 +693,7 @@ ProtobufNode::add_graph_version(uint64_t version)
 std::vector<uint64_t>
 ProtobufNode::graph_versions() const
 {
+    init_info();
     std::vector<uint64_t> vers;
     for (int i = 0; i < info.graph_versions_size(); ++i) {
         vers.push_back(info.graph_versions(i));

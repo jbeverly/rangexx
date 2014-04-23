@@ -14,31 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#ifndef _RANGE_TESTS_MOCK_INSTANCE_LOCK_H
-#define _RANGE_TESTS_MOCK_INSTANCE_LOCK_H
-
+#ifndef _RANGE_TEST_MOCK_TRANSACTION_H
+#define _RANGE_TEST_MOCK_TRANSACTION_H
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include "../db/db_interface.h"
 
-//##############################################################################
-//##############################################################################
-class MockInstanceLock : public range::db::GraphInstanceLock {
+class MockTransaction : public ::range::db::GraphTransaction {
     public:
-        MOCK_METHOD0(unlock, void(void));
-        MOCK_METHOD0(readonly, bool(void));
-
-        virtual ~MockInstanceLock() noexcept override {
-            try {
-                unlock();
-            }
-            catch(...) {
-                return;
-            }
-        }
+        MockTransaction() = default;
+        MOCK_METHOD0(abort, void(void));
+        MOCK_METHOD0(commit, void(void));
+        MOCK_METHOD0(flush, void(void));
 };
 
 #endif

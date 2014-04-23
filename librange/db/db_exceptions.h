@@ -39,6 +39,11 @@ struct DatabaseLockingException : public Exception {
         explicit DatabaseLockingException(const std::string& what) : Exception(what) { }
 };
 
+struct UnknownTransactionException : public Exception {
+    explicit UnknownTransactionException(const std::string& what) : Exception(what) { }
+};
+
+
 } // namespace db
 } // namespace range
 

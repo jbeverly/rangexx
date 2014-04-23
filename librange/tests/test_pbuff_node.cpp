@@ -30,10 +30,10 @@
 #include "../db/db_interface.h"
 #include "../util/crc32.h"
 
+#include "mock_transaction.h"
 #include "mock_instance_lock.h"
 #include "mock_cursor.h"
 #include "mock_instance.h"
-#include "mock_graph.h"
 
 using namespace ::testing;
 
@@ -48,14 +48,16 @@ class TestProtobufNode : public ::testing::Test {
         {
             inst = boost::make_shared<MockInstance>();
             cursor = boost::make_shared<MockCursor>();
-            //graph = boost::make_shared<MockGraph>();
+
             EXPECT_CALL(*inst, version())
                 .Times(AtLeast(0))
                 .WillRepeatedly(Return(0));
+
+            EXPECT_CALL(*inst, start_txn())
+                .Times(AtLeast(0))
+                .WillRepeatedly(Return(boost::make_shared<MockTransaction>()));
         }
 
-
-        //boost::shared_ptr<MockGraph> graph;
         boost::shared_ptr<MockInstance> inst;
         boost::shared_ptr<MockCursor> cursor;
         static const auto rectype = range::db::GraphInstanceInterface::record_type::NODE;
@@ -65,14 +67,12 @@ class TestProtobufNode : public ::testing::Test {
 //##############################################################################
 TEST_F(TestProtobufNode, TestNodeCreation) {
     EXPECT_CALL(*inst, get_record(rectype, "test1"))
-        .Times(2)
-        .WillOnce(Return(""))
-        .WillOnce(Return(""));
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(""));
 
     EXPECT_CALL(*inst, get_record(rectype, "test2"))
-        .Times(2)
-        .WillOnce(Return(""))
-        .WillOnce(Return(""));
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(""));
 
     range::db::NodeInfo test1;
     test1.set_list_version(1);
@@ -163,12 +163,12 @@ TEST_F(TestProtobufNode, TestNodeAdjListInitialization) {
 
 
     EXPECT_CALL(*inst, get_record(rectype, "test1"))
-        .Times(1)
-        .WillOnce(Return(test1.SerializeAsString()));
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(test1.SerializeAsString()));
 
     EXPECT_CALL(*inst, get_record(rectype, "test2"))
-        .Times(1)
-        .WillOnce(Return(test2.SerializeAsString()));
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(test2.SerializeAsString()));
 
     range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
     range::graph::NodeIface::node_t node2 = boost::make_shared<range::db::ProtobufNode>("test2", inst);
@@ -219,14 +219,12 @@ TEST_F(TestProtobufNode, TestNodeTypeSetter) {
    
 
     EXPECT_CALL(*inst, get_record(rectype, "test1"))
-        .Times(2)
-        .WillOnce(Return(test1.SerializeAsString()))
-        .WillOnce(Return(test1.SerializeAsString()));
+        .Times(AtLeast(2))
+        .WillRepeatedly(Return(test1.SerializeAsString()));
 
     EXPECT_CALL(*inst, get_record(rectype, "test2"))
-        .Times(2)
-        .WillOnce(Return(test2.SerializeAsString()))
-        .WillOnce(Return(test2.SerializeAsString()));
+        .Times(AtLeast(2))
+        .WillRepeatedly(Return(test2.SerializeAsString()));
 
     test1.set_list_version(2);
     test1.mutable_forward()->mutable_edges(0)->add_versions(2);

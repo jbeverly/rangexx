@@ -25,10 +25,9 @@ namespace db {
 //##############################################################################
 BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, BerkeleyDB::map_t& map,
                                 bool read_write)
-    : backend_(backend), txn_(0), iter_(0)
+    : backend_(backend), txn_(0), iter_(0), readonly_(!read_write)
 {
     auto rmw = dbstl::ReadModifyWriteOption::no_read_modify_write();
-    bool readonly = !read_write;
     int flags = DB_TXN_SYNC | DB_TXN_SNAPSHOT;
 
     if (read_write) {
@@ -48,7 +47,7 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, BerkeleyDB::map_t& map,
     try {
         iter_ = map.begin(
                     rmw,
-                    readonly,
+                    readonly_,
                     dbstl::BulkRetrievalOption::no_bulk_retrieval(),
                     false
                 );
@@ -65,11 +64,32 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, BerkeleyDB::map_t& map,
 
 //##############################################################################
 //##############################################################################
+/* void
+BerkeleyDBLock::cleanup()
+{
+    std::thread::id id = std::this_thread::get_id();
+    auto it = backend_.weak_table.find(id);
+    if (it != backend_.weak_table.end()) {
+        backend_.weak_table.erase(it);
+    }
+} */
+
+//##############################################################################
+//##############################################################################
 void
 BerkeleyDBLock::unlock()
 {
     iter_.close_cursor();
     dbstl::commit_txn(backend_.env_, txn_, 0);
+    //cleanup();
+}
+
+//##############################################################################
+//##############################################################################
+bool
+BerkeleyDBLock::readonly()
+{
+    return readonly_;
 }
 
 //##############################################################################
@@ -77,6 +97,9 @@ BerkeleyDBLock::unlock()
 BerkeleyDBLock::~BerkeleyDBLock()
 {
     if(std::uncaught_exception()) {                                             // An exception is active, abort txn
+        /* try {
+            cleanup();
+        } catch(...) { } */
         try {
             iter_.close_cursor();
             dbstl::abort_txn(backend_.env_, txn_);
