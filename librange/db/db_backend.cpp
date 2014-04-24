@@ -15,6 +15,8 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
+
 #include <boost/make_shared.hpp>
 
 #include <db_cxx.h>
@@ -31,8 +33,8 @@ namespace db {
 //##############################################################################
 BerkeleyDB::BerkeleyDB(const ConfigIface& config) 
     : conf_(config), env_(nullptr), graph_info(nullptr),
-        graph_info_map(nullptr), graph_db_instances(), graph_map_instances(),
-        weak_table(lock_table)
+        weak_table(lock_table), graph_info_map(nullptr),  
+        graph_db_instances(), graph_map_instances()
 { 
     try { 
         dbstl::dbstl_startup();
@@ -48,6 +50,14 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
             throw DatabaseEnvironmentException(
                     std::string("Unable to open environment"));
         }
+
+        const char * home;
+        env_->get_home(&home);
+
+        if(strncmp(home, conf_.db_home().c_str(), conf_.db_home().size()) != 0) {
+            throw DatabaseEnvironmentException(
+                    std::string("Unable to open environment"));
+        }
     } catch(dbstl::DbstlException& e) {
         try { 
             dbstl::close_db_env(env_);
@@ -56,8 +66,11 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
                 std::string("Unable to open environment") + e.what());
     }
     try {
-        graph_info = dbstl::open_db(env_, "graph_info", DB_HASH, DB_CREATE,
-                DB_CHKSUM, 0664, NULL, 0, "graph_info");
+        auto txn = dbstl::begin_txn(DB_TXN_SYNC, env_);
+        graph_info = dbstl::open_db(env_, "graph_info", DB_HASH,
+                DB_CREATE | DB_MULTIVERSION, DB_CHKSUM, 0664, txn, 0,
+                "graph_info");
+        dbstl::commit_txn(env_, txn);
         init_graph_info();
     } catch(dbstl::DbstlException& e) {
         try { 
@@ -121,11 +134,13 @@ BerkeleyDB::init_graph_info()
 
     for(auto name : listGraphInstances()) {
         try {
-            graph_db_instances[name] = dbstl::open_db(env_, "graph_info",
-                    DB_HASH, DB_MULTIVERSION, DB_CHKSUM, 0664, NULL, 0,
-                    "graph_info");
+            auto txn = dbstl::begin_txn(DB_TXN_SYNC, env_);
+            graph_db_instances[name] = dbstl::open_db(env_, name.c_str(), DB_HASH,
+                    DB_CREATE | DB_MULTIVERSION, DB_CHKSUM, 0664, txn, 0,
+                    name.c_str());
+            dbstl::commit_txn(env_, txn);
 
-            graph_map_instances[name] = map_t(graph_db_instances[name], env_);
+            graph_map_instances.insert(std::pair<std::string, map_t>(name, map_t(graph_db_instances[name], env_)));
         } catch(dbstl::DbstlException& e) {
             throw InstanceUnitializedException(
                     "Unable to open instance: " + name + ": " + e.what());
@@ -163,11 +178,11 @@ BerkeleyDB::add_graph_instance(const std::string& name) {
     BerkeleyDBLock lock { *this, *graph_info_map, true };
 
     try {    
-        graph_db_instances[name] = dbstl::open_db(env_, "graph_info", DB_HASH,
+        graph_db_instances[name] = dbstl::open_db(env_, name.c_str(), DB_HASH,
                 DB_CREATE | DB_MULTIVERSION, DB_CHKSUM, 0664, lock.txn(), 0,
-                "graph_info");
+                name.c_str());
 
-        graph_map_instances[name] = map_t(graph_db_instances[name], env_);
+        graph_map_instances.insert(std::pair<std::string, map_t>(name, map_t(graph_db_instances[name], env_)));
     } catch(dbstl::DbstlException& e) {
         throw InstanceUnitializedException(
                 "Unable to create instance: " + name + ": " + e.what());

@@ -54,14 +54,94 @@ class TestDB : public ::testing::Test {
         static std::string path;
 };
 
-std::string TestDB::path = "";
-   
 //##############################################################################
+//##############################################################################
+class TestGraphDB : public ::testing::Test {
+    public:
+        static void SetUpTestCase() {
+            char p[] = "/tmp/db_test_env.XXXXXXXXXX"; 
+            if(!mkdtemp(p)) {
+                throw "AAAAGGGGHHHH";
+            }
+            std::string dbpath { p };
+            path = dbpath;
+            MockDbConfig a;
+
+            EXPECT_CALL(a, db_home())
+                .Times(AtLeast(0))
+                .WillRepeatedly(ReturnRef(dbpath));
+
+            EXPECT_CALL(a, cache_size())
+                .Times(AtLeast(0))
+                .WillRepeatedly(Return(67108864));
+
+            range::db::BerkeleyDB db { a };
+            instance = db.createGraphInstance("primary");
+        }
+
+        virtual void SetUp() override {
+            EXPECT_CALL(cfg, db_home())
+                .Times(AtLeast(0))
+                .WillRepeatedly(ReturnRef(path));
+
+            EXPECT_CALL(cfg, cache_size())
+                .Times(AtLeast(0))
+                .WillRepeatedly(Return(67108864));
+        }
+
+        static range::db::BerkeleyDB::graph_instance_t instance;
+        MockDbConfig cfg;
+        static std::string path;
+};
+
+
+
+range::db::BerkeleyDB::graph_instance_t TestGraphDB::instance = nullptr;
+std::string TestDB::path = "";
+std::string TestGraphDB::path = "";
+
+//##############################################################################
+//##############################################################################
+// TestDB
+//##############################################################################
+//##############################################################################
+
+//##############################################################################
+// Don't laugh, this is important!
 //##############################################################################
 TEST_F(TestDB, test_db_ctor) {
     range::db::BerkeleyDB db { cfg };
 }
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDB, test_create_instance) {
+    range::db::BerkeleyDB db { cfg };
+    auto instance = db.createGraphInstance("Foobar");
+
+    EXPECT_EQ(1, db.listGraphInstances().size());
+    ASSERT_THAT(db.listGraphInstances(), ElementsAre("Foobar"));
+}
+
      
+//##############################################################################
+//##############################################################################
+// TestGraphDB
+//##############################################################################
+//##############################################################################
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_get_instance) {
+    range::db::BerkeleyDB db { cfg };
+
+    EXPECT_EQ(1, db.listGraphInstances().size());
+    ASSERT_THAT(db.listGraphInstances(), ElementsAre("primary"));
+
+    auto instance = db.getGraphInstance("primary");
+}
+
+
 //##############################################################################
 //##############################################################################
 int
