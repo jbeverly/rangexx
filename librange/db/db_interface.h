@@ -164,8 +164,6 @@ class BackendInterface {
         virtual ~BackendInterface() = default;
 
         //######################################################################
-//        virtual uint32_t initialize(const std::string& db_home) = 0;
-//        virtual uint32_t close(bool forcesync) = 0;
         virtual graph_instance_t getGraphInstance(const std::string& name) = 0;
         virtual graph_instance_t createGraphInstance(const std::string& name) = 0;
         virtual std::vector<std::string> listGraphInstances() const = 0;

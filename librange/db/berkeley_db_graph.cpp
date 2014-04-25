@@ -21,12 +21,25 @@
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "db.h"
 #include "db_exceptions.h"
 #include "changelist.pb.h"
 
+#include "berkeley_db_graph.h"
+#include "berkeley_db_lock.h"
+#include "berkeley_db_txn.h"
+#include "berkeley_db_cursor.h"
+#include "berkeley_db.h"
+
 namespace range {
 namespace db {
+
+
+//##############################################################################
+//##############################################################################
+BerkeleyDBGraph::BerkeleyDBGraph(const std::string& name, BerkeleyDB& backend)
+    : name_(name), backend_(backend), wanted_version_(-1), weak_table(transaction_table)
+{ 
+}
 
 //##############################################################################
 //##############################################################################
@@ -40,7 +53,9 @@ BerkeleyDBGraph::commit_txn(std::thread::id id)
         throw UnknownTransactionException("Transaction not found in transaction table");
     }
 
-    auto map_instance = backend_.graph_map_instances[name_];
+    auto it = backend_.graph_map_instances.find(name_);
+    assert(it != backend_.graph_map_instances.end());
+    auto map_instance = it->second;
 
     for (auto change : txn->second.lock()->changelist()) {
         record_type type;
@@ -61,7 +76,7 @@ BerkeleyDBGraph::commit_txn(std::thread::id id)
 
         if (data.size() > 0) { 
             std::string lookup = key_name(type, object_name);
-            map_instance[lookup] = data;
+            (*map_instance)[lookup] = data;
         }
     }
 
@@ -73,20 +88,22 @@ BerkeleyDBGraph::commit_txn(std::thread::id id)
 void
 BerkeleyDBGraph::inculcate_change(std::thread::id id)
 {
-    auto map_instance = backend_.graph_map_instances[name_];
-    BerkeleyDBLock lock { backend_, map_instance, true };
+    auto it = backend_.graph_map_instances.find(name_);
+    assert(it != backend_.graph_map_instances.end());
+    auto map_instance = it->second;
+    //auto map_instance = backend_.graph_map_instances[name_];
+    auto lock = write_lock(record_type::GRAPH_META, "changelist");
 
     auto key = key_name(record_type::GRAPH_META, "changelist");
     ChangeList changes;
-    if (map_instance.find(key) != map_instance.end()) {
-        changes.ParseFromString(map_instance[key]);
+    if (map_instance->find(key) != map_instance->end()) {
+        changes.ParseFromString((*map_instance)[key]);
     } 
 
     auto filtered_changes = commit_txn(id);
+    auto c = changes.add_change();
 
     if (filtered_changes.size() > 0) { 
-        auto c = changes.add_change();
-
         for (auto change : commit_txn(id)) {
             record_type type;
             std::string object_name;
@@ -98,17 +115,19 @@ BerkeleyDBGraph::inculcate_change(std::thread::id id)
             item->set_key( key_name(type, object_name) );
             item->set_version( object_version );
         }
-
-        struct timeval cur_time;
-        gettimeofday(&cur_time, NULL);
-
-        auto ts = c->mutable_timestamp();
-        ts->set_seconds(cur_time.tv_sec);
-        ts->set_msec(cur_time.tv_usec / 1000);
-
-        changes.set_current_version( changes.current_version() + 1 );
-        map_instance[key] = changes.SerializeAsString();
     }
+
+    struct timeval cur_time;
+    gettimeofday(&cur_time, NULL);
+
+    auto ts = c->mutable_timestamp();
+    ts->set_seconds(cur_time.tv_sec);
+    ts->set_msec(cur_time.tv_usec / 1000);
+
+    changes.set_current_version( changes.current_version() + 1 );
+
+    (*map_instance)[key] = changes.SerializeAsString();
+    assert((*map_instance)[key] == changes.SerializeAsString());
 }
 
 //##############################################################################
@@ -116,9 +135,11 @@ BerkeleyDBGraph::inculcate_change(std::thread::id id)
 size_t
 BerkeleyDBGraph::n_vertices() const
 {
-    auto map_instance = backend_.graph_map_instances[name_];
-    BerkeleyDBLock lock { backend_, map_instance, false };
-    size_t n = boost::lexical_cast<size_t>(map_instance[key_name(record_type::GRAPH_META, "n_vertices")]);
+    auto it = backend_.graph_map_instances.find(name_);
+    assert(it != backend_.graph_map_instances.end());
+    auto map_instance = it->second;
+    auto lock = read_lock(record_type::GRAPH_META, "n_vertices");
+    size_t n = boost::lexical_cast<size_t>((*map_instance)[key_name(record_type::GRAPH_META, "n_vertices")]);
     return n;
 }
 //##############################################################################
@@ -126,9 +147,11 @@ BerkeleyDBGraph::n_vertices() const
 size_t
 BerkeleyDBGraph::n_edges() const
 {
-    auto map_instance = backend_.graph_map_instances[name_];
-    BerkeleyDBLock lock { backend_, map_instance, false };
-    size_t n = boost::lexical_cast<size_t>(map_instance[key_name(record_type::GRAPH_META, "n_edges")]);
+    auto it = backend_.graph_map_instances.find(name_);
+    assert(it != backend_.graph_map_instances.end());
+    auto map_instance = it->second;
+    auto lock = read_lock(record_type::GRAPH_META, "n_edges");
+    size_t n = boost::lexical_cast<size_t>((*map_instance)[key_name(record_type::GRAPH_META, "n_edges")]);
     return n;
 }
 
@@ -137,9 +160,12 @@ BerkeleyDBGraph::n_edges() const
 size_t
 BerkeleyDBGraph::n_redges() const
 {
-    auto map_instance = backend_.graph_map_instances[name_];
-    BerkeleyDBLock lock { backend_, map_instance, false };
-    size_t n = boost::lexical_cast<size_t>(map_instance[key_name(record_type::GRAPH_META, "n_redges")]);
+    auto it = backend_.graph_map_instances.find(name_);
+    assert(it != backend_.graph_map_instances.end());
+    auto map_instance = it->second;
+
+    auto lock = read_lock(record_type::GRAPH_META, "n_redges");
+    size_t n = boost::lexical_cast<size_t>((*map_instance)[key_name(record_type::GRAPH_META, "n_redges")]);
     return n;
 }
 
@@ -148,13 +174,15 @@ BerkeleyDBGraph::n_redges() const
 uint64_t
 BerkeleyDBGraph::version() const
 {
-    auto map_instance = backend_.graph_map_instances[name_];
-    BerkeleyDBLock lock { backend_, map_instance, false };
+    auto it = backend_.graph_map_instances.find(name_);
+    assert(it != backend_.graph_map_instances.end());
+    auto map_instance = it->second;
+    auto lock = read_lock(record_type::GRAPH_META, "changelist");
     ChangeList changes;
 
     auto key = key_name(record_type::GRAPH_META, "changelist");
-    if (map_instance.find(key) != map_instance.end()) {
-        changes.ParseFromString(map_instance[key]);
+    if (map_instance->find(key) != map_instance->end()) {
+        changes.ParseFromString((*map_instance)[key]);
     } 
 
     return changes.current_version();
@@ -173,9 +201,12 @@ BerkeleyDBGraph::get_cursor() const
 std::string
 BerkeleyDBGraph::get_record(record_type type, const std::string& key) const
 {
-    auto map_instance = backend_.graph_map_instances[name_];
-    BerkeleyDBLock lock { backend_, map_instance, false };
-    return map_instance[key_name(type, key)];
+    auto it = backend_.graph_map_instances.find(name_);
+    assert(it != backend_.graph_map_instances.end());
+    auto map_instance = it->second;
+
+    auto lock = read_lock(type, key);
+    return (*map_instance)[key_name(type, key)];
 }
 
 //##############################################################################
@@ -191,13 +222,16 @@ BerkeleyDBGraph::read_lock(record_type type, const std::string& key) const
 
     std::string lookup = key_name(type, key);                                   // UNUSED, no record-level locking for DB_HASH
 
-    auto map_instance = backend_.graph_map_instances[name_];
+    auto it = backend_.graph_map_instances.find(name_);
+    assert(it != backend_.graph_map_instances.end());
+    auto map_instance = it->second;
 
     boost::shared_ptr<BerkeleyDBLock> lock_ptr { 
-            new BerkeleyDBLock(const_cast<BerkeleyDB&>(backend_), map_instance, true),
-                BerkeleyDBWeakDeleter<BerkeleyDBLock, BerkeleyDB>(backend_) 
+            new BerkeleyDBLock(const_cast<BerkeleyDB&>(backend_), *map_instance, false),
+                BerkeleyDBWeakDeleter<BerkeleyDBGraph, BerkeleyDBLock, BerkeleyDB>(backend_) 
         };
 
+    backend_.lock_table[id] = lock_ptr;
     return lock_ptr;
 }
 
@@ -216,11 +250,13 @@ BerkeleyDBGraph::write_lock(record_type type, const std::string& key)
     }
 
     std::string lookup = key_name(type, key);                                   // UNUSED, no record-level locking for DB_HASH
-    auto map_instance = backend_.graph_map_instances[name_];
+    auto it = backend_.graph_map_instances.find(name_);
+    assert(it != backend_.graph_map_instances.end());
+    auto map_instance = it->second;
 
     boost::shared_ptr<BerkeleyDBLock> lock_ptr { 
-            new BerkeleyDBLock(const_cast<BerkeleyDB&>(backend_), map_instance, true),
-            BerkeleyDBWeakDeleter<BerkeleyDBLock, BerkeleyDB>(backend_) 
+            new BerkeleyDBLock(const_cast<BerkeleyDB&>(backend_), *map_instance, true),
+            BerkeleyDBWeakDeleter<BerkeleyDBGraph, BerkeleyDBLock, BerkeleyDB>(backend_) 
         };
 
     backend_.lock_table[id] = lock_ptr;
@@ -241,10 +277,10 @@ BerkeleyDBGraph::start_txn()
 
     boost::shared_ptr<BerkeleyDBTxn> txn_ptr {
                 new BerkeleyDBTxn(id, *this),
-                BerkeleyDBWeakDeleter<BerkeleyDBTxn, BerkeleyDBGraph>(*this)
+                BerkeleyDBWeakDeleter<BerkeleyDBGraph, BerkeleyDBTxn, BerkeleyDBGraph>(*this)
             };
 
-    transaction_table[id] = txn_ptr;
+    transaction_table[id] = boost::weak_ptr<BerkeleyDBTxn>(txn_ptr);
     return txn_ptr;
 }
 
@@ -260,13 +296,9 @@ BerkeleyDBGraph::write_record(record_type type, const std::string& key,
         txnit->second.lock()->add_change(std::make_tuple(type, key, object_version, data));
     }
     else {
-        auto txn = boost::make_shared<BerkeleyDBTxn>(id, *this);
-        transaction_table[id] = txn;
-        txn->add_change(std::make_tuple(type, key, object_version, data));
-
-        std::string lookup = key_name(type, key);
-        auto map_instance = backend_.graph_map_instances[name_];
-        map_instance[lookup] = data;
+        auto txn = start_txn();
+        boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->add_change(
+                std::make_tuple(type, key, object_version, data));
     }
     return true;
 }
@@ -286,7 +318,7 @@ BerkeleyDBGraph::set_wanted_version(uint64_t version)
 std::string
 BerkeleyDBGraph::key_prefix(record_type type)
 {
-    return std::to_string(static_cast<int>(type)) + '\a' + '\a'; 
+    return "record" + std::to_string(static_cast<int>(type)) + "0000"; // + '\a'; 
 }
 
 //##############################################################################
@@ -296,6 +328,14 @@ BerkeleyDBGraph::key_name(record_type type, const std::string& name)
 {
     std::string lookup { key_prefix(type) + name };
     return lookup;
+}
+
+//##############################################################################
+//##############################################################################
+DbEnv *
+BerkeleyDBGraph::env(void)
+{
+    return backend_.env_; 
 }
 
 

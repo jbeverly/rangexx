@@ -22,9 +22,13 @@
 #include <db_cxx.h>
 #include <dbstl_map.h>
 
-#include "db.h"
 #include "db_exceptions.h"
 #include "graph_list.pb.h"
+
+#include "berkeley_db_graph.h"
+#include "berkeley_db.h"
+#include "berkeley_db_lock.h"
+#include "berkeley_db_txn.h"
 
 namespace range {
 namespace db {
@@ -140,7 +144,8 @@ BerkeleyDB::init_graph_info()
                     name.c_str());
             dbstl::commit_txn(env_, txn);
 
-            graph_map_instances.insert(std::pair<std::string, map_t>(name, map_t(graph_db_instances[name], env_)));
+            graph_map_instances[name] = boost::make_shared<map_t>(graph_db_instances[name], env_);
+            
         } catch(dbstl::DbstlException& e) {
             throw InstanceUnitializedException(
                     "Unable to open instance: " + name + ": " + e.what());
@@ -182,7 +187,8 @@ BerkeleyDB::add_graph_instance(const std::string& name) {
                 DB_CREATE | DB_MULTIVERSION, DB_CHKSUM, 0664, lock.txn(), 0,
                 name.c_str());
 
-        graph_map_instances.insert(std::pair<std::string, map_t>(name, map_t(graph_db_instances[name], env_)));
+        graph_map_instances[name] = boost::make_shared<map_t>(graph_db_instances[name], env_);
+
     } catch(dbstl::DbstlException& e) {
         throw InstanceUnitializedException(
                 "Unable to create instance: " + name + ": " + e.what());
@@ -200,26 +206,24 @@ BerkeleyDB::add_graph_instance(const std::string& name) {
 }
 
 //##############################################################################
-// MOCKED
 //##############################################################################
 BerkeleyDB::graph_instance_t
 BerkeleyDB::createGraphInstance(const std::string& name)
 {
     add_graph_instance(name);
-    return nullptr; //boost::make_shared<GraphInstanceInterface>(nullptr);
+    return getGraphInstance(name);
 }
 
 //##############################################################################
-// MOCKED
 //##############################################################################
 BerkeleyDB::graph_instance_t
 BerkeleyDB::getGraphInstance(const std::string& name)
 {
     auto iter = graph_db_instances.find(name);
     if (iter != graph_db_instances.end()) {
-        //...
+        return boost::make_shared<BerkeleyDBGraph>(name, *this);
     }
-    return nullptr; //boost::make_shared<GraphInstanceInterface>(nullptr);
+    return nullptr;
 }
 
 

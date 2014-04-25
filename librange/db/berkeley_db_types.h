@@ -14,19 +14,32 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGE_TESTS_MOCK_DB_CONFIG_H
-#define _RANGE_TESTS_MOCK_DB_CONFIG_H
+#ifndef _RANGE_DB_BERKELEY_DB_TYPES_H
+#define _RANGE_DB_BERKELEY_DB_TYPES_H
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
+#include <tuple>
+#include <string>
+#include <vector>
 
-#include "../db/config_interface.h"
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/weak_ptr.hpp>
 
-class MockDbConfig : public range::db::ConfigIface {
-    public:
-        MOCK_CONST_METHOD0(db_home, const std::string&(void));
-        MOCK_CONST_METHOD0(cache_size, size_t(void));
-};
+#include <db_cxx.h>
+#include <dbstl_common.h>
+#include <dbstl_map.h>
 
-#endif
+#include "db_interface.h"
 
+namespace range {
+namespace db {
+
+typedef dbstl::db_map<std::string, std::string> map_t;
+typedef GraphInstanceInterface::record_type record_type;
+typedef std::tuple<record_type, std::string, uint64_t, std::string> change_t;
+typedef std::vector<change_t> changelist_t;
+
+} // namespace db
+} // namespace range
+
+
+#endif 

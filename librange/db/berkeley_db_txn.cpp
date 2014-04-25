@@ -17,11 +17,13 @@
 
 #include <sys/time.h>
 #include <thread>
+#include <cassert>
 
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "db.h"
+#include "berkeley_db_txn.h"
+#include "berkeley_db_graph.h"
 
 namespace range {
 namespace db {
@@ -72,12 +74,6 @@ BerkeleyDBTxn::~BerkeleyDBTxn()
             commit();
         } catch(...) { }
     }
-    /* try {
-        auto it = instance_.weak_table.find(id_);
-        if (it != instance_.weak_table.end()) { 
-            instance_.weak_table.erase(it);
-        }
-    } catch(...) { } */
 }
 
 //##############################################################################

@@ -40,8 +40,34 @@ librange_util_la_SOURCES = util/crc32.cpp
 librange_util_la_LIBADD = $(AM_LIBADD)
 
 librange_db_la_includedir = $(includedir)
-nobase_librange_db_la_include_HEADERS = db/changelist.pb.h db/db.h db/nodeinfo.pb.h db/pbuff_node.h db/graphdb.h db/db_interface.h db/db_exceptions.h db/config_interface.h db/graph_list.pb.h
-librange_db_la_SOURCES = db/db_transaction.cpp db/changelist.pb.cpp db/db_cursor.cpp db/db_graph_instance.cpp db/db_lock.cpp db/db_backend.cpp db/graphdb.cpp db/nodeinfo.pb.cpp db/graph_list.pb.cpp db/pbuff_node.cpp $(top_builddir)/range_config.h 
+nobase_librange_db_la_include_HEADERS  = db/graphdb.h \
+										 db/pbuff_node.h \
+										 db/db_interface.h \
+										 db/db_exceptions.h \
+										 db/berkeley_db.h \
+										 db/berkeley_db_graph.h \
+										 db/berkeley_db_cursor.h \
+										 db/berkeley_db_weak_deleter.h \
+										 db/berkeley_db_txn.h \
+										 db/berkeley_db_lock.h \
+										 db/berkeley_db_types.h \
+										 db/config_interface.h \
+										 db/changelist.pb.h \
+										 db/nodeinfo.pb.h \
+										 db/graph_list.pb.h
+
+librange_db_la_SOURCES = db/graphdb.cpp \
+						 db/pbuff_node.cpp \
+						 db/nodeinfo.pb.cpp \
+						 db/berkeley_db_cursor.cpp \
+						 db/berkeley_db_graph.cpp \
+						 db/berkeley_db_lock.cpp \
+						 db/berkeley_db_txn.cpp \
+						 db/berkeley_db.cpp \
+						 db/graph_list.pb.cpp \
+						 db/changelist.pb.cpp \
+						 $(top_builddir)/range_config.h 
+
 librange_db_la_LIBADD = $(AM_LIBADD)
 
 librange_graph_la_includedir = $(includedir)
@@ -56,10 +82,9 @@ librange_core_la_SOURCES =
 librange_core_la_LIBADD = $(AM_LIBADD)
 
 
-
 librange_la_SOURCES = 
 librange_la_LDFLAGS = -version-info $(RANGEXX_LIBRARY_VERSION)
-librange_la_LIBADD = librange_db.la librange_graph.la librange_util.la 
+librange_la_LIBADD = librange_graph.la librange_db.la librange_util.la 
 
 #nobase_librange_la_include_HEADERS = 
 

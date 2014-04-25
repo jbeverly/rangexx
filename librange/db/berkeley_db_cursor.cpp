@@ -18,7 +18,8 @@
 #include <boost/make_shared.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-#include "db.h"
+#include "berkeley_db.h"
+#include "berkeley_db_cursor.h"
 #include "pbuff_node.h"
 
 namespace range {
@@ -33,7 +34,7 @@ BerkeleyDBCursor::get_const_map() const
 {
     const std::string& name = graph_->name_;
     auto& backend = graph_->backend_; 
-    const map_t& const_map = backend.graph_map_instances[name];
+    const map_t& const_map = *backend.graph_map_instances[name];
     return const_map;
 }
 

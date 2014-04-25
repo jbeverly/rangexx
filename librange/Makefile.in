@@ -140,7 +140,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(librange_graph_la_includedir)" \
 	"$(DESTDIR)$(librange_util_la_includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
-librange_la_DEPENDENCIES = librange_db.la librange_graph.la \
+librange_la_DEPENDENCIES = librange_graph.la librange_db.la \
 	librange_util.la
 am_librange_la_OBJECTS =
 librange_la_OBJECTS = $(am_librange_la_OBJECTS)
@@ -158,10 +158,11 @@ am_librange_core_la_OBJECTS =
 librange_core_la_OBJECTS = $(am_librange_core_la_OBJECTS)
 librange_db_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am__dirstamp = $(am__leading_dot)dirstamp
-am_librange_db_la_OBJECTS = db/db_transaction.lo db/changelist.pb.lo \
-	db/db_cursor.lo db/db_graph_instance.lo db/db_lock.lo \
-	db/db_backend.lo db/graphdb.lo db/nodeinfo.pb.lo \
-	db/graph_list.pb.lo db/pbuff_node.lo
+am_librange_db_la_OBJECTS = db/graphdb.lo db/pbuff_node.lo \
+	db/nodeinfo.pb.lo db/berkeley_db_cursor.lo \
+	db/berkeley_db_graph.lo db/berkeley_db_lock.lo \
+	db/berkeley_db_txn.lo db/berkeley_db.lo db/graph_list.pb.lo \
+	db/changelist.pb.lo
 librange_db_la_OBJECTS = $(am_librange_db_la_OBJECTS)
 librange_graph_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_graph_la_OBJECTS = graph/graph_iter.lo
@@ -473,8 +474,34 @@ nobase_librange_util_la_include_HEADERS = util/crc32.h
 librange_util_la_SOURCES = util/crc32.cpp
 librange_util_la_LIBADD = $(AM_LIBADD)
 librange_db_la_includedir = $(includedir)
-nobase_librange_db_la_include_HEADERS = db/changelist.pb.h db/db.h db/nodeinfo.pb.h db/pbuff_node.h db/graphdb.h db/db_interface.h db/db_exceptions.h db/config_interface.h db/graph_list.pb.h
-librange_db_la_SOURCES = db/db_transaction.cpp db/changelist.pb.cpp db/db_cursor.cpp db/db_graph_instance.cpp db/db_lock.cpp db/db_backend.cpp db/graphdb.cpp db/nodeinfo.pb.cpp db/graph_list.pb.cpp db/pbuff_node.cpp $(top_builddir)/range_config.h 
+nobase_librange_db_la_include_HEADERS = db/graphdb.h \
+										 db/pbuff_node.h \
+										 db/db_interface.h \
+										 db/db_exceptions.h \
+										 db/berkeley_db.h \
+										 db/berkeley_db_graph.h \
+										 db/berkeley_db_cursor.h \
+										 db/berkeley_db_weak_deleter.h \
+										 db/berkeley_db_txn.h \
+										 db/berkeley_db_lock.h \
+										 db/berkeley_db_types.h \
+										 db/config_interface.h \
+										 db/changelist.pb.h \
+										 db/nodeinfo.pb.h \
+										 db/graph_list.pb.h
+
+librange_db_la_SOURCES = db/graphdb.cpp \
+						 db/pbuff_node.cpp \
+						 db/nodeinfo.pb.cpp \
+						 db/berkeley_db_cursor.cpp \
+						 db/berkeley_db_graph.cpp \
+						 db/berkeley_db_lock.cpp \
+						 db/berkeley_db_txn.cpp \
+						 db/berkeley_db.cpp \
+						 db/graph_list.pb.cpp \
+						 db/changelist.pb.cpp \
+						 $(top_builddir)/range_config.h 
+
 librange_db_la_LIBADD = $(AM_LIBADD)
 librange_graph_la_includedir = $(includedir)
 nobase_librange_graph_la_include_HEADERS = graph/graph_interface.h graph/node_interface.h
@@ -486,7 +513,7 @@ librange_core_la_SOURCES =
 librange_core_la_LIBADD = $(AM_LIBADD)
 librange_la_SOURCES = 
 librange_la_LDFLAGS = -version-info $(RANGEXX_LIBRARY_VERSION)
-librange_la_LIBADD = librange_db.la librange_graph.la librange_util.la 
+librange_la_LIBADD = librange_graph.la librange_db.la librange_util.la 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -580,17 +607,19 @@ db/$(am__dirstamp):
 db/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) db/$(DEPDIR)
 	@: > db/$(DEPDIR)/$(am__dirstamp)
-db/db_transaction.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
-db/changelist.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
-db/db_cursor.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
-db/db_graph_instance.lo: db/$(am__dirstamp) \
-	db/$(DEPDIR)/$(am__dirstamp)
-db/db_lock.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
-db/db_backend.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
 db/graphdb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
-db/nodeinfo.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
-db/graph_list.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
 db/pbuff_node.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
+db/nodeinfo.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
+db/berkeley_db_cursor.lo: db/$(am__dirstamp) \
+	db/$(DEPDIR)/$(am__dirstamp)
+db/berkeley_db_graph.lo: db/$(am__dirstamp) \
+	db/$(DEPDIR)/$(am__dirstamp)
+db/berkeley_db_lock.lo: db/$(am__dirstamp) \
+	db/$(DEPDIR)/$(am__dirstamp)
+db/berkeley_db_txn.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
+db/berkeley_db.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
+db/graph_list.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
+db/changelist.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
 
 librange_db.la: $(librange_db_la_OBJECTS) $(librange_db_la_DEPENDENCIES) $(EXTRA_librange_db_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_db_la_OBJECTS) $(librange_db_la_LIBADD) $(LIBS)
@@ -628,12 +657,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db_cursor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db_graph.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db_lock.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db_txn.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/changelist.pb.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/db_backend.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/db_cursor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/db_graph_instance.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/db_lock.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/db_transaction.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/graph_list.pb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/graphdb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/nodeinfo.pb.Plo@am__quote@

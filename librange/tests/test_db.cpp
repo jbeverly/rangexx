@@ -15,6 +15,10 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 //#include <cstdlib>
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <thread>
 
 #include <boost/make_shared.hpp>
 
@@ -23,8 +27,14 @@
 #include <google/protobuf/message.h>
 
 #include "mock_db_config.h"
-#include "../db/db.h"
 #include "../db/config_interface.h"
+#include "../db/db_exceptions.h"
+
+#include "../db/berkeley_db.h"
+#include "../db/berkeley_db_graph.h"
+#include "../db/berkeley_db_txn.h"
+#include "../db/berkeley_db_lock.h"
+#include "../db/berkeley_db_cursor.h"
 
 using namespace ::testing;
 
@@ -38,6 +48,19 @@ class TestDB : public ::testing::Test {
                 throw "AAAAGGGGHHHH";
             }
             path = p;
+        }
+
+        static void TearDownTestCase() {
+            DIR* d = opendir(path.c_str());
+
+            struct dirent * dentry;
+
+            while( (dentry = readdir(d)) ) {
+                std::string p { path + '/' + dentry->d_name };
+                unlink(p.c_str());
+            }
+            rmdir(path.c_str());
+            closedir(d);
         }
 
         virtual void SetUp() override {
@@ -58,47 +81,61 @@ class TestDB : public ::testing::Test {
 //##############################################################################
 class TestGraphDB : public ::testing::Test {
     public:
-        static void SetUpTestCase() {
+        void SetUp() override {
             char p[] = "/tmp/db_test_env.XXXXXXXXXX"; 
             if(!mkdtemp(p)) {
                 throw "AAAAGGGGHHHH";
             }
             std::string dbpath { p };
             path = dbpath;
-            MockDbConfig a;
 
-            EXPECT_CALL(a, db_home())
+            EXPECT_CALL(TestGraphDB::cfg, db_home())
                 .Times(AtLeast(0))
                 .WillRepeatedly(ReturnRef(dbpath));
-
-            EXPECT_CALL(a, cache_size())
-                .Times(AtLeast(0))
-                .WillRepeatedly(Return(67108864));
-
-            range::db::BerkeleyDB db { a };
-            instance = db.createGraphInstance("primary");
-        }
-
-        virtual void SetUp() override {
-            EXPECT_CALL(cfg, db_home())
-                .Times(AtLeast(0))
-                .WillRepeatedly(ReturnRef(path));
 
             EXPECT_CALL(cfg, cache_size())
                 .Times(AtLeast(0))
                 .WillRepeatedly(Return(67108864));
+
+            backendp = boost::make_shared<range::db::BerkeleyDB>(cfg);
+            instance = backendp->createGraphInstance("primary");
+            auto inst = boost::dynamic_pointer_cast<range::db::BerkeleyDBGraph>(instance);
+            transaction_table_p = &inst->transaction_table;
+            lock_table_p = &backendp->lock_table;
         }
 
-        static range::db::BerkeleyDB::graph_instance_t instance;
+        virtual void TearDown() override {
+           DIR* d = opendir(path.c_str());
+
+            struct dirent * dentry;
+
+            while( (dentry = readdir(d)) ) {
+                std::string p { path + '/' + dentry->d_name };
+                unlink(p.c_str());
+            }
+            rmdir(path.c_str()); 
+            closedir(d);
+            backendp = nullptr;
+        }
+
+        std::unordered_map<std::thread::id, boost::weak_ptr<range::db::BerkeleyDBLock>> * lock_table_p;
+        std::unordered_map<std::thread::id, boost::weak_ptr<range::db::BerkeleyDBTxn>> * transaction_table_p;
+        
+        range::db::BerkeleyDB::graph_instance_t instance; 
+        boost::shared_ptr<range::db::BerkeleyDB> backendp;
         MockDbConfig cfg;
-        static std::string path;
+        std::string path;
 };
 
 
-
-range::db::BerkeleyDB::graph_instance_t TestGraphDB::instance = nullptr;
 std::string TestDB::path = "";
+/*
+range::db::BerkeleyDB::graph_instance_t TestGraphDB::instance = nullptr;
 std::string TestGraphDB::path = "";
+MockDbConfig TestGraphDB::cfg;
+boost::shared_ptr<range::db::BerkeleyDB> TestGraphDB::backendp = nullptr;
+*/
+
 
 //##############################################################################
 //##############################################################################
@@ -133,14 +170,173 @@ TEST_F(TestDB, test_create_instance) {
 //##############################################################################
 //##############################################################################
 TEST_F(TestGraphDB, test_get_instance) {
-    range::db::BerkeleyDB db { cfg };
-
-    EXPECT_EQ(1, db.listGraphInstances().size());
-    ASSERT_THAT(db.listGraphInstances(), ElementsAre("primary"));
-
-    auto instance = db.getGraphInstance("primary");
+    EXPECT_EQ(1, backendp->listGraphInstances().size());
+    ASSERT_THAT(backendp->listGraphInstances(), ElementsAre("primary"));
 }
 
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_txn_cleanup) {
+    { 
+        auto txn = instance->start_txn();
+        ASSERT_NE(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
+        auto txn2 = instance->start_txn();
+        EXPECT_EQ(txn, txn2);
+        EXPECT_EQ(txn.get(), txn2.get());
+    }
+    ASSERT_EQ(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
+    { 
+        auto txn3 = instance->start_txn();
+        ASSERT_NE(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
+    }
+    ASSERT_EQ(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_read_lock_cleanup) {
+    {
+        auto lock = instance->read_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+        ASSERT_NE(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
+        auto lock2 = instance->read_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+        EXPECT_EQ(lock, lock2);
+        EXPECT_EQ(lock.get(), lock2.get());
+    }
+    ASSERT_EQ(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
+    {
+        auto lock = instance->read_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+        ASSERT_NE(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
+    }
+    ASSERT_EQ(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_write_lock_cleanup) {
+    {
+        auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+        ASSERT_NE(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
+        auto lock2 = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+        EXPECT_EQ(lock, lock2);
+        EXPECT_EQ(lock.get(), lock2.get());
+    }
+    ASSERT_EQ(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
+    {
+        auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+        ASSERT_NE(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
+    }
+    ASSERT_EQ(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
+}
+
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_writelock_before_readlock) {
+    auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+    auto lock2 = instance->read_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+    EXPECT_EQ(lock, lock2);
+    EXPECT_EQ(lock.get(), lock2.get());
+}
+
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_readlock_before_writelock) {
+    auto lock = instance->read_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+    ASSERT_THROW(instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar"), range::db::DatabaseLockingException);
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_db_readwrite) {
+    std::string test_data = "I like Cheese!";
+    auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+
+    EXPECT_EQ(0, instance->version());
+    instance->write_record(range::db::GraphInstanceInterface::record_type::NODE, "foobar", 5, test_data);
+    EXPECT_EQ(1, instance->version());
+
+    auto dataz = instance->get_record(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+    EXPECT_EQ(test_data, dataz);
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_db_txn) {
+    std::vector<std::pair<std::string, std::string>> test_data { 
+        { 
+            std::make_pair("foo1", "I like cheese!"), 
+            std::make_pair("foo2", "to the pain!"),
+            std::make_pair("foo3", "Third thing..."), 
+            std::make_pair("foo4", "Another thing")
+        } 
+    };
+
+    EXPECT_EQ(0, instance->version());
+
+    {
+        auto txn = instance->start_txn();
+
+        for (auto t : test_data) { 
+            auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, t.first);
+            instance->write_record(range::db::GraphInstanceInterface::record_type::NODE, t.first, 5, t.second );
+        }
+    }
+
+    EXPECT_EQ(1, instance->version());
+
+    for (auto t : test_data) { 
+        EXPECT_EQ(t.second, instance->get_record(range::db::GraphInstanceInterface::record_type::NODE, t.first));
+    }
+}
+
+TEST_F(TestGraphDB, test_multiple_db_txn) {
+    std::vector<std::pair<std::string, std::string>> test_data { 
+        { 
+            std::make_pair("foo1", "I like cheese!"), 
+            std::make_pair("foo2", "to the pain!"),
+            std::make_pair("foo3", "Third thing..."), 
+            std::make_pair("foo4", "Another thing")
+        } 
+    };
+
+    EXPECT_EQ(0, instance->version());
+
+    {
+        auto txn = instance->start_txn();
+
+        for (auto t : test_data) { 
+            auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, t.first);
+            instance->write_record(range::db::GraphInstanceInterface::record_type::NODE, t.first, 5, t.second );
+        }
+    }
+
+    EXPECT_EQ(1, instance->version());
+    for (auto t : test_data) { 
+        EXPECT_EQ(t.second, instance->get_record(range::db::GraphInstanceInterface::record_type::NODE, t.first));
+    }
+
+    {
+        auto txn = instance->start_txn();
+
+        for (auto t : test_data) { 
+            auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, t.first);
+            instance->write_record(range::db::GraphInstanceInterface::record_type::NODE, t.first, 5, t.second );
+        }
+    }
+
+
+    EXPECT_EQ(2, instance->version());
+
+    for (auto t : test_data) { 
+        EXPECT_EQ(t.second, instance->get_record(range::db::GraphInstanceInterface::record_type::NODE, t.first));
+    }
+}
+
+
+
+ 
+ 
 
 //##############################################################################
 //##############################################################################

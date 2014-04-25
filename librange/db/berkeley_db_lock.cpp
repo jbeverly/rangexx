@@ -15,20 +15,22 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "db.h"
 #include "db_exceptions.h"
+
+#include "berkeley_db_lock.h"
+#include "berkeley_db.h"
 
 namespace range {
 namespace db {
 
 //##############################################################################
 //##############################################################################
-BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, BerkeleyDB::map_t& map,
+BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
                                 bool read_write)
     : backend_(backend), txn_(0), iter_(0), readonly_(!read_write)
 {
     auto rmw = dbstl::ReadModifyWriteOption::no_read_modify_write();
-    int flags = DB_TXN_SYNC | DB_TXN_SNAPSHOT;
+    int flags = DB_TXN_SYNC; //| DB_TXN_SNAPSHOT;
 
     if (read_write) {
         rmw = dbstl::ReadModifyWriteOption::read_modify_write();
@@ -97,9 +99,6 @@ BerkeleyDBLock::readonly()
 BerkeleyDBLock::~BerkeleyDBLock()
 {
     if(std::uncaught_exception()) {                                             // An exception is active, abort txn
-        /* try {
-            cleanup();
-        } catch(...) { } */
         try {
             iter_.close_cursor();
             dbstl::abort_txn(backend_.env_, txn_);
