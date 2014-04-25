@@ -25,7 +25,13 @@
 namespace range {
 namespace db {
 
+
 const std::string BerkeleyDBCursor::node_prefix = BerkeleyDBGraph::key_prefix(BerkeleyDBGraph::record_type::NODE);
+
+static inline std::string
+unprefix(std::string prefix, std::string name) {
+    return name.substr(prefix.length(), std::string::npos);
+}
 
 //##############################################################################
 //##############################################################################
@@ -44,16 +50,27 @@ BerkeleyDBCursor::node_t
 BerkeleyDBCursor::fetch(const std::string& name) const 
 {
     const map_t& map = get_const_map();
-    map_t::const_iterator found = map.find(name);
-    if (found != map.end()) {
-        iter = found;
-        iter.set_bulk_buffer(4096);
+
+    auto found = map.rbegin(dbstl::BulkRetrievalOption::bulk_retrieval(4096), false);
+    if (found.move_to(node_prefix + name) != 0) {
+        return nullptr;
+    }
+
+    iter = found;
+    riter = found;
+
+    if (found != map.rend()) {
+        iterator_valid = true;
+
         // while this cursor is const, the ProtobufNodes require a mutable graph instance
         // They do their own locking and protection. This iterator is invalidated if you perform any
         // mutations on an iterated node
         boost::shared_ptr<BerkeleyDBGraph> mutable_graph = boost::const_pointer_cast<BerkeleyDBGraph>(graph_);
-        return boost::make_shared<ProtobufNode>(name, mutable_graph);
+        return boost::make_shared<ProtobufNode>(unprefix(node_prefix, name), mutable_graph);
     }
+    iterator_valid = false;
+    iter = map.end();
+    riter = map.rend();
     return nullptr;
 }
 
@@ -63,23 +80,29 @@ BerkeleyDBCursor::node_t
 BerkeleyDBCursor::next() const 
 {
     const map_t& map = get_const_map();
-    if (iter != map.end()) {
+
+    if (iterator_valid && iter != map.end()) {
         do {
             ++iter;
-        } while (! boost::starts_with(iter->first, node_prefix) && iter != map.end() );
-    } else {
+        } while (iter != map.end() && ! boost::starts_with(iter->first, node_prefix) );
+    } else if (!iterator_valid) {
         iter = map.begin(dbstl::BulkRetrievalOption::bulk_retrieval(4096), false);
-        while (! boost::starts_with(iter->first, node_prefix) && iter != map.end() ) {
+        while (iter != map.end() && ! boost::starts_with(iter->first, node_prefix) ) {
             ++iter;
         }
     }
+
+    riter = iter;
+
     if (iter != map.end()) {
         // while this cursor is const, the ProtobufNodes require a mutable graph instance
         // They do their own locking and protection. This iterator is invalidated if you perform any
         // mutations on an iterated node
+        iterator_valid = true;
         boost::shared_ptr<BerkeleyDBGraph> mutable_graph = boost::const_pointer_cast<BerkeleyDBGraph>(graph_);
-        return boost::make_shared<ProtobufNode>(iter->first, mutable_graph);
+        return boost::make_shared<ProtobufNode>(unprefix(node_prefix, iter->first), mutable_graph);
     }
+    iterator_valid = false;
     return nullptr;
 }
 
@@ -89,26 +112,33 @@ BerkeleyDBCursor::node_t
 BerkeleyDBCursor::prev() const 
 {
     const map_t& map = get_const_map();
-    if (iter != map.end() && iter != map.begin()) {
+
+    if (iterator_valid && riter != map.rend()) {
         do {
-            --iter;
-        } while (! boost::starts_with(iter->first, node_prefix) && iter != map.end() );
-    } else {
-        iter = map.end();
-        iter.set_bulk_buffer(4096);
-        do {
-            --iter;
-        } while (! boost::starts_with(iter->first, node_prefix) && iter != map.end() );
+            ++riter;
+        } while (riter != map.rend() && ! boost::starts_with(riter->first, node_prefix));
+    } else if (!iterator_valid) {
+        riter = map.rbegin(dbstl::BulkRetrievalOption::bulk_retrieval(4096), false);
+        while (riter != map.rend() && ! boost::starts_with(riter->first, node_prefix) ) {
+            ++riter;
+        }
     }
-    if (iter != map.end()) {
+
+    iter = riter;
+
+    if (riter != map.rend()) {
         // while this cursor is const, the ProtobufNodes require a mutable graph instance
         // They do their own locking and protection. This iterator is invalidated if you perform any
         // mutations on an iterated node
+        iterator_valid = true;
         boost::shared_ptr<BerkeleyDBGraph> mutable_graph = boost::const_pointer_cast<BerkeleyDBGraph>(graph_);
-        return boost::make_shared<ProtobufNode>(iter->first, mutable_graph);
+        return boost::make_shared<ProtobufNode>(unprefix(node_prefix, riter->first), mutable_graph);
     }
+    iterator_valid = false;
     return nullptr;
 }
+
+
 
 //##############################################################################
 //##############################################################################
@@ -134,8 +164,9 @@ BerkeleyDBCursor::node_t
 BerkeleyDBCursor::first() const 
 {
     const map_t& map = get_const_map();
+
     auto first = map.begin();
-    while (! boost::starts_with(first->first, node_prefix) && first != map.end() ) {
+    while (first != map.end() && !boost::starts_with(first->first, node_prefix) ) {
         ++first;
     }
     if (first != map.end()) {
@@ -143,7 +174,7 @@ BerkeleyDBCursor::first() const
         // They do their own locking and protection. This iterator is invalidated if you perform any
         // mutations on an iterated node
         boost::shared_ptr<BerkeleyDBGraph> mutable_graph = boost::const_pointer_cast<BerkeleyDBGraph>(graph_);
-        return boost::make_shared<ProtobufNode>(first->first, mutable_graph);
+        return boost::make_shared<ProtobufNode>(unprefix(node_prefix, first->first), mutable_graph);
     }
     return nullptr;
 }
@@ -154,17 +185,18 @@ BerkeleyDBCursor::node_t
 BerkeleyDBCursor::last() const 
 {
     const map_t& map = get_const_map();
-    auto last = map.end();
-    do {
-        --last;
-    } while (! boost::starts_with(last->first, node_prefix) && last != map.end() );
 
-    if (last != map.end()) {
+    auto last = map.rbegin();
+    while (last != map.rend() && !boost::starts_with(last->first, node_prefix)) {
+        ++last;
+    }
+
+    if (last != map.rend()) {
         // while this cursor is const, the ProtobufNodes require a mutable graph instance
         // They do their own locking and protection. This iterator is invalidated if you perform any
         // mutations on an iterated node
         boost::shared_ptr<BerkeleyDBGraph> mutable_graph = boost::const_pointer_cast<BerkeleyDBGraph>(graph_);
-        return boost::make_shared<ProtobufNode>(last->first, mutable_graph);
+        return boost::make_shared<ProtobufNode>(unprefix(node_prefix, last->first), mutable_graph);
     }
     return nullptr;
 }

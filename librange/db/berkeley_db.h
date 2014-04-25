@@ -39,6 +39,7 @@
 #include "berkeley_db_weak_deleter.h"
 
 class TestGraphDB; // For test introspection
+class TestDB; // For test introspection
 
 namespace range {
 namespace db {
@@ -77,6 +78,7 @@ class BerkeleyDB : public BackendInterface {
         friend BerkeleyDBLock;
         friend BerkeleyDBCursor;
         friend ::TestGraphDB; // enable test introspection
+        friend ::TestDB; // For test introspection
 
         const ConfigIface& conf_;
         DbEnv * env_;

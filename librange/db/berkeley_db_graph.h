@@ -34,7 +34,9 @@
 #include "berkeley_db_weak_deleter.h"
 #include "berkeley_db_types.h"
 
+//##############################################################################
 class TestGraphDB; // enable test introspection
+//##############################################################################
 
 namespace range {
 namespace db {
@@ -91,8 +93,7 @@ class BerkeleyDBGraph
         virtual txn_t start_txn() override;
 
         //######################################################################
-        virtual bool
-            write_record(record_type type, const std::string& key,
+        virtual bool write_record(record_type type, const std::string& key,
                     uint64_t object_version, const std::string& data) override;
         //######################################################################
         virtual uint64_t set_wanted_version(uint64_t version) override;

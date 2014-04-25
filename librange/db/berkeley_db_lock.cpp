@@ -30,7 +30,7 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
     : backend_(backend), txn_(0), iter_(0), readonly_(!read_write)
 {
     auto rmw = dbstl::ReadModifyWriteOption::no_read_modify_write();
-    int flags = DB_TXN_SYNC; //| DB_TXN_SNAPSHOT;
+    int flags = DB_TXN_SYNC | DB_TXN_SNAPSHOT;
 
     if (read_write) {
         rmw = dbstl::ReadModifyWriteOption::read_modify_write();

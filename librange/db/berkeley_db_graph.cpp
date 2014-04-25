@@ -54,7 +54,9 @@ BerkeleyDBGraph::commit_txn(std::thread::id id)
     }
 
     auto it = backend_.graph_map_instances.find(name_);
-    assert(it != backend_.graph_map_instances.end());
+    if (it == backend_.graph_map_instances.end()) {
+        throw InstanceUnitializedException("Map instance not found");
+    }
     auto map_instance = it->second;
 
     for (auto change : txn->second.lock()->changelist()) {
@@ -89,9 +91,10 @@ void
 BerkeleyDBGraph::inculcate_change(std::thread::id id)
 {
     auto it = backend_.graph_map_instances.find(name_);
-    assert(it != backend_.graph_map_instances.end());
+    if (it == backend_.graph_map_instances.end()) {
+        throw InstanceUnitializedException("Map instance not found");
+    }
     auto map_instance = it->second;
-    //auto map_instance = backend_.graph_map_instances[name_];
     auto lock = write_lock(record_type::GRAPH_META, "changelist");
 
     auto key = key_name(record_type::GRAPH_META, "changelist");
@@ -136,7 +139,9 @@ size_t
 BerkeleyDBGraph::n_vertices() const
 {
     auto it = backend_.graph_map_instances.find(name_);
-    assert(it != backend_.graph_map_instances.end());
+    if (it == backend_.graph_map_instances.end()) {
+        throw InstanceUnitializedException("Map instance not found");
+    }
     auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "n_vertices");
     size_t n = boost::lexical_cast<size_t>((*map_instance)[key_name(record_type::GRAPH_META, "n_vertices")]);
@@ -148,7 +153,9 @@ size_t
 BerkeleyDBGraph::n_edges() const
 {
     auto it = backend_.graph_map_instances.find(name_);
-    assert(it != backend_.graph_map_instances.end());
+    if (it == backend_.graph_map_instances.end()) {
+        throw InstanceUnitializedException("Map instance not found");
+    }
     auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "n_edges");
     size_t n = boost::lexical_cast<size_t>((*map_instance)[key_name(record_type::GRAPH_META, "n_edges")]);
@@ -161,7 +168,9 @@ size_t
 BerkeleyDBGraph::n_redges() const
 {
     auto it = backend_.graph_map_instances.find(name_);
-    assert(it != backend_.graph_map_instances.end());
+    if (it == backend_.graph_map_instances.end()) {
+        throw InstanceUnitializedException("Map instance not found");
+    }
     auto map_instance = it->second;
 
     auto lock = read_lock(record_type::GRAPH_META, "n_redges");
@@ -175,7 +184,9 @@ uint64_t
 BerkeleyDBGraph::version() const
 {
     auto it = backend_.graph_map_instances.find(name_);
-    assert(it != backend_.graph_map_instances.end());
+    if (it == backend_.graph_map_instances.end()) {
+        throw InstanceUnitializedException("Map instance not found");
+    }
     auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "changelist");
     ChangeList changes;
@@ -202,7 +213,9 @@ std::string
 BerkeleyDBGraph::get_record(record_type type, const std::string& key) const
 {
     auto it = backend_.graph_map_instances.find(name_);
-    assert(it != backend_.graph_map_instances.end());
+    if (it == backend_.graph_map_instances.end()) {
+        throw InstanceUnitializedException("Map instance not found");
+    }
     auto map_instance = it->second;
 
     auto lock = read_lock(type, key);
@@ -223,7 +236,9 @@ BerkeleyDBGraph::read_lock(record_type type, const std::string& key) const
     std::string lookup = key_name(type, key);                                   // UNUSED, no record-level locking for DB_HASH
 
     auto it = backend_.graph_map_instances.find(name_);
-    assert(it != backend_.graph_map_instances.end());
+    if (it == backend_.graph_map_instances.end()) {
+        throw InstanceUnitializedException("Map instance not found");
+    }
     auto map_instance = it->second;
 
     boost::shared_ptr<BerkeleyDBLock> lock_ptr { 
@@ -318,7 +333,7 @@ BerkeleyDBGraph::set_wanted_version(uint64_t version)
 std::string
 BerkeleyDBGraph::key_prefix(record_type type)
 {
-    return "record" + std::to_string(static_cast<int>(type)) + "0000"; // + '\a'; 
+    return std::to_string(static_cast<int>(type)) + "0" + '\a';  
 }
 
 //##############################################################################

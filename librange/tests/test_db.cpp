@@ -19,8 +19,12 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <thread>
+#include <vector>
+#include <string>
 
 #include <boost/make_shared.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -37,6 +41,12 @@
 #include "../db/berkeley_db_cursor.h"
 
 using namespace ::testing;
+
+//##############################################################################
+//##############################################################################
+// TestDB
+//##############################################################################
+//##############################################################################
 
 //##############################################################################
 //##############################################################################
@@ -73,9 +83,43 @@ class TestDB : public ::testing::Test {
                 .WillRepeatedly(Return(67108864));
         }
 
+        std::string get_db_home(const range::db::BerkeleyDB& db) {
+            const char * dbhome;
+            db.env_->get_home(&dbhome);
+            return std::string(dbhome);
+        }
+
+
         MockDbConfig cfg;
         static std::string path;
 };
+
+//##############################################################################
+// Don't laugh, this is important!
+//##############################################################################
+TEST_F(TestDB, test_db_ctor) {
+    range::db::BerkeleyDB db { cfg };
+    EXPECT_EQ(path, get_db_home(db));
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDB, test_create_instance) {
+    range::db::BerkeleyDB db { cfg };
+    auto instance = db.createGraphInstance("Foobar");
+
+    EXPECT_EQ(1, db.listGraphInstances().size());
+    ASSERT_THAT(db.listGraphInstances(), ElementsAre("Foobar"));
+}
+
+
+
+
+//##############################################################################
+//##############################################################################
+// TestGraphDB
+//##############################################################################
+//##############################################################################
 
 //##############################################################################
 //##############################################################################
@@ -127,45 +171,7 @@ class TestGraphDB : public ::testing::Test {
         std::string path;
 };
 
-
 std::string TestDB::path = "";
-/*
-range::db::BerkeleyDB::graph_instance_t TestGraphDB::instance = nullptr;
-std::string TestGraphDB::path = "";
-MockDbConfig TestGraphDB::cfg;
-boost::shared_ptr<range::db::BerkeleyDB> TestGraphDB::backendp = nullptr;
-*/
-
-
-//##############################################################################
-//##############################################################################
-// TestDB
-//##############################################################################
-//##############################################################################
-
-//##############################################################################
-// Don't laugh, this is important!
-//##############################################################################
-TEST_F(TestDB, test_db_ctor) {
-    range::db::BerkeleyDB db { cfg };
-}
-
-//##############################################################################
-//##############################################################################
-TEST_F(TestDB, test_create_instance) {
-    range::db::BerkeleyDB db { cfg };
-    auto instance = db.createGraphInstance("Foobar");
-
-    EXPECT_EQ(1, db.listGraphInstances().size());
-    ASSERT_THAT(db.listGraphInstances(), ElementsAre("Foobar"));
-}
-
-     
-//##############################################################################
-//##############################################################################
-// TestGraphDB
-//##############################################################################
-//##############################################################################
 
 //##############################################################################
 //##############################################################################
@@ -290,6 +296,8 @@ TEST_F(TestGraphDB, test_db_txn) {
     }
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestGraphDB, test_multiple_db_txn) {
     std::vector<std::pair<std::string, std::string>> test_data { 
         { 
@@ -333,9 +341,223 @@ TEST_F(TestGraphDB, test_multiple_db_txn) {
     }
 }
 
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_n_vertices) {
+    {
+        auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::GRAPH_META, "n_vertices");
+        instance->write_record(range::db::GraphInstanceInterface::record_type::GRAPH_META, "n_vertices", 0, boost::lexical_cast<std::string>(92) );
+    }
+
+    EXPECT_EQ(92, instance->n_vertices());
+}
 
 
- 
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_n_edges) {
+    {
+        auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::GRAPH_META, "n_edges");
+        instance->write_record(range::db::GraphInstanceInterface::record_type::GRAPH_META, "n_edges", 0, boost::lexical_cast<std::string>(192) );
+    }
+
+    EXPECT_EQ(192, instance->n_edges());
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_n_redges) {
+    {
+        auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::GRAPH_META, "n_redges");
+        instance->write_record(range::db::GraphInstanceInterface::record_type::GRAPH_META, "n_redges", 0, boost::lexical_cast<std::string>(392) );
+    }
+
+    EXPECT_EQ(392, instance->n_redges());
+}
+
+
+
+//##############################################################################
+//##############################################################################
+// TestDBCursor
+//##############################################################################
+//##############################################################################
+
+//##############################################################################
+//##############################################################################
+class TestDBCursor : public TestGraphDB {
+    virtual void SetUp() override {
+        TestGraphDB::SetUp();
+
+        std::vector<std::pair<std::string, std::string>> test_data { 
+            { 
+                std::make_pair("foo0", "0"),
+                std::make_pair("foo1", "0"), 
+                std::make_pair("foo2", "0"),
+                std::make_pair("foo3", "0"), 
+                std::make_pair("foo4", "0"),
+                std::make_pair("foo5", "0"),
+                std::make_pair("foo6", "0"),
+                std::make_pair("foo7", "0"),
+                std::make_pair("foo8", "0"),
+                std::make_pair("foo9", "0"),
+            } 
+        };
+
+        {
+            auto txn = instance->start_txn();
+            for (auto t : test_data) { 
+                auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, t.first);
+                instance->write_record(range::db::GraphInstanceInterface::record_type::NODE, t.first, 5, t.second );
+            }
+        }
+    }
+};
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDBCursor, test_first) {
+    auto c = instance->get_cursor();
+
+    EXPECT_EQ("foo", c->first()->name().substr(0,3));
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDBCursor, test_last) {
+    auto c = instance->get_cursor();
+
+    EXPECT_EQ("foo", c->last()->name().substr(0,3));
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDBCursor, test_next) {
+    auto c = instance->get_cursor();
+    std::map<std::string, bool> found;
+
+    range::db::BerkeleyDBCursor::node_t node;
+
+    while( (node = c->next()) != nullptr ) {
+        found[node->name()] = true;
+    }
+
+    auto it = found.begin();
+    for (auto s : { "foo0", "foo1", "foo2", "foo3", "foo4", "foo5", "foo6", "foo7", "foo8", "foo9" }) {
+        EXPECT_EQ(s, (it++)->first);
+    }
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDBCursor, test_prev) {
+    auto c = instance->get_cursor();
+    std::map<std::string, bool> found;
+
+    range::db::BerkeleyDBCursor::node_t node;
+
+    while( (node = c->prev()) != nullptr ) {
+        found[node->name()] = true;
+    }
+
+    auto it = found.end();
+    std::vector<std::string> l { "foo0", "foo1", "foo2", "foo3", "foo4", "foo5", "foo6", "foo7", "foo8", "foo9" };
+    for (auto& s : boost::adaptors::reverse(l)) {
+        EXPECT_EQ(s, (--it)->first);
+    }
+}
+
+
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDBCursor, test_one_past_last) {
+    auto c = instance->get_cursor();
+    EXPECT_EQ(nullptr, c->next(c->last()));
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDBCursor, test_one_before_first) {
+    auto c = instance->get_cursor();
+    EXPECT_EQ(nullptr, c->prev(c->first()));
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDBCursor, test_one_before_last) {
+    auto c = instance->get_cursor();
+    EXPECT_EQ("foo", c->prev(c->last())->name().substr(0, 3));
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDBCursor, test_one_after_first) {
+    auto c = instance->get_cursor();
+    EXPECT_EQ("foo", c->next(c->first())->name().substr(0, 3));
+}
+
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDBCursor, test_ten_before_last) {
+    auto c = instance->get_cursor();
+    auto n = c->last();
+    size_t i = 1;
+    n = c->prev(n); ++i;
+
+    while (c->prev() != nullptr) {
+        ++i;
+    }
+    EXPECT_EQ(10, i);
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDBCursor, test_chaining_ten_before_last) {
+    std::map<std::string, bool> found;
+    auto c = instance->get_cursor();
+    size_t i = 1;
+    auto n = c->last();
+    found[n->name()] = true;
+
+    while ( (n = c->prev(n)) != nullptr) {
+        found[n->name()] = true;
+        ++i;
+    }
+
+    auto it = found.begin();
+    for (auto s : { "foo0", "foo1", "foo2", "foo3", "foo4", "foo5", "foo6", "foo7", "foo8", "foo9" }) {
+        EXPECT_EQ(s, (it++)->first);
+    }
+
+    EXPECT_EQ(10, i);
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDBCursor, test_ten_after_first) {
+    std::map<std::string, bool> found;
+    auto c = instance->get_cursor();
+    size_t i = 1;
+    auto n = c->first();
+    found[n->name()] = true;
+
+    while ( (n = c->next(n)) != nullptr) {
+        found[n->name()] = true;
+        ++i;
+    }
+
+    auto it = found.begin();
+    for (auto s : { "foo0", "foo1", "foo2", "foo3", "foo4", "foo5", "foo6", "foo7", "foo8", "foo9" }) {
+        EXPECT_EQ(s, (it++)->first);
+    }
+
+    EXPECT_EQ(10, i);
+}
+
+
+
  
 
 //##############################################################################
@@ -347,5 +569,5 @@ main(int argc, char **argv)
     ::testing::InitGoogleTest(&argc, argv);
     int rval = RUN_ALL_TESTS();
     range::db::BerkeleyDB::s_shutdown();
- return rval;
+    return rval;
 }
