@@ -182,11 +182,14 @@ GraphDB::node_t
 GraphDB::remove(node_t node)
 {
     auto vers = node->graph_versions();
-    auto found = std::find_if(vers.rbegin(), vers.rend(),
-            [this](uint64_t v){return v == this->version();});
 
-    if (found == vers.rend()) {
-        return nullptr;
+    for (auto it = vers.rbegin(); it != vers.rend(); ++it) {
+        if (*it == this->version()) {
+            break;
+        }
+        if (*it < this->version()) {
+            return nullptr;
+        }
     }
 
     auto txn = instance_->start_txn();

@@ -146,7 +146,9 @@ get_map_value(uint64_t cmp_version, const NodeInfo_Tags_KeyValue& key)
             if (cmp_version == value.versions(val_idx)) {
                 values.push_back( value.data() );
             }
-            break;
+            if (cmp_version > value.versions(val_idx)) {
+                break;
+            }
         }
     }
     return values;
@@ -230,6 +232,9 @@ ProtobufNode::get_edges(const NodeInfo_Edges& direction) const
                         direction.edges(i).id(), instance_, wanted_version_
                         );
                 found_edges.push_back(n);
+                break;
+            }
+            if (direction.edges(i).versions(ver_idx) < cmp_version) {
                 break;
             }
         }
@@ -333,6 +338,9 @@ ProtobufNode::tags() const
             uint64_t key_ver = key.versions(ver_idx);
             if (cmp_version == key_ver) {
                 tagtable[key.key()] = get_map_value(key.key_version(), key);
+            }
+            if (cmp_version > key_ver) {
+                break;
             }
         }
     }
