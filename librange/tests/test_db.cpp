@@ -200,6 +200,22 @@ TEST_F(TestGraphDB, test_txn_cleanup) {
 
 //##############################################################################
 //##############################################################################
+TEST_F(TestGraphDB, test_txn_abort) {
+    try { 
+        auto txn = instance->start_txn();
+        ASSERT_NE(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
+        auto txn2 = instance->start_txn();
+        EXPECT_EQ(txn, txn2);
+        EXPECT_EQ(txn.get(), txn2.get());
+        ASSERT_NE(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
+        throw range::Exception("Hello world!");
+    } catch(range::Exception& e) { /* pass */ }
+    ASSERT_EQ(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
+}
+
+
+//##############################################################################
+//##############################################################################
 TEST_F(TestGraphDB, test_read_lock_cleanup) {
     {
         auto lock = instance->read_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
@@ -286,6 +302,36 @@ TEST_F(TestGraphDB, test_db_txn) {
         for (auto t : test_data) { 
             auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, t.first);
             instance->write_record(range::db::GraphInstanceInterface::record_type::NODE, t.first, 5, t.second );
+        }
+    }
+
+    EXPECT_EQ(1, instance->version());
+
+    for (auto t : test_data) { 
+        EXPECT_EQ(t.second, instance->get_record(range::db::GraphInstanceInterface::record_type::NODE, t.first));
+    }
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_db_txn_flush) {
+    std::vector<std::pair<std::string, std::string>> test_data { 
+        { 
+            std::make_pair("foo1", "I like cheese!"), 
+            std::make_pair("foo2", "to the pain!"),
+            std::make_pair("foo3", "Third thing..."), 
+            std::make_pair("foo4", "Another thing")
+        } 
+    };
+
+    EXPECT_EQ(0, instance->version());
+    {
+        auto txn = instance->start_txn();
+
+        for (auto t : test_data) { 
+            auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, t.first);
+            instance->write_record(range::db::GraphInstanceInterface::record_type::NODE, t.first, 5, t.second );
+            txn->flush();
         }
     }
 
@@ -555,6 +601,7 @@ TEST_F(TestDBCursor, test_ten_after_first) {
 
     EXPECT_EQ(10, i);
 }
+
 
 
 

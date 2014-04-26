@@ -22,11 +22,16 @@
 #include <gmock/gmock.h>
 
 #include "../graph/node_interface.h"
+#include "../db/db_interface.h"
 
+#define UNUSED(x) (void)(x)
 //##############################################################################
 //##############################################################################
 class MockNode : public range::graph::NodeIface {
     public:
+        MockNode() {}
+        MockNode(const std::string& name, range::db::BackendInterface::graph_instance_t instance) { UNUSED(name); UNUSED(instance); }
+
         MOCK_CONST_METHOD0(forward_edges, std::vector<range::graph::NodeIface::node_t>(void));
         MOCK_CONST_METHOD0(reverse_edges, std::vector<range::graph::NodeIface::node_t>(void));
         MOCK_CONST_METHOD0(name, std::string(void));

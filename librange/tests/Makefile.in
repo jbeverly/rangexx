@@ -78,7 +78,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = test_graph_iterator$(EXEEXT) test_pbuff_node$(EXEEXT) \
-	test_db$(EXEEXT)
+	test_db$(EXEEXT) test_graphdb$(EXEEXT)
 subdir = librange/tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp $(top_srcdir)/test-driver
@@ -116,6 +116,10 @@ test_graph_iterator_OBJECTS = test_graph_iterator.$(OBJEXT)
 test_graph_iterator_LDADD = $(LDADD)
 test_graph_iterator_DEPENDENCIES =  \
 	$(top_builddir)/librange/librange.la
+test_graphdb_SOURCES = test_graphdb.cpp
+test_graphdb_OBJECTS = test_graphdb.$(OBJEXT)
+test_graphdb_LDADD = $(LDADD)
+test_graphdb_DEPENDENCIES = $(top_builddir)/librange/librange.la
 test_pbuff_node_SOURCES = test_pbuff_node.cpp
 test_pbuff_node_OBJECTS = test_pbuff_node.$(OBJEXT)
 test_pbuff_node_LDADD = $(LDADD)
@@ -154,8 +158,10 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = test_db.cpp test_graph_iterator.cpp test_pbuff_node.cpp
-DIST_SOURCES = test_db.cpp test_graph_iterator.cpp test_pbuff_node.cpp
+SOURCES = test_db.cpp test_graph_iterator.cpp test_graphdb.cpp \
+	test_pbuff_node.cpp
+DIST_SOURCES = test_db.cpp test_graph_iterator.cpp test_graphdb.cpp \
+	test_pbuff_node.cpp
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -543,8 +549,8 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = color-tests
-AM_CPPFLAGS = -fprofile-arcs -ftest-coverage @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ -I$(top_builddir)/librange
-AM_LDFLAGS = -lgcov -fprofile-arcs @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_LDFLAGS@ @DB_CXX_LDFLAGS@ @DB_STL_LDFLAGS@ 
+AM_CPPFLAGS = @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ -I$(top_builddir)/librange
+AM_LDFLAGS = @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_LDFLAGS@ @DB_CXX_LDFLAGS@ @DB_STL_LDFLAGS@ 
 LDADD = $(top_builddir)/librange/librange.la @GTEST_LIBS@ @GMOCK_LIBS@ @DB_CXX_LIBS@ @DB_STL_LIBS@
 LIBADD = $(top_builddir)/librange/librange.la
 AM_DEFAULT_SOURCE_EXT = .cpp
@@ -601,6 +607,10 @@ test_graph_iterator$(EXEEXT): $(test_graph_iterator_OBJECTS) $(test_graph_iterat
 	@rm -f test_graph_iterator$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_graph_iterator_OBJECTS) $(test_graph_iterator_LDADD) $(LIBS)
 
+test_graphdb$(EXEEXT): $(test_graphdb_OBJECTS) $(test_graphdb_DEPENDENCIES) $(EXTRA_test_graphdb_DEPENDENCIES) 
+	@rm -f test_graphdb$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(test_graphdb_OBJECTS) $(test_graphdb_LDADD) $(LIBS)
+
 test_pbuff_node$(EXEEXT): $(test_pbuff_node_OBJECTS) $(test_pbuff_node_DEPENDENCIES) $(EXTRA_test_pbuff_node_DEPENDENCIES) 
 	@rm -f test_pbuff_node$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_pbuff_node_OBJECTS) $(test_pbuff_node_LDADD) $(LIBS)
@@ -613,6 +623,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_db.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_graph_iterator.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_graphdb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_pbuff_node.Po@am__quote@
 
 .cpp.o:
@@ -852,6 +863,13 @@ test_pbuff_node.log: test_pbuff_node$(EXEEXT)
 test_db.log: test_db$(EXEEXT)
 	@p='test_db$(EXEEXT)'; \
 	b='test_db'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_graphdb.log: test_graphdb$(EXEEXT)
+	@p='test_graphdb$(EXEEXT)'; \
+	b='test_graphdb'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

@@ -477,6 +477,7 @@ librange_db_la_includedir = $(includedir)
 nobase_librange_db_la_include_HEADERS = db/graphdb.h \
 										 db/pbuff_node.h \
 										 db/db_interface.h \
+										 db/node_factory.h \
 										 db/db_exceptions.h \
 										 db/berkeley_db.h \
 										 db/berkeley_db_graph.h \

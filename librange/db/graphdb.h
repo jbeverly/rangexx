@@ -26,29 +26,49 @@
 #include "../graph/node_interface.h"
 #include "../graph/graph_interface.h"
 #include "db_interface.h"
+#include "node_factory.h"
 
 namespace range {
 namespace db {
 
 //##############################################################################
 //##############################################################################
-class GraphDB : public graph::GraphInterface, public boost::enable_shared_from_this<GraphDB>  {
+class GraphDB 
+    :   public graph::GraphInterface,
+        public boost::enable_shared_from_this<GraphDB>  
+{
     //##########################################################################
     //##########################################################################
     public:
         //######################################################################
+        typedef boost::shared_ptr<NodeIfaceAbstractFactory> node_factory_t;
         typedef boost::shared_ptr<GraphInstanceInterface> instance_t;
         typedef graph::NodeIface::node_t node_t;
         typedef graph::GraphInterface::iterator_t iterator_t;
         typedef graph::GraphInterface::const_iterator_t const_iterator_t;
 
         //######################################################################
-        GraphDB() : name_(0), instance_(0), wanted_version_(-1) {}
+        GraphDB() : name_(0), instance_(0), wanted_version_(-1), node_factory_()
+        {
+            /* this space intentionally left blank */
+        }
 
         //######################################################################
-        inline GraphDB(std::string name, instance_t instance)
-            : name_(name), instance_(instance), wanted_version_(-1)
-        { }
+        /// To build a graphdb, you must Dependency inject an instance, and a 
+        /// factory for creating node instances
+        ///
+        /// @param[in] name name of the graph instance
+        /// @param[in] instance shared_ptr to object implementing
+        ///             GraphInstanceInterface 
+        /// @paran[in] node_factory shared_ptr to object implementing
+        ///             NodeIfaceAbstractFactory
+        inline GraphDB(const std::string& name, instance_t instance, 
+                node_factory_t node_factory)
+            : name_(name), instance_(instance), wanted_version_(-1),
+                node_factory_(node_factory)
+        {
+            /* this space intentionally left blank */
+        }
 
         //######################################################################
         virtual size_t V() const override;
@@ -84,10 +104,6 @@ class GraphDB : public graph::GraphInterface, public boost::enable_shared_from_t
         virtual bool set_wanted_version(uint64_t version) override;
         virtual uint64_t get_wanted_version() const override;
 
-        /* virtual bool record_change(record_type object_type,
-                const std::string& object_key,
-                uint64_t object_version) override; */
-
 
     //##########################################################################
     //##########################################################################
@@ -99,6 +115,7 @@ class GraphDB : public graph::GraphInterface, public boost::enable_shared_from_t
         std::string name_;
         instance_t instance_;
         uint64_t wanted_version_;
+        node_factory_t node_factory_;
 
         //######################################################################
         virtual graph::GraphInterface::cursor_t get_cursor() const override;

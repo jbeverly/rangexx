@@ -106,7 +106,7 @@ update_tag_versions(range::db::NodeInfo& info, uint64_t cmp_version, uint64_t ne
 //##############################################################################
 //##############################################################################
 static inline void
-init_default_nodeinfo(NodeInfo& info, uint64_t graph_version)
+init_default_nodeinfo(NodeInfo& info) //, uint64_t graph_version)
 {
     info.set_node_type(static_cast<int>(graph::NodeIface::node_type::UNKNOWN));
     info.set_list_version(0);
@@ -114,8 +114,8 @@ init_default_nodeinfo(NodeInfo& info, uint64_t graph_version)
     info.mutable_tags();
     info.mutable_forward();
     info.mutable_reverse();
-    info.mutable_graph_versions()->Clear();                                     // We're creating a new one, but we may read_record -> "" twice,
-    info.add_graph_versions(graph_version);                                     //   and I don't want (0,0) in the list (I think this can
+    info.mutable_graph_versions(); //->Clear();                                     // We're creating a new one, but we may read_record -> "" twice,
+    //info.add_graph_versions(graph_version);                                     //   and I don't want (0,0) in the list (I think this can
                                                                                 //   only really happen in the unit-tests, but just in case)
 }
 
@@ -178,7 +178,7 @@ ProtobufNode::init_info() const
             }
             else                                                                    // new node
             {                                            
-                init_default_nodeinfo(info, instance_->version());
+                init_default_nodeinfo(info); //, instance_->version());
                 info_initialized = info.IsInitialized();
             }
         }
@@ -202,7 +202,7 @@ ProtobufNode::info_lock(bool writable)
             info.ParseFromString(buffer);
             type_ = node_type(info.node_type());
         } else {                                                            ///< New node
-            init_default_nodeinfo(info, instance_->version());
+            init_default_nodeinfo(info); //, instance_->version());
         }
         info_initialized = true;
         return lock;
@@ -300,8 +300,9 @@ ProtobufNode::version() const
 uint64_t
 ProtobufNode::get_wanted_version() const
 {
-    init_info();
-    return info.list_version();
+    return wanted_version_;
+    //init_info();
+    //return info.list_version();
 }
 
 

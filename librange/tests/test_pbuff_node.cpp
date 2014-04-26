@@ -80,7 +80,8 @@ TEST_F(TestProtobufNode, TestNodeCreation) {
     test1.mutable_tags();
     auto f1 = test1.mutable_forward()->add_edges();
     test1.mutable_reverse();
-    test1.add_graph_versions(0);
+    test1.mutable_graph_versions();
+    //test1.add_graph_versions(0);
     f1->add_versions(1);
     f1->set_id("test2"); 
     test1.set_crc32(0);
@@ -92,7 +93,8 @@ TEST_F(TestProtobufNode, TestNodeCreation) {
     test2.mutable_tags();
     auto r2 = test2.mutable_reverse()->add_edges();
     test2.mutable_forward();
-    test2.add_graph_versions(0);
+    test2.mutable_graph_versions();
+    //test2.add_graph_versions(0);
     r2->add_versions(1);
     r2->set_id("test1");
     test2.set_crc32(0);
@@ -144,7 +146,8 @@ TEST_F(TestProtobufNode, TestNodeAdjListInitialization) {
     test1.mutable_tags();
     auto f1 = test1.mutable_forward()->add_edges();
     test1.mutable_reverse();
-    test1.add_graph_versions(0);
+    test1.mutable_graph_versions();
+    //test1.add_graph_versions(0);
     f1->add_versions(1);
     f1->set_id("test2"); 
     test1.set_crc32(range::util::crc32(test1.SerializeAsString()));
@@ -156,7 +159,8 @@ TEST_F(TestProtobufNode, TestNodeAdjListInitialization) {
     test2.mutable_tags();
     test2.mutable_forward();
     auto r2 = test2.mutable_reverse()->add_edges();
-    test2.add_graph_versions(0);
+    test2.mutable_graph_versions();
+    //test2.add_graph_versions(0);
     r2->add_versions(1);
     r2->set_id("test1");
     test2.set_crc32(range::util::crc32(test2.SerializeAsString()));
@@ -199,7 +203,8 @@ TEST_F(TestProtobufNode, TestNodeTypeSetter) {
     test1.mutable_tags();
     auto f1 = test1.mutable_forward()->add_edges();
     test1.mutable_reverse();
-    test1.add_graph_versions(0);
+    test1.mutable_graph_versions();
+    //test1.add_graph_versions(0);
     f1->add_versions(1);
     f1->set_id("test2");
     test1.set_crc32(0);
@@ -211,7 +216,8 @@ TEST_F(TestProtobufNode, TestNodeTypeSetter) {
     test2.mutable_tags();
     test2.mutable_forward();
     auto r2 = test2.mutable_reverse()->add_edges();
-    test2.add_graph_versions(0);
+    test2.mutable_graph_versions();
+    //test2.add_graph_versions(0);
     r2->add_versions(1);
     r2->set_id("test1");
     test2.set_crc32(0);
@@ -281,7 +287,8 @@ TEST_F(TestProtobufNode, TestNodeVersionEdgeRemoval) {
     test1.mutable_tags();
     test1.mutable_forward();
     test1.mutable_reverse();
-    test1.add_graph_versions(0);
+    test1.mutable_graph_versions();
+    //test1.add_graph_versions(0);
     test1.set_crc32(0);
     test1.set_crc32(range::util::crc32(test1.SerializeAsString()));
 
@@ -324,7 +331,8 @@ TEST_F(TestProtobufNode, TestNodeVersionEdgeRemoval) {
     test2.mutable_tags();
     test2.mutable_forward();
     test2.mutable_reverse();
-    test2.add_graph_versions(0);
+    test2.mutable_graph_versions();
+    //test2.add_graph_versions(0);
     test2.set_crc32(0);
     test2.set_crc32(range::util::crc32(test2.SerializeAsString()));
 
@@ -354,7 +362,8 @@ TEST_F(TestProtobufNode, TestNodeVersionEdgeRemoval) {
     test3.mutable_tags();
     test3.mutable_forward();
     test3.mutable_reverse();
-    test3.add_graph_versions(0);
+    test3.mutable_graph_versions();
+    //test3.add_graph_versions(0);
     test3.set_crc32(0);
     test3.set_crc32(range::util::crc32(test3.SerializeAsString()));
 
@@ -496,7 +505,8 @@ TEST_F(TestProtobufNode, TestNodeKeys) {
     test.set_crc32(0);
     test.mutable_forward();
     test.mutable_reverse();
-    test.add_graph_versions(0);
+    //test.add_graph_versions(0);
+    test.mutable_graph_versions();
     test.set_crc32(0);
     test.set_crc32(range::util::crc32(test.SerializeAsString()));
 
@@ -544,7 +554,8 @@ TEST_F(TestProtobufNode, TestNodeKeysParse) {
     test.set_crc32(0);
     test.mutable_forward();
     test.mutable_reverse();
-    test.add_graph_versions(0);
+    test.mutable_graph_versions();
+    //test.add_graph_versions(0);
 
     auto k = test.mutable_tags()->add_keys();
     k->set_key("Foo");
@@ -584,7 +595,8 @@ TEST_F(TestProtobufNode, TestNodeRemoval) {
     test.set_crc32(0);
     test.mutable_forward();
     test.mutable_reverse();
-    test.add_graph_versions(0);
+    test.mutable_graph_versions();
+    //test.add_graph_versions(0);
 
     auto k = test.mutable_tags()->add_keys();
     k->set_key("Foo");
@@ -634,7 +646,8 @@ TEST_F(TestProtobufNode, TestNodeVersionedRemoval) {
     test.set_crc32(0);
     test.mutable_forward();
     test.mutable_reverse();
-    test.add_graph_versions(0);
+    test.mutable_graph_versions();
+    //test.add_graph_versions(0);
 
     auto k = test.mutable_tags()->add_keys();
     k->set_key("Foo");

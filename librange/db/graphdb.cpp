@@ -14,10 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <iostream>
 #include <iterator>
 #include <algorithm>
 
-#include <boost/make_shared.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
 #include "graphdb.h"
@@ -87,9 +88,12 @@ GraphDB::get_cursor() const
 GraphDB::cursor_t
 GraphDB::get_cursor(GraphDB::node_t node) const
 {
-    cursor_t cur = instance_->get_cursor();
-    cur->fetch(node->name());
-    return cur;
+    if (node) { 
+        cursor_t cur = instance_->get_cursor();
+        cur->fetch(node->name());
+        return cur;
+    }
+    return nullptr;
 }
 
 //##############################################################################
@@ -144,21 +148,20 @@ GraphDB::create(const std::string& name)
     auto lock = instance_->write_lock(GraphInstanceInterface::record_type::NODE, name);
     auto txn = instance_->start_txn();
 
-    if (lock) {
-        node_t node = boost::make_shared<ProtobufNode>(name, instance_);
-        for (uint64_t node_version : boost::adaptors::reverse(node->graph_versions())) {
-            if (this->version() == node_version) {
-                return nullptr;
-            }
+    node_t node =  this->node_factory_->createNode(name, instance_);
+    for (uint64_t node_version : boost::adaptors::reverse(node->graph_versions())) {
+        if (node_version < this->version())
+            break;
+        if (this->version() == node_version) {
+            return nullptr;
         }
-        if (node->version() == 0) {
-            node->commit();
-        }
-        std::for_each(std::begin(*this), std::end(*this), 
-                [this, txn](graph::NodeIface& v) { v.add_graph_version(this->version() + 1); txn->flush(); });
-        return node;
     }
-    return nullptr;
+    if (node->version() == 0) {
+        node->commit();
+    }
+    std::for_each(std::begin(*this), std::end(*this), 
+            [this, txn](graph::NodeIface& v) { v.add_graph_version(this->version() + 1); txn->flush(); });
+    return node;
 }
 
 //##############################################################################
@@ -166,7 +169,7 @@ GraphDB::create(const std::string& name)
 bool
 GraphDB::set_wanted_version(uint64_t ver) 
 {
-    if (wanted_version_ <= version()) {
+    if (ver <= version()) {
         wanted_version_ = ver;
         return true;
     }
@@ -174,8 +177,6 @@ GraphDB::set_wanted_version(uint64_t ver)
 }
 
 //##############################################################################
-// FIXME: this should have a transaction handler, to create one single changelist
-//             entry
 //##############################################################################
 GraphDB::node_t
 GraphDB::remove(node_t node)
@@ -197,23 +198,18 @@ GraphDB::remove(node_t node)
     for (auto affected: node->forward_edges()) {
         affected->remove_reverse_edge(node, false);
     }
+
     std::for_each(std::begin(*this), std::end(*this),
-            [this, txn](graph::NodeIface& v) { v.add_graph_version(this->version() + 1); txn->flush(); });
+            [this, txn, node](range::graph::NodeIface& v) { 
+                if (node->name() != v.name()) { 
+                    v.add_graph_version(this->version() + 1);
+                    txn->flush();
+                }
+            }
+        );
 
     return node;
 }
-
-//##############################################################################
-// MOCKED
-//##############################################################################
-/*
-bool
-GraphDB::record_change(record_type object_type, const std::string &object_key, uint64_t object_version)
-{
-    std::string foo = std::to_string(static_cast<long long>(object_type)) + object_key + std::to_string(object_version);
-    return true;
-}
-*/
 
 
 
