@@ -1,0 +1,5 @@
+To regenerate grammar use bisonc++
+	http://bisoncpp.sourceforge.net/
+
+To regenerate lexer use flexc++ with the --baseclass-skeleton=./flexc++ 
+	http://flexcpp.sourceforge.net/

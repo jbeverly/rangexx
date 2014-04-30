@@ -13,7 +13,7 @@ AM_LDFLAGS  = @DB_CXX_LDFLAGS@  @DB_STL_LDFLAGS@ @PROTOBUF_LDFLAGS@  $(AM_LDFLAG
 AM_LIBADD   = @DB_CXX_LIBS@     @DB_STL_LIBS@ @PROTOBUF_LIBS@     $(AM_LIBADD_G)
 
 lib_LTLIBRARIES    = librange.la
-noinst_LTLIBRARIES = librange_db.la librange_graph.la librange_util.la librange_core.la
+noinst_LTLIBRARIES = librange_db.la librange_graph.la librange_compiler.la librange_util.la librange_core.la
 
 db/nodeinfo.pb.h: db/nodeinfo.proto
 	$(PROTOC) -I=db/ --cpp_out=db/ db/nodeinfo.proto && mv db/nodeinfo.pb.cc db/nodeinfo.pb.cpp
@@ -30,14 +30,22 @@ db/changelist.pb.h: db/changelist.proto
 
 db/changelist.pb.cpp: db/changelist.pb.h
 
-
-
 BUILT_SOURCES = db/nodeinfo.pb.h db/nodeinfo.pb.cpp db/graph_list.pb.h db/graph_list.pb.cpp
 
 librange_util_la_includedir = $(includedir)
 nobase_librange_util_la_include_HEADERS = util/crc32.h
 librange_util_la_SOURCES = util/crc32.cpp
 librange_util_la_LIBADD = $(AM_LIBADD)
+
+librange_compiler_la_includedir = $(includedir)
+nobase_librange_compiler_la_include_HEADERS = compiler/grammar_interface.h \
+											  compiler/compiler_types.h \
+											  compiler/ast.h \
+											  compiler/grammar.h
+
+librange_compiler_la_SOURCES = compiler/function_st.cpp
+librange_compiler_la_LIBADD = $(AM_LIBADD)
+
 
 librange_db_la_includedir = $(includedir)
 nobase_librange_db_la_include_HEADERS  = db/graphdb.h \
@@ -85,7 +93,7 @@ librange_core_la_LIBADD = $(AM_LIBADD)
 
 librange_la_SOURCES = 
 librange_la_LDFLAGS = -version-info $(RANGEXX_LIBRARY_VERSION)
-librange_la_LIBADD = librange_graph.la librange_db.la librange_util.la 
+librange_la_LIBADD = librange_graph.la librange_db.la librange_compiler.la librange_util.la 
 
 #nobase_librange_la_include_HEADERS = 
 

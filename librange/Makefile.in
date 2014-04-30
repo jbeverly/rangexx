@@ -82,6 +82,7 @@ host_triplet = @host@
 subdir = librange
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp \
+	$(nobase_librange_compiler_la_include_HEADERS) \
 	$(nobase_librange_core_la_include_HEADERS) \
 	$(nobase_librange_db_la_include_HEADERS) \
 	$(nobase_librange_graph_la_include_HEADERS) \
@@ -135,13 +136,14 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" \
+	"$(DESTDIR)$(librange_compiler_la_includedir)" \
 	"$(DESTDIR)$(librange_core_la_includedir)" \
 	"$(DESTDIR)$(librange_db_la_includedir)" \
 	"$(DESTDIR)$(librange_graph_la_includedir)" \
 	"$(DESTDIR)$(librange_util_la_includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 librange_la_DEPENDENCIES = librange_graph.la librange_db.la \
-	librange_util.la
+	librange_compiler.la librange_util.la
 am_librange_la_OBJECTS =
 librange_la_OBJECTS = $(am_librange_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -153,11 +155,14 @@ librange_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(librange_la_LDFLAGS) $(LDFLAGS) -o $@
 am__DEPENDENCIES_1 =
 am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
+librange_compiler_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
+am__dirstamp = $(am__leading_dot)dirstamp
+am_librange_compiler_la_OBJECTS = compiler/function_st.lo
+librange_compiler_la_OBJECTS = $(am_librange_compiler_la_OBJECTS)
 librange_core_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_core_la_OBJECTS =
 librange_core_la_OBJECTS = $(am_librange_core_la_OBJECTS)
 librange_db_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
-am__dirstamp = $(am__leading_dot)dirstamp
 am_librange_db_la_OBJECTS = db/graphdb.lo db/pbuff_node.lo \
 	db/nodeinfo.pb.lo db/berkeley_db_cursor.lo \
 	db/berkeley_db_graph.lo db/berkeley_db_lock.lo \
@@ -222,12 +227,12 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(librange_la_SOURCES) $(librange_core_la_SOURCES) \
-	$(librange_db_la_SOURCES) $(librange_graph_la_SOURCES) \
-	$(librange_util_la_SOURCES)
-DIST_SOURCES = $(librange_la_SOURCES) $(librange_core_la_SOURCES) \
-	$(librange_db_la_SOURCES) $(librange_graph_la_SOURCES) \
-	$(librange_util_la_SOURCES)
+SOURCES = $(librange_la_SOURCES) $(librange_compiler_la_SOURCES) \
+	$(librange_core_la_SOURCES) $(librange_db_la_SOURCES) \
+	$(librange_graph_la_SOURCES) $(librange_util_la_SOURCES)
+DIST_SOURCES = $(librange_la_SOURCES) $(librange_compiler_la_SOURCES) \
+	$(librange_core_la_SOURCES) $(librange_db_la_SOURCES) \
+	$(librange_graph_la_SOURCES) $(librange_util_la_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -241,7 +246,8 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-HEADERS = $(nobase_librange_core_la_include_HEADERS) \
+HEADERS = $(nobase_librange_compiler_la_include_HEADERS) \
+	$(nobase_librange_core_la_include_HEADERS) \
 	$(nobase_librange_db_la_include_HEADERS) \
 	$(nobase_librange_graph_la_include_HEADERS) \
 	$(nobase_librange_util_la_include_HEADERS)
@@ -467,12 +473,20 @@ AM_CPPFLAGS = @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ $(AM_CPPFL
 AM_LDFLAGS = @DB_CXX_LDFLAGS@  @DB_STL_LDFLAGS@ @PROTOBUF_LDFLAGS@  $(AM_LDFLAGS_G)
 AM_LIBADD = @DB_CXX_LIBS@     @DB_STL_LIBS@ @PROTOBUF_LIBS@     $(AM_LIBADD_G)
 lib_LTLIBRARIES = librange.la
-noinst_LTLIBRARIES = librange_db.la librange_graph.la librange_util.la librange_core.la
+noinst_LTLIBRARIES = librange_db.la librange_graph.la librange_compiler.la librange_util.la librange_core.la
 BUILT_SOURCES = db/nodeinfo.pb.h db/nodeinfo.pb.cpp db/graph_list.pb.h db/graph_list.pb.cpp
 librange_util_la_includedir = $(includedir)
 nobase_librange_util_la_include_HEADERS = util/crc32.h
 librange_util_la_SOURCES = util/crc32.cpp
 librange_util_la_LIBADD = $(AM_LIBADD)
+librange_compiler_la_includedir = $(includedir)
+nobase_librange_compiler_la_include_HEADERS = compiler/grammar_interface.h \
+											  compiler/compiler_types.h \
+											  compiler/ast.h \
+											  compiler/grammar.h
+
+librange_compiler_la_SOURCES = compiler/function_st.cpp
+librange_compiler_la_LIBADD = $(AM_LIBADD)
 librange_db_la_includedir = $(includedir)
 nobase_librange_db_la_include_HEADERS = db/graphdb.h \
 										 db/pbuff_node.h \
@@ -514,7 +528,7 @@ librange_core_la_SOURCES =
 librange_core_la_LIBADD = $(AM_LIBADD)
 librange_la_SOURCES = 
 librange_la_LDFLAGS = -version-info $(RANGEXX_LIBRARY_VERSION)
-librange_la_LIBADD = librange_graph.la librange_db.la librange_util.la 
+librange_la_LIBADD = librange_graph.la librange_db.la librange_compiler.la librange_util.la 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -599,6 +613,17 @@ clean-noinstLTLIBRARIES:
 
 librange.la: $(librange_la_OBJECTS) $(librange_la_DEPENDENCIES) $(EXTRA_librange_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(librange_la_LINK) -rpath $(libdir) $(librange_la_OBJECTS) $(librange_la_LIBADD) $(LIBS)
+compiler/$(am__dirstamp):
+	@$(MKDIR_P) compiler
+	@: > compiler/$(am__dirstamp)
+compiler/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) compiler/$(DEPDIR)
+	@: > compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/function_st.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+
+librange_compiler.la: $(librange_compiler_la_OBJECTS) $(librange_compiler_la_DEPENDENCIES) $(EXTRA_librange_compiler_la_DEPENDENCIES) 
+	$(AM_V_CXXLD)$(CXXLINK)  $(librange_compiler_la_OBJECTS) $(librange_compiler_la_LIBADD) $(LIBS)
 
 librange_core.la: $(librange_core_la_OBJECTS) $(librange_core_la_DEPENDENCIES) $(EXTRA_librange_core_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK)  $(librange_core_la_OBJECTS) $(librange_core_la_LIBADD) $(LIBS)
@@ -648,6 +673,8 @@ librange_util.la: $(librange_util_la_OBJECTS) $(librange_util_la_DEPENDENCIES) $
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f compiler/*.$(OBJEXT)
+	-rm -f compiler/*.lo
 	-rm -f db/*.$(OBJEXT)
 	-rm -f db/*.lo
 	-rm -f graph/*.$(OBJEXT)
@@ -658,6 +685,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/function_st.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db_cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db_graph.Plo@am__quote@
@@ -700,9 +728,34 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+	-rm -rf compiler/.libs compiler/_libs
 	-rm -rf db/.libs db/_libs
 	-rm -rf graph/.libs graph/_libs
 	-rm -rf util/.libs util/_libs
+install-nobase_librange_compiler_la_includeHEADERS: $(nobase_librange_compiler_la_include_HEADERS)
+	@$(NORMAL_INSTALL)
+	@list='$(nobase_librange_compiler_la_include_HEADERS)'; test -n "$(librange_compiler_la_includedir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(librange_compiler_la_includedir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(librange_compiler_la_includedir)" || exit 1; \
+	fi; \
+	$(am__nobase_list) | while read dir files; do \
+	  xfiles=; for file in $$files; do \
+	    if test -f "$$file"; then xfiles="$$xfiles $$file"; \
+	    else xfiles="$$xfiles $(srcdir)/$$file"; fi; done; \
+	  test -z "$$xfiles" || { \
+	    test "x$$dir" = x. || { \
+	      echo " $(MKDIR_P) '$(DESTDIR)$(librange_compiler_la_includedir)/$$dir'"; \
+	      $(MKDIR_P) "$(DESTDIR)$(librange_compiler_la_includedir)/$$dir"; }; \
+	    echo " $(INSTALL_HEADER) $$xfiles '$(DESTDIR)$(librange_compiler_la_includedir)/$$dir'"; \
+	    $(INSTALL_HEADER) $$xfiles "$(DESTDIR)$(librange_compiler_la_includedir)/$$dir" || exit $$?; }; \
+	done
+
+uninstall-nobase_librange_compiler_la_includeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(nobase_librange_compiler_la_include_HEADERS)'; test -n "$(librange_compiler_la_includedir)" || list=; \
+	$(am__nobase_strip_setup); files=`$(am__nobase_strip)`; \
+	dir='$(DESTDIR)$(librange_compiler_la_includedir)'; $(am__uninstall_files_from_dir)
 install-nobase_librange_core_la_includeHEADERS: $(nobase_librange_core_la_include_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(nobase_librange_core_la_include_HEADERS)'; test -n "$(librange_core_la_includedir)" || list=; \
@@ -960,7 +1013,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(librange_core_la_includedir)" "$(DESTDIR)$(librange_db_la_includedir)" "$(DESTDIR)$(librange_graph_la_includedir)" "$(DESTDIR)$(librange_util_la_includedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(librange_compiler_la_includedir)" "$(DESTDIR)$(librange_core_la_includedir)" "$(DESTDIR)$(librange_db_la_includedir)" "$(DESTDIR)$(librange_graph_la_includedir)" "$(DESTDIR)$(librange_util_la_includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -990,6 +1043,8 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-rm -f compiler/$(DEPDIR)/$(am__dirstamp)
+	-rm -f compiler/$(am__dirstamp)
 	-rm -f db/$(DEPDIR)/$(am__dirstamp)
 	-rm -f db/$(am__dirstamp)
 	-rm -f graph/$(DEPDIR)/$(am__dirstamp)
@@ -1007,7 +1062,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	clean-noinstLTLIBRARIES mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
+	-rm -rf compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1024,7 +1079,8 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-nobase_librange_core_la_includeHEADERS \
+install-data-am: install-nobase_librange_compiler_la_includeHEADERS \
+	install-nobase_librange_core_la_includeHEADERS \
 	install-nobase_librange_db_la_includeHEADERS \
 	install-nobase_librange_graph_la_includeHEADERS \
 	install-nobase_librange_util_la_includeHEADERS
@@ -1056,7 +1112,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
+	-rm -rf compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1074,6 +1130,7 @@ ps: ps-recursive
 ps-am:
 
 uninstall-am: uninstall-libLTLIBRARIES \
+	uninstall-nobase_librange_compiler_la_includeHEADERS \
 	uninstall-nobase_librange_core_la_includeHEADERS \
 	uninstall-nobase_librange_db_la_includeHEADERS \
 	uninstall-nobase_librange_graph_la_includeHEADERS \
@@ -1091,6 +1148,7 @@ uninstall-am: uninstall-libLTLIBRARIES \
 	install-data-am install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am install-info \
 	install-info-am install-libLTLIBRARIES install-man \
+	install-nobase_librange_compiler_la_includeHEADERS \
 	install-nobase_librange_core_la_includeHEADERS \
 	install-nobase_librange_db_la_includeHEADERS \
 	install-nobase_librange_graph_la_includeHEADERS \
@@ -1101,6 +1159,7 @@ uninstall-am: uninstall-libLTLIBRARIES \
 	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
 	pdf pdf-am ps ps-am tags tags-am uninstall uninstall-am \
 	uninstall-libLTLIBRARIES \
+	uninstall-nobase_librange_compiler_la_includeHEADERS \
 	uninstall-nobase_librange_core_la_includeHEADERS \
 	uninstall-nobase_librange_db_la_includeHEADERS \
 	uninstall-nobase_librange_graph_la_includeHEADERS \

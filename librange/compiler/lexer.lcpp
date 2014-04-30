@@ -1,0 +1,72 @@
+/*
+ * This file is part of range++.
+ *
+ * range++ is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * range++ is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with range++.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+%class-name "RangeScanner"
+%namespace "rangecompiler"
+%filenames "RangeScanner"
+%lex-source "RangeScanner.cpp"
+
+%x squotedstring
+%x dquotedstring
+%x regex
+%x escape
+%x setoperation
+
+%%
+
+[\ \t\n\r]+           /* skip */
+
+"/"									{ begin(StartCondition__::regex); }
+
+<escape>{
+    .								{ more(); begin(statestack.top()); statestack.pop(); }
+}
+<regex>{
+    "\\"							{ statestack.push(StartCondition__::regex); begin(StartCondition__::escape); }
+    "/"								{ begin(StartCondition__::INITIAL); return Parser::REGEX; }
+    .								{ more(); }
+}
+
+"\""								{ begin(StartCondition__::dquotedstring); }
+<dquotedstring>{
+    \\								{ statestack.push(StartCondition__::dquotedstring); begin(StartCondition__::escape); }
+    "\""							{ begin(StartCondition__::INITIAL); return Parser::DOUBLEQUOTED; }
+    .								{ more(); }
+}
+"'"									{ begin(StartCondition__::squotedstring); }
+<squotedstring>{
+    "\\"							{ statestack.push(StartCondition__::squotedstring); begin(StartCondition__::escape); }
+    "'"								{ begin(StartCondition__::INITIAL); return Parser::SINGLEQUOTED; }
+    .								{ more(); }
+}
+","									{ begin(StartCondition__::setoperation); }
+<setoperation>{
+    "-"								{ return '-'; }
+    "&"								{ return '&'; }
+    .								{ redo(1); return ','; }
+}
+".."								{ return Parser::Sequence; }
+[a-zA-Z0-9_\.][a-zA-Z0-9_\.\-]+		{ 
+										auto it = function_st_->find(matched());
+										if (it != function_st_->end()) {
+											function_ = *it;
+											return Parser::FUNCTION;
+										}
+										return Parser::WORD;
+									}
+[!\-&^;:*%(){}]						{ return matched()[0]; }
+
