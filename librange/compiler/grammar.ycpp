@@ -164,15 +164,15 @@ expr:
         regex
     |   literal
     |   function_name
-    |    word
+    |   word
     |   sequence
     |   group
-    |    union
-    |    difference
+    |   union
+    |   difference
     |   intersection
     |   braceexpand
-    |    keyexpand
-    |    expand
+    |   keyexpand
+    |   expand
     |   admin
     |   get_cluster
     |   function

@@ -28,44 +28,44 @@
 
 %%
 
-[\ \t\n\r]+							/* skip */
+[\ \t\n\r]+                         /* skip */
 
 <escape>{
-    .								{ more(); begin(statestack.top()); statestack.pop(); }
+    .                               { more(); begin(statestack.top()); statestack.pop(); }
 }
 
-"/"									{ begin(StartCondition__::regex); }
+"/"                                 { begin(StartCondition__::regex); }
 <regex>{
-    "\\"							{ statestack.push(StartCondition__::regex); begin(StartCondition__::escape); }
-    "/"								{ begin(StartCondition__::INITIAL); return RangeParser::REGEX; }
-    .								{ more(); }
+    "\\"                            { statestack.push(StartCondition__::regex); begin(StartCondition__::escape); }
+    "/"                             { begin(StartCondition__::INITIAL); return RangeParser::REGEX; }
+    .                               { more(); }
 }
 
-"\""								{ begin(StartCondition__::dquotedstring); }
+"\""                                { begin(StartCondition__::dquotedstring); }
 <dquotedstring>{
-    \\								{ statestack.push(StartCondition__::dquotedstring); begin(StartCondition__::escape); }
-    "\""							{ begin(StartCondition__::INITIAL); return RangeParser::DOUBLEQUOTED; }
-    .								{ more(); }
+    \\                              { statestack.push(StartCondition__::dquotedstring); begin(StartCondition__::escape); }
+    "\""                            { begin(StartCondition__::INITIAL); return RangeParser::DOUBLEQUOTED; }
+    .                               { more(); }
 }
-"'"									{ begin(StartCondition__::squotedstring); }
+"'"                                 { begin(StartCondition__::squotedstring); }
 <squotedstring>{
-    "\\"							{ statestack.push(StartCondition__::squotedstring); begin(StartCondition__::escape); }
-    "'"								{ begin(StartCondition__::INITIAL); return RangeParser::SINGLEQUOTED; }
-    .								{ more(); }
+    "\\"                            { statestack.push(StartCondition__::squotedstring); begin(StartCondition__::escape); }
+    "'"                             { begin(StartCondition__::INITIAL); return RangeParser::SINGLEQUOTED; }
+    .                               { more(); }
 }
-","									{ begin(StartCondition__::setoperation); }
+","                                 { begin(StartCondition__::setoperation); }
 <setoperation>{
-    "-"								{ return '-'; }
-    "&"								{ return '&'; }
-    .								{ redo(1); return ','; }
+    "-"                             { return '-'; }
+    "&"                             { return '&'; }
+    .                               { redo(1); return ','; }
 }
-".."								{ return RangeParser::SEQUENCE; }
-[a-zA-Z0-9_\.][a-zA-Z0-9_\.\-]+		{ 
-										auto it = function_st_->find(matched());
-										if (it != function_st_->end()) {
-											return RangeParser::FUNCTION;
-										}
-										return RangeParser::BAREWORD;
-									}
-[!\-&^;:*%(){}]						{ return matched()[0]; }
+".."                                { return RangeParser::SEQUENCE; }
+[a-zA-Z0-9_\.][a-zA-Z0-9_\.\-]+     { 
+                                        auto it = function_st_->find(matched());
+                                        if (it != function_st_->end()) {
+                                            return RangeParser::FUNCTION;
+                                        }
+                                        return RangeParser::BAREWORD;
+                                    }
+[!\-&^;:*%(){}]                     { return matched()[0]; }
 
