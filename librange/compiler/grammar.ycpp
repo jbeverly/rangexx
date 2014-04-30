@@ -117,18 +117,23 @@ function_arguments:
 		$$ = $1;
 	};
 
+// We'll treat a function as just a word until proven that it is being used as a function (followed by '(' ... ')')
+function_name:
+	FUNCTION
+	{
+		$$ = range::compiler::ast::ASTWord(d_scanner.matched());
+	};
+	
 // If it is being used as a function, we'll discard the ASTWord from the tree, and replace it with an ASTFunction
 function:
-	word '(' function_arguments ')'
+	function_name '(' function_arguments ')'
 	{
 		auto w = boost::get<range::compiler::ast::ASTWord>($1);
 		$$ = range::compiler::ast::ASTFunction(d_scanner.function(w.word), $3);
 	};
 
-// We'll treat a function as just a word until proven that it is being used as a function (followed by '(' ... ')')
 word:
 		BAREWORD
-	|	FUNCTION
 	{
 		$$ = range::compiler::ast::ASTWord(d_scanner.matched());
 	};
@@ -144,6 +149,10 @@ regex:
 	REGEX
 	{
 		$$ = range::compiler::ast::ASTRegex(d_scanner.matched());
+	}
+	'!' REGEX
+	{
+		$$ = range::compiler::ast::ASTRegex(d_scanner.matched(), false);
 	};
 
 null:
@@ -154,6 +163,7 @@ null:
 expr:
         regex
     |   literal
+	|   function_name
     |	word
 	|   sequence
 	|   group

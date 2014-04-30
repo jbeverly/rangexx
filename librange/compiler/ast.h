@@ -86,8 +86,9 @@ class ASTLiteral {
 //##############################################################################
 class ASTRegex {
     public:
-        explicit ASTRegex(const std::string& w) : word(w) { }
+        explicit ASTRegex(const std::string& w, bool p=true) : word(w), positive(p) { }
         std::string word;
+        bool positive;
 };
 
 //##############################################################################

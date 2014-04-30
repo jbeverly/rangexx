@@ -11,8 +11,8 @@ AM_DEFAULT_SOURCE_EXT = .cpp
 check_PROGRAMS = test_graph_iterator \
 				 test_pbuff_node \
 				 test_db \
-				 test_graphdb \
-				 test_compiler
+				 test_graphdb 
+#test_compiler
 
 TESTS = $(check_PROGRAMS)
 

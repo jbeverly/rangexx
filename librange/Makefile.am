@@ -38,12 +38,20 @@ librange_util_la_SOURCES = util/crc32.cpp
 librange_util_la_LIBADD = $(AM_LIBADD)
 
 librange_compiler_la_includedir = $(includedir)
-nobase_librange_compiler_la_include_HEADERS = compiler/grammar_interface.h \
+nobase_librange_compiler_la_include_HEADERS = compiler/ast.h \
 											  compiler/compiler_types.h \
-											  compiler/ast.h \
-											  compiler/grammar.h
+											  compiler/grammar_factory.h \
+											  compiler/grammar_interface.h \
+											  compiler/RangeParserbase.h \
+											  compiler/RangeParser.h \
+											  compiler/RangeScannerbase.h \
+											  compiler/RangeScanner.h 
+											
+										
+									
 
-librange_compiler_la_SOURCES = compiler/function_st.cpp
+librange_compiler_la_SOURCES = compiler/RangeParser_parse.cpp \
+							   compiler/RangeScanner.cpp
 librange_compiler_la_LIBADD = $(AM_LIBADD)
 
 

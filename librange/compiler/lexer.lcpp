@@ -28,29 +28,29 @@
 
 %%
 
-[\ \t\n\r]+           /* skip */
-
-"/"									{ begin(StartCondition__::regex); }
+[\ \t\n\r]+							/* skip */
 
 <escape>{
     .								{ more(); begin(statestack.top()); statestack.pop(); }
 }
+
+"/"									{ begin(StartCondition__::regex); }
 <regex>{
     "\\"							{ statestack.push(StartCondition__::regex); begin(StartCondition__::escape); }
-    "/"								{ begin(StartCondition__::INITIAL); return Parser::REGEX; }
+    "/"								{ begin(StartCondition__::INITIAL); return RangeParser::REGEX; }
     .								{ more(); }
 }
 
 "\""								{ begin(StartCondition__::dquotedstring); }
 <dquotedstring>{
     \\								{ statestack.push(StartCondition__::dquotedstring); begin(StartCondition__::escape); }
-    "\""							{ begin(StartCondition__::INITIAL); return Parser::DOUBLEQUOTED; }
+    "\""							{ begin(StartCondition__::INITIAL); return RangeParser::DOUBLEQUOTED; }
     .								{ more(); }
 }
 "'"									{ begin(StartCondition__::squotedstring); }
 <squotedstring>{
     "\\"							{ statestack.push(StartCondition__::squotedstring); begin(StartCondition__::escape); }
-    "'"								{ begin(StartCondition__::INITIAL); return Parser::SINGLEQUOTED; }
+    "'"								{ begin(StartCondition__::INITIAL); return RangeParser::SINGLEQUOTED; }
     .								{ more(); }
 }
 ","									{ begin(StartCondition__::setoperation); }
@@ -59,14 +59,13 @@
     "&"								{ return '&'; }
     .								{ redo(1); return ','; }
 }
-".."								{ return Parser::Sequence; }
+".."								{ return RangeParser::SEQUENCE; }
 [a-zA-Z0-9_\.][a-zA-Z0-9_\.\-]+		{ 
 										auto it = function_st_->find(matched());
 										if (it != function_st_->end()) {
-											function_ = *it;
-											return Parser::FUNCTION;
+											return RangeParser::FUNCTION;
 										}
-										return Parser::WORD;
+										return RangeParser::BAREWORD;
 									}
 [!\-&^;:*%(){}]						{ return matched()[0]; }
 

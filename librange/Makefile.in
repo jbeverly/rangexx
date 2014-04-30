@@ -157,7 +157,8 @@ am__DEPENDENCIES_1 =
 am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 librange_compiler_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am__dirstamp = $(am__leading_dot)dirstamp
-am_librange_compiler_la_OBJECTS = compiler/function_st.lo
+am_librange_compiler_la_OBJECTS = compiler/RangeParser_parse.lo \
+	compiler/RangeScanner.lo
 librange_compiler_la_OBJECTS = $(am_librange_compiler_la_OBJECTS)
 librange_core_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_core_la_OBJECTS =
@@ -480,12 +481,18 @@ nobase_librange_util_la_include_HEADERS = util/crc32.h
 librange_util_la_SOURCES = util/crc32.cpp
 librange_util_la_LIBADD = $(AM_LIBADD)
 librange_compiler_la_includedir = $(includedir)
-nobase_librange_compiler_la_include_HEADERS = compiler/grammar_interface.h \
+nobase_librange_compiler_la_include_HEADERS = compiler/ast.h \
 											  compiler/compiler_types.h \
-											  compiler/ast.h \
-											  compiler/grammar.h
+											  compiler/grammar_factory.h \
+											  compiler/grammar_interface.h \
+											  compiler/RangeParserbase.h \
+											  compiler/RangeParser.h \
+											  compiler/RangeScannerbase.h \
+											  compiler/RangeScanner.h 
 
-librange_compiler_la_SOURCES = compiler/function_st.cpp
+librange_compiler_la_SOURCES = compiler/RangeParser_parse.cpp \
+							   compiler/RangeScanner.cpp
+
 librange_compiler_la_LIBADD = $(AM_LIBADD)
 librange_db_la_includedir = $(includedir)
 nobase_librange_db_la_include_HEADERS = db/graphdb.h \
@@ -619,7 +626,9 @@ compiler/$(am__dirstamp):
 compiler/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) compiler/$(DEPDIR)
 	@: > compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/function_st.lo: compiler/$(am__dirstamp) \
+compiler/RangeParser_parse.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/RangeScanner.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
 
 librange_compiler.la: $(librange_compiler_la_OBJECTS) $(librange_compiler_la_DEPENDENCIES) $(EXTRA_librange_compiler_la_DEPENDENCIES) 
@@ -685,7 +694,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/function_st.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeParser_parse.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeScanner.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db_cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db_graph.Plo@am__quote@
