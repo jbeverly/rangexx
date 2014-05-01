@@ -18,11 +18,11 @@
 /* This bison/yacc-like grammar is for use with bisonc++ */
 
 %namespace rangecompiler
-%class-name RangeParser
+%class-name RangeParser_v1
 %baseclass-preinclude "ast.h"
-%parsefun-source RangeParser_parse.cpp
+%parsefun-source RangeParser_v1.cpp
 
-%scanner RangeScanner.h
+%scanner RangeScanner_v1.h
 %scanner-token-function d_scanner.lex()
 
 %stype ::range::compiler::ast::ASTNode

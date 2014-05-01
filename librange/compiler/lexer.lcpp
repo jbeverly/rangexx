@@ -15,10 +15,10 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-%class-name "RangeScanner"
 %namespace "rangecompiler"
-%filenames "RangeScanner"
-%lex-source "RangeScanner.cpp"
+%class-name "RangeScanner_v1"
+%filenames "RangeScanner_v1"
+%lex-source "RangeScanner_v1.cpp"
 
 %x squotedstring
 %x dquotedstring
@@ -37,20 +37,20 @@
 "/"                                 { begin(StartCondition__::regex); }
 <regex>{
     "\\"                            { statestack.push(StartCondition__::regex); begin(StartCondition__::escape); }
-    "/"                             { begin(StartCondition__::INITIAL); return RangeParser::REGEX; }
+    "/"                             { begin(StartCondition__::INITIAL); return RangeParser_v1::REGEX; }
     .                               { more(); }
 }
 
 "\""                                { begin(StartCondition__::dquotedstring); }
 <dquotedstring>{
     \\                              { statestack.push(StartCondition__::dquotedstring); begin(StartCondition__::escape); }
-    "\""                            { begin(StartCondition__::INITIAL); return RangeParser::DOUBLEQUOTED; }
+    "\""                            { begin(StartCondition__::INITIAL); return RangeParser_v1::DOUBLEQUOTED; }
     .                               { more(); }
 }
 "'"                                 { begin(StartCondition__::squotedstring); }
 <squotedstring>{
     "\\"                            { statestack.push(StartCondition__::squotedstring); begin(StartCondition__::escape); }
-    "'"                             { begin(StartCondition__::INITIAL); return RangeParser::SINGLEQUOTED; }
+    "'"                             { begin(StartCondition__::INITIAL); return RangeParser_v1::SINGLEQUOTED; }
     .                               { more(); }
 }
 ","                                 { begin(StartCondition__::setoperation); }
@@ -59,13 +59,13 @@
     "&"                             { return '&'; }
     .                               { redo(1); return ','; }
 }
-".."                                { return RangeParser::SEQUENCE; }
+".."                                { return RangeParser_v1::SEQUENCE; }
 [a-zA-Z0-9_\.][a-zA-Z0-9_\.\-]+     { 
                                         auto it = function_st_->find(matched());
                                         if (it != function_st_->end()) {
-                                            return RangeParser::FUNCTION;
+                                            return RangeParser_v1::FUNCTION;
                                         }
-                                        return RangeParser::BAREWORD;
+                                        return RangeParser_v1::BAREWORD;
                                     }
 [!\-&^;:*%(){}]                     { return matched()[0]; }
 

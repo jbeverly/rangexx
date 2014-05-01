@@ -26,8 +26,8 @@
 #include <boost/iostreams/device/null.hpp>
 
 #include "compiler_types.h"
-#include "RangeScannerbase.h"
-#include "RangeParserbase.h"
+#include "RangeScanner_v1base.h"
+#include "RangeParser_v1base.h"
 
 namespace rangecompiler
 {
@@ -36,23 +36,23 @@ namespace c = ::range::compiler;
 
 //##############################################################################
 //##############################################################################
-class RangeScanner: public RangeScannerBase
+class RangeScanner_v1: public RangeScanner_v1Base
 {
     public:
-        typedef std::unordered_map<std::string, c::range_function_sp_t> functor_map_t;
-        typedef boost::shared_ptr<functor_map_t> functor_map_sp_t;
+        typedef ::range::compiler::functor_map_t functor_map_t;
+        typedef ::range::compiler::functor_map_sp_t functor_map_sp_t;
 
         //######################################################################
         //######################################################################
-        explicit RangeScanner(std::istream& in, std::ostream& out,
+        explicit RangeScanner_v1(std::istream& in, std::ostream& out,
                 functor_map_sp_t symtable)
-            : RangeScannerBase(in, out), function_st_(symtable)
+            : RangeScanner_v1Base(in, out), function_st_(symtable)
         {}
 
         //######################################################################
         //######################################################################
-        explicit RangeScanner(const std::string& s, functor_map_sp_t symtable)
-            : RangeScannerBase(stringstream_, nullsink_), stringstream_(s),
+        explicit RangeScanner_v1(const std::string& s, functor_map_sp_t symtable)
+            : RangeScanner_v1Base(stringstream_, nullsink_), stringstream_(s),
                 nullsink_(null()), function_st_(symtable)
         {
         } 
@@ -93,22 +93,22 @@ class RangeScanner: public RangeScannerBase
         void postCode(PostEnum__ type);    
 };
 
-inline int RangeScanner::lex()
+inline int RangeScanner_v1::lex()
 {
     return lex__();
 }
 
-inline void RangeScanner::preCode() 
+inline void RangeScanner_v1::preCode() 
 {
 }
 
 #define UNUSED(x) (void)(x)
-inline void RangeScanner::postCode(PostEnum__ type) 
+inline void RangeScanner_v1::postCode(PostEnum__ type) 
 {
     UNUSED(type);
 }
 
-inline void RangeScanner::print() 
+inline void RangeScanner_v1::print() 
 {
     print__();
 }

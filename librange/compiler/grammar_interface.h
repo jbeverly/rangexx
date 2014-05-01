@@ -15,12 +15,12 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _RANGE_COMPILER_GRAMMAR_INTERFACE_H
-#define _RANGE_COMPILER_GRAMMAR_INTERFACE_H
+#ifndef _RANGE_COMPILER_GRAMMAR_INTERFACES_H
+#define _RANGE_COMPILER_GRAMMAR_INTERFACES_H
 
 #include <string>
-
 #include <boost/shared_ptr.hpp>
+#include "compiler_types.h"
 
 namespace range {
 namespace compiler {
@@ -31,6 +31,8 @@ class RangeGrammar
 {
     public:
         virtual ~RangeGrammar() = default;
+        virtual int parse() = 0;
+        virtual ::range::compiler::ast::ASTNode ast() const = 0;
     protected:
         RangeGrammar() = default;
 };
@@ -45,6 +47,7 @@ class RangeFunction {
     protected:
         RangeFunction() = default;
 };
+
 
 } // namespace compiler
 } // namespace range

@@ -1,72 +1,30 @@
+/*
+ * This file is part of range++.
+ *
+ * range++ is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * range++ is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with range++.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef _RANGE_COMPILER_AST_H
 #define _RANGE_COMPILER_AST_H
 
 #include <list>
 
-#include <boost/fusion/include/adapt_struct.hpp>
-#include <boost/variant/recursive_variant.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/variant/get.hpp>
 
 #include "compiler_types.h"
 
-namespace range { namespace compiler {
-
-/*
-//##############################################################################
-//##############################################################################
-class RangeFunction {
-    public:
-        virtual ~RangeFunction() = default;
-        virtual std::vector<std::string> operator()(std::vector<std::string>) = 0;
-        virtual size_t n_args() const = 0;
-    protected:
-        RangeFunction() = default;
-};
-
-*/
-
-    
-namespace ast {
-
-//typedef boost::shared_ptr<compiler::RangeFunction> range_function_t;
-
-class ASTWord;
-class ASTLiteral;
-class ASTRegex;
-class ASTNull { };
-class ASTUnion;
-class ASTDifference;
-class ASTIntersection;
-class ASTSequence;
-class ASTExpand;
-class ASTGetCluster;
-class ASTAdmin;
-class ASTGroup;
-class ASTBraceExpand;
-class ASTFunctionArguments;
-class ASTFunction;
-class ASTKeyExpand;
-
-typedef boost::variant<
-    ASTWord,                                        // 0
-    ASTLiteral,                                     // 1
-    ASTRegex,                                       // 2
-    ASTNull,                                        // 3
-    boost::recursive_wrapper<ASTUnion>,             // 4
-    boost::recursive_wrapper<ASTDifference>,        // 5
-    boost::recursive_wrapper<ASTIntersection>,      // 6
-    boost::recursive_wrapper<ASTSequence>,          // 7
-    boost::recursive_wrapper<ASTExpand>,            // 8
-    boost::recursive_wrapper<ASTGetCluster>,        // 9
-    boost::recursive_wrapper<ASTAdmin>,             // 10
-    boost::recursive_wrapper<ASTGroup>,             // 11
-    boost::recursive_wrapper<ASTBraceExpand>,       // 12
-    boost::recursive_wrapper<ASTFunctionArguments>, // 13
-    boost::recursive_wrapper<ASTFunction>,          // 14
-    boost::recursive_wrapper<ASTKeyExpand>          // 15
-> ASTNode;
+namespace range { namespace compiler { namespace ast {
 
 //##############################################################################
 class ASTWord {

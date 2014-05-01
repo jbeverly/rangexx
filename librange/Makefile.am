@@ -42,16 +42,16 @@ nobase_librange_compiler_la_include_HEADERS = compiler/ast.h \
 											  compiler/compiler_types.h \
 											  compiler/grammar_factory.h \
 											  compiler/grammar_interface.h \
-											  compiler/RangeParserbase.h \
-											  compiler/RangeParser.h \
-											  compiler/RangeScannerbase.h \
-											  compiler/RangeScanner.h 
+											  compiler/RangeParser_v1base.h \
+											  compiler/RangeParser_v1.h \
+											  compiler/RangeScanner_v1base.h \
+											  compiler/RangeScanner_v1.h 
 											
 										
 									
 
-librange_compiler_la_SOURCES = compiler/RangeParser_parse.cpp \
-							   compiler/RangeScanner.cpp
+librange_compiler_la_SOURCES = compiler/RangeParser_v1.cpp \
+							   compiler/RangeScanner_v1.cpp
 librange_compiler_la_LIBADD = $(AM_LIBADD)
 
 

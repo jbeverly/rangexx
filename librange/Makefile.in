@@ -157,8 +157,8 @@ am__DEPENDENCIES_1 =
 am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 librange_compiler_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am__dirstamp = $(am__leading_dot)dirstamp
-am_librange_compiler_la_OBJECTS = compiler/RangeParser_parse.lo \
-	compiler/RangeScanner.lo
+am_librange_compiler_la_OBJECTS = compiler/RangeParser_v1.lo \
+	compiler/RangeScanner_v1.lo
 librange_compiler_la_OBJECTS = $(am_librange_compiler_la_OBJECTS)
 librange_core_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_core_la_OBJECTS =
@@ -485,13 +485,13 @@ nobase_librange_compiler_la_include_HEADERS = compiler/ast.h \
 											  compiler/compiler_types.h \
 											  compiler/grammar_factory.h \
 											  compiler/grammar_interface.h \
-											  compiler/RangeParserbase.h \
-											  compiler/RangeParser.h \
-											  compiler/RangeScannerbase.h \
-											  compiler/RangeScanner.h 
+											  compiler/RangeParser_v1base.h \
+											  compiler/RangeParser_v1.h \
+											  compiler/RangeScanner_v1base.h \
+											  compiler/RangeScanner_v1.h 
 
-librange_compiler_la_SOURCES = compiler/RangeParser_parse.cpp \
-							   compiler/RangeScanner.cpp
+librange_compiler_la_SOURCES = compiler/RangeParser_v1.cpp \
+							   compiler/RangeScanner_v1.cpp
 
 librange_compiler_la_LIBADD = $(AM_LIBADD)
 librange_db_la_includedir = $(includedir)
@@ -626,9 +626,9 @@ compiler/$(am__dirstamp):
 compiler/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) compiler/$(DEPDIR)
 	@: > compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/RangeParser_parse.lo: compiler/$(am__dirstamp) \
+compiler/RangeParser_v1.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/RangeScanner.lo: compiler/$(am__dirstamp) \
+compiler/RangeScanner_v1.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
 
 librange_compiler.la: $(librange_compiler_la_OBJECTS) $(librange_compiler_la_DEPENDENCIES) $(EXTRA_librange_compiler_la_DEPENDENCIES) 
@@ -694,8 +694,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeParser_parse.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeScanner.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeParser_v1.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeScanner_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db_cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db_graph.Plo@am__quote@

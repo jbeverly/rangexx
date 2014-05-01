@@ -18,27 +18,32 @@
 #ifndef rangecompilerRangeParser_h_included
 #define rangecompilerRangeParser_h_included
 
-#include "RangeParserbase.h"
-#include "RangeScanner.h"
+#include <boost/make_shared.hpp>
+
+#include "RangeParser_v1base.h"
+#undef RangeParser_v1
+
+#include "RangeScanner_v1.h"
+#include "compiler_types.h"
+#include "ast.h"
+#include "grammar_factory.h"
 
 namespace rangecompiler
 {
 
-#undef RangeParser
-class RangeParser: public RangeParserBase
+class RangeParser_v1: public RangeParser_v1Base, public ::range::compiler::RangeGrammar
 {
    public:
-       RangeParser(RangeScanner& s) : d_scanner(s) { }
-       ::range::compiler::ast::ASTNode ast() const { return ast_; };
+       inline explicit RangeParser_v1(RangeScanner_v1& s) : d_scanner(s) { }
+       virtual ::range::compiler::ast::ASTNode ast() const override { return ast_; };
 
        //######################################################################
        // bisonc++ generated parse function
        //######################################################################
-       int parse();
+       virtual int parse() override;
    private:
-       RangeScanner& d_scanner;                                                ///< the lexer scannar
+       RangeScanner_v1& d_scanner;                                             ///< the lexer scannar
        ::range::compiler::ast::ASTNode ast_;                                   ///< the generated ast
-
 
        //######################################################################
        // bisonc++ generated support functions for parse():
@@ -57,4 +62,27 @@ class RangeParser: public RangeParserBase
 
 }
 
+namespace range {
+namespace compiler {
+
+//##############################################################################
+//##############################################################################
+class RangeGrammar_v1Factory : public RangeGrammarAbstractFactory {
+    public:
+        explicit RangeGrammar_v1Factory(const std::string& s, functor_map_sp_t symtable)
+            : str_(s), symtable_(symtable)
+        {
+        }
+
+        virtual grammar_sp_t create() const override {
+            ::rangecompiler::RangeScanner_v1 s { str_, symtable_ };
+            return boost::make_shared<::rangecompiler::RangeParser_v1>(s);
+        }
+    private:
+        std::string str_;
+        functor_map_sp_t symtable_;
+};
+
+} // namespace compiler
+} // namespace range
 #endif
