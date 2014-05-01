@@ -45,7 +45,6 @@
 
 <regex>{
     "\\"                            { 
-                                        more();
                                         discard(1);
                                         statestack.push(StartCondition__::regex);
                                         begin(StartCondition__::escape);
@@ -62,7 +61,6 @@
 
 <dquotedstring>{
     \\                              { 
-                                        more();
                                         discard(1);
                                         statestack.push(StartCondition__::dquotedstring);
                                         begin(StartCondition__::escape);
@@ -79,7 +77,6 @@
 
 <squotedstring>{
     "\\"                            {
-                                        more();
                                         discard(1);
                                         statestack.push(StartCondition__::squotedstring);
                                         begin(StartCondition__::escape);

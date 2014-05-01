@@ -76,9 +76,12 @@ class RangeScanner_v1: public RangeScanner_v1Base
         boost::shared_ptr<std::istream> in_;
         boost::shared_ptr<std::ostream> out_;
 
+        // Moved to far more efficient impl patched into baseclass via Input interface include
+        /* 
         void discard(size_t n) {
             setMatched(matched().substr(0, length() - n));
         }
+        */
 
         
         //######################################################################

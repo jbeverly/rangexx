@@ -1,3 +1,10 @@
+protected:
+    void discard(size_t n) {
+        d_matched.resize(d_matched.size() - n, '\0');
+        d_more = true;
+    }
+
+private:
 class Input
 {
     std::deque<unsigned char> d_deque;  // pending input chars
