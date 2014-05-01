@@ -19,53 +19,124 @@
 %class-name "RangeScanner_v1"
 %filenames "RangeScanner_v1"
 %lex-source "RangeScanner_v1.cpp"
+%input-interface "scanner_input.h.in"
+%input-implementation "scanner_input.cpp.in"
 
 %x squotedstring
 %x dquotedstring
 %x regex
 %x escape
 %x setoperation
+%x bareword
 
 %%
 
 [\ \t\n\r]+                         /* skip */
 
 <escape>{
-    .                               { more(); begin(statestack.top()); statestack.pop(); }
+    .                               {
+                                        more();
+                                        begin(statestack.top());
+                                        statestack.pop();
+                                    }
 }
 
 "/"                                 { begin(StartCondition__::regex); }
+
 <regex>{
-    "\\"                            { statestack.push(StartCondition__::regex); begin(StartCondition__::escape); }
-    "/"                             { begin(StartCondition__::INITIAL); return RangeParser_v1::REGEX; }
+    "\\"                            { 
+                                        more();
+                                        discard(1);
+                                        statestack.push(StartCondition__::regex);
+                                        begin(StartCondition__::escape);
+                                    }
+    "/"                             { 
+                                        discard(1);
+                                        begin(StartCondition__::INITIAL);
+                                        return RangeParser_v1::REGEX;
+                                    }
     .                               { more(); }
 }
 
 "\""                                { begin(StartCondition__::dquotedstring); }
+
 <dquotedstring>{
-    \\                              { statestack.push(StartCondition__::dquotedstring); begin(StartCondition__::escape); }
-    "\""                            { begin(StartCondition__::INITIAL); return RangeParser_v1::DOUBLEQUOTED; }
+    \\                              { 
+                                        more();
+                                        discard(1);
+                                        statestack.push(StartCondition__::dquotedstring);
+                                        begin(StartCondition__::escape);
+                                    }
+    "\""                            { 
+                                        discard(1);
+                                        begin(StartCondition__::INITIAL);
+                                        return RangeParser_v1::DOUBLEQUOTED;
+                                    }
     .                               { more(); }
 }
+
 "'"                                 { begin(StartCondition__::squotedstring); }
+
 <squotedstring>{
-    "\\"                            { statestack.push(StartCondition__::squotedstring); begin(StartCondition__::escape); }
-    "'"                             { begin(StartCondition__::INITIAL); return RangeParser_v1::SINGLEQUOTED; }
+    "\\"                            {
+                                        more();
+                                        discard(1);
+                                        statestack.push(StartCondition__::squotedstring);
+                                        begin(StartCondition__::escape);
+                                    }
+    "'"                             { 
+                                        discard(1);
+                                        begin(StartCondition__::INITIAL);
+                                        return RangeParser_v1::SINGLEQUOTED;
+                                    }
     .                               { more(); }
 }
+
 ","                                 { begin(StartCondition__::setoperation); }
+
 <setoperation>{
-    "-"                             { return '-'; }
-    "&"                             { return '&'; }
-    .                               { redo(1); return ','; }
+    "-"                             { begin(StartCondition__::INITIAL); return '-'; }
+    "&"                             { begin(StartCondition__::INITIAL); return '&'; }
+    .                               { redo(1); begin(StartCondition__::INITIAL); return ','; }
 }
+
 ".."                                { return RangeParser_v1::SEQUENCE; }
-[a-zA-Z0-9_\.][a-zA-Z0-9_\.\-]+     { 
+
+[a-zA-Z0-9_]                        { 
+                                        more();
+                                        begin(StartCondition__::bareword);
+                                    }
+<bareword>{
+    [a-zA-Z0-9_\-]                  { more(); }
+    ".."                            { 
+                                        redo(2);
+                                        begin(StartCondition__::INITIAL);
                                         auto it = function_st_->find(matched());
                                         if (it != function_st_->end()) {
                                             return RangeParser_v1::FUNCTION;
                                         }
                                         return RangeParser_v1::BAREWORD;
                                     }
+    "."                             { more(); }
+    .                               {
+                                        redo(1);
+                                        begin(StartCondition__::INITIAL);
+                                        auto it = function_st_->find(matched());
+                                        if (it != function_st_->end()) {
+                                            return RangeParser_v1::FUNCTION;
+                                        }
+                                        return RangeParser_v1::BAREWORD;
+                                    }
+     <<EOF>>                        {
+                                        begin(StartCondition__::INITIAL);
+                                        auto it = function_st_->find(matched());
+                                        if (it != function_st_->end()) {
+                                            return RangeParser_v1::FUNCTION;
+                                        }
+                                        return RangeParser_v1::BAREWORD;
+                                    }
+}
+
+    
 [!\-&^;:*%(){}]                     { return matched()[0]; }
 

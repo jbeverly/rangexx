@@ -21,9 +21,9 @@
 #include <sstream>
 #include <stack>
 #include <unordered_map>
+#include <fstream>
 
-#include <boost/iostreams/stream.hpp>
-#include <boost/iostreams/device/null.hpp>
+#include <boost/make_shared.hpp>
 
 #include "compiler_types.h"
 #include "RangeScanner_v1base.h"
@@ -44,18 +44,17 @@ class RangeScanner_v1: public RangeScanner_v1Base
 
         //######################################################################
         //######################################################################
-        explicit RangeScanner_v1(std::istream& in, std::ostream& out,
-                functor_map_sp_t symtable)
+        explicit RangeScanner_v1(std::istream& in, std::ostream& out, functor_map_sp_t(symtable))
             : RangeScanner_v1Base(in, out), function_st_(symtable)
-        {}
+        {
+        }
 
         //######################################################################
         //######################################################################
-        explicit RangeScanner_v1(const std::string& s, functor_map_sp_t symtable)
-            : RangeScanner_v1Base(stringstream_, nullsink_), stringstream_(s),
-                nullsink_(null()), function_st_(symtable)
-        {
-        } 
+        explicit RangeScanner_v1(boost::shared_ptr<std::istream> in, boost::shared_ptr<std::ostream> out,
+                functor_map_sp_t symtable)
+            : RangeScanner_v1Base(*in, *out), function_st_(symtable), in_(in), out_(out)
+        {}
 
         //######################################################################
         //######################################################################
@@ -72,13 +71,14 @@ class RangeScanner_v1: public RangeScanner_v1Base
         //######################################################################
         int lex();
     private:
-        typedef boost::iostreams::null_sink null;
-        typedef boost::iostreams::stream<null> nullstream;
-
-        std::istringstream stringstream_;
-        nullstream nullsink_;
         std::stack<StartCondition__> statestack;
         functor_map_sp_t function_st_;
+        boost::shared_ptr<std::istream> in_;
+        boost::shared_ptr<std::ostream> out_;
+
+        void discard(size_t n) {
+            setMatched(matched().substr(0, length() - n));
+        }
 
         
         //######################################################################
@@ -112,6 +112,15 @@ inline void RangeScanner_v1::print()
 {
     print__();
 }
+
+inline boost::shared_ptr<RangeScanner_v1> make_string_scanner_v1(const std::string& s, RangeScanner_v1::functor_map_sp_t symtable) {
+    auto null = boost::make_shared<std::ofstream>("/dev/null");
+    auto stringstream = boost::make_shared<std::istringstream>(s);
+
+    return boost::make_shared<RangeScanner_v1>(stringstream, null, symtable);
+}
+
+
 
 }
 

@@ -1,0 +1,58 @@
+RangeScanner_v1Base::Input::Input()
+:
+    d_in(0),
+    d_lineNr(1)
+{}
+
+RangeScanner_v1Base::Input::Input(std::istream *iStream, size_t lineNr)
+:
+    d_in(iStream),
+    d_lineNr(lineNr)
+{}
+
+size_t RangeScanner_v1Base::Input::get()
+{
+    switch (size_t ch = next())         // get the next input char
+    {
+        case '\n':
+            ++d_lineNr;
+        // FALLING THROUGH
+
+        default:
+        return ch;
+    }
+}
+
+size_t RangeScanner_v1Base::Input::next()
+{
+    size_t ch;
+
+    if (d_deque.empty())                // deque empty: next char fm d_in
+    {
+        if (d_in == 0)
+            return AT_EOF;
+        ch = d_in->get();
+        return *d_in ? ch : static_cast<size_t>(AT_EOF);
+    }
+
+    ch = d_deque.front();
+    d_deque.pop_front();
+
+    return ch;
+}
+
+void RangeScanner_v1Base::Input::reRead(size_t ch)
+{
+    if (ch < 0x100)
+    {
+        if (ch == '\n')
+            --d_lineNr;
+        d_deque.push_front(ch);
+    }
+}
+
+void RangeScanner_v1Base::Input::reRead(std::string const &str, size_t fm)
+{
+    for (size_t idx = str.size(); idx-- > fm; )
+        reRead(str[idx]);
+}

@@ -130,7 +130,7 @@ BerkeleyDBGraph::inculcate_change(std::thread::id id)
     changes.set_current_version( changes.current_version() + 1 );
 
     (*map_instance)[key] = changes.SerializeAsString();
-    assert((*map_instance)[key] == changes.SerializeAsString());
+    //assert((*map_instance)[key] == changes.SerializeAsString());
 }
 
 //##############################################################################

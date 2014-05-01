@@ -34,7 +34,7 @@ namespace rangecompiler
 class RangeParser_v1: public RangeParser_v1Base, public ::range::compiler::RangeGrammar
 {
    public:
-       inline explicit RangeParser_v1(RangeScanner_v1& s) : d_scanner(s) { }
+       inline explicit RangeParser_v1(boost::shared_ptr<RangeScanner_v1> s) : d_scanner(*s), d_scanner_sp(s) { }
        virtual ::range::compiler::ast::ASTNode ast() const override { return ast_; };
 
        //######################################################################
@@ -43,6 +43,7 @@ class RangeParser_v1: public RangeParser_v1Base, public ::range::compiler::Range
        virtual int parse() override;
    private:
        RangeScanner_v1& d_scanner;                                             ///< the lexer scannar
+       boost::shared_ptr<RangeScanner_v1> d_scanner_sp;                        ///< the lexer scannar
        ::range::compiler::ast::ASTNode ast_;                                   ///< the generated ast
 
        //######################################################################
@@ -75,7 +76,9 @@ class RangeGrammar_v1Factory : public RangeGrammarAbstractFactory {
         }
 
         virtual grammar_sp_t create() const override {
-            ::rangecompiler::RangeScanner_v1 s { str_, symtable_ };
+            auto s = ::rangecompiler::make_string_scanner_v1(str_, symtable_);
+            
+            //::rangecompiler::RangeScanner_v1 s { str_, symtable_ };
             return boost::make_shared<::rangecompiler::RangeParser_v1>(s);
         }
     private:
