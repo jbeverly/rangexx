@@ -1,5 +1,5 @@
 To regenerate grammar use bisonc++ : bisonc++ grammar.ycpp
 	http://bisoncpp.sourceforge.net/
 
-To regenerate lexer use flexc++ : flexc++ --skeleton-directory=./flexc++/ lexer.lcpp
+To regenerate lexer use flexc++ : flexc++ lexer.lcpp
 	http://flexcpp.sourceforge.net/
