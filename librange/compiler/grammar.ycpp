@@ -35,13 +35,14 @@
 %token SINGLEQUOTED
 %token DOUBLEQUOTED
 
-%right ':'
-%left ','
-%left '-'
-%left '&'
+%left ',' '-' '&'
+%left '!'
+%left ':'
+%left '%' '*' '^'
+%left ';'
+%nonassoc SEQUENCE
 %left '(' ')'
 %left '{' '}'
-%nonassoc SEQUENCE
 
 %%
 
@@ -146,11 +147,11 @@ literal:
     };
 
 regex:
-    REGEX
+	REGEX
     {
         $$ = range::compiler::ast::ASTRegex(d_scanner.matched());
     }
-    '!' REGEX
+    | '!' REGEX
     {
         $$ = range::compiler::ast::ASTRegex(d_scanner.matched(), false);
     };
@@ -179,7 +180,7 @@ expr:
     |   null;
 
 start:
-    expr
+    expr 
     {
         ast_ = $1;
     };

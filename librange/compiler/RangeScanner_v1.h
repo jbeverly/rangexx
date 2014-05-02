@@ -54,11 +54,16 @@ class RangeScanner_v1: public RangeScanner_v1Base
         explicit RangeScanner_v1(boost::shared_ptr<std::istream> in, boost::shared_ptr<std::ostream> out,
                 functor_map_sp_t symtable)
             : RangeScanner_v1Base(*in, *out), function_st_(symtable), in_(in), out_(out)
-        {}
+        {
+        }
 
+#ifdef _ENABLE_TESTING
+        // save a vtable, save the world
+        virtual
+#endif
         //######################################################################
         //######################################################################
-        c::range_function_sp_t function(const std::string& name) {
+        c::range_function_sp_t function(const std::string& name) const {
             auto it = function_st_->find(name);
             if (it != function_st_->end()) {
                 return it->second;
@@ -69,7 +74,16 @@ class RangeScanner_v1: public RangeScanner_v1Base
          
         //######################################################################
         //######################################################################
+#ifdef _ENABLE_TESTING
+        // save a vtable, save the world
+        virtual
+#endif
         int lex();
+
+#ifdef _ENABLE_TESTING
+        // save a vtable, save the world
+        virtual std::string matched() const { return RangeScanner_v1Base::matched(); }
+#endif
     private:
         std::stack<StartCondition__> statestack;
         functor_map_sp_t function_st_;

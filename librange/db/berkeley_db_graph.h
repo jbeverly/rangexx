@@ -35,7 +35,9 @@
 #include "berkeley_db_types.h"
 
 //##############################################################################
+#ifdef _ENABLE_TESTING
 class TestGraphDB; // enable test introspection
+#endif
 //##############################################################################
 
 namespace range {
@@ -103,7 +105,9 @@ class BerkeleyDBGraph
         friend BerkeleyDBCursor;
         friend BerkeleyDBTxn;
         friend BerkeleyDBWeakDeleter<BerkeleyDBGraph, BerkeleyDBTxn, BerkeleyDBGraph>;
+#ifdef _ENABLE_TESTING
         friend ::TestGraphDB; // enable test introspection
+#endif
 
         std::string name_;
         BerkeleyDB& backend_;

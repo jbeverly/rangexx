@@ -32,6 +32,7 @@ class ASTWord {
         ASTWord() = default;
         explicit ASTWord(const std::string& w) : word(w) { }
         std::string word;
+        std::vector<std::string> children;
 };
 
 //##############################################################################
@@ -39,6 +40,7 @@ class ASTLiteral {
     public:
         explicit ASTLiteral(const std::string& w) : word(w) { }
         std::string word;
+        std::vector<std::string> children;
 };
 
 //##############################################################################
@@ -47,6 +49,7 @@ class ASTRegex {
         explicit ASTRegex(const std::string& w, bool p=true) : word(w), positive(p) { }
         std::string word;
         bool positive;
+        std::vector<std::string> children;
 };
 
 //##############################################################################
@@ -55,6 +58,7 @@ class ASTUnion {
         explicit ASTUnion(ASTNode l, ASTNode r) : lhs(l), rhs(r) { }
         ASTNode lhs;
         ASTNode rhs; 
+        std::vector<std::string> children;
 };
 
 //##############################################################################
@@ -63,6 +67,7 @@ class ASTDifference {
         explicit ASTDifference(ASTNode l, ASTNode r) : lhs(l), rhs(r) { }
         ASTNode lhs;
         ASTNode rhs; 
+        std::vector<std::string> children;
 };
 
 //##############################################################################
@@ -71,6 +76,7 @@ class ASTIntersection {
         explicit ASTIntersection(ASTNode l, ASTNode r) : lhs(l), rhs(r) { }
         ASTNode lhs;
         ASTNode rhs; 
+        std::vector<std::string> children;
 };
 
 //##############################################################################
@@ -79,6 +85,7 @@ class ASTSequence {
         explicit ASTSequence(ASTNode l, ASTNode r) : lhs(l), rhs(r) { }
         ASTNode lhs;
         ASTNode rhs; 
+        std::vector<std::string> children;
 };
 
 
@@ -88,6 +95,7 @@ class ASTExpand {
     public:
         explicit ASTExpand(ASTNode c) : child(c) { }
         ASTNode child;
+        std::vector<std::string> children;
 };
 
 //##############################################################################
@@ -95,6 +103,7 @@ class ASTGetCluster {
     public:
         explicit ASTGetCluster(ASTNode c) : child(c) { }
         ASTNode child;
+        std::vector<std::string> children;
 };
 
 //##############################################################################
@@ -102,6 +111,7 @@ class ASTAdmin {
     public:
         explicit ASTAdmin(ASTNode c) : child(c) { }
         ASTNode child;
+        std::vector<std::string> children;
 };
 
 //##############################################################################
@@ -109,6 +119,7 @@ class ASTGroup {
     public:
         explicit ASTGroup(ASTNode c) : child(c) { }
         ASTNode child;
+        std::vector<std::string> children;
 };
 
 //##############################################################################
@@ -118,6 +129,7 @@ class ASTBraceExpand {
         ASTNode left;
         ASTNode center;
         ASTNode right;
+        std::vector<std::string> children;
 };
 
 //##############################################################################
@@ -133,6 +145,7 @@ class ASTFunctionArguments {
         }
 
         std::list<ASTNode> args;
+        std::vector<std::vector<std::string>> argument_vecs;
 };
 
 //##############################################################################
@@ -142,6 +155,7 @@ class ASTFunction {
 
         compiler::range_function_sp_t fn;
         ASTFunctionArguments args_node;
+        std::vector<std::string> children;
 };
 
 //##############################################################################
@@ -150,6 +164,7 @@ class ASTKeyExpand {
         explicit ASTKeyExpand(ASTNode l, ASTNode r) : lhs(l), rhs(r) { }
         ASTNode lhs;
         ASTNode rhs; 
+        std::vector<std::string> children;
 };
 
 

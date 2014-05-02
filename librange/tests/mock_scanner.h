@@ -15,16 +15,39 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _RANGE_TEST_MOCK_SCANNER_H
+#define _RANGE_TEST_MOCK_SCANNER_H
+
+#include <unordered_map>
+#include <fstream>
+
+#include <boost/make_shared.hpp>
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "../compiler/compiler_types.h"
+#ifndef _ENABLE_TESTING
+#define _ENABLE_TESTING
+#endif
 
-class MockRangeFunction : public ::range::compiler::RangeFunction {
+#include "../compiler/compiler_types.h"
+#include "../compiler/RangeScanner_v1.h"
+#include "mock_range_function.h"
+
+static std::ifstream infile { "/dev/null" };
+static std::ofstream outfile { "/dev/null" };
+
+class MockScanner : public ::rangecompiler::RangeScanner_v1 {
     public:
-        MOCK_CONST_METHOD0(n_args, size_t(void));
-        MOCK_METHOD1(call, std::vector<std::string>(const std::vector<std::vector<std::string>>&));
-        virtual std::vector<std::string> operator()(const std::vector<std::vector<std::string>>& vs) override {
-            return call(vs);
+        MockScanner(::range::compiler::functor_map_sp_t mockst) 
+            : ::rangecompiler::RangeScanner_v1(infile, outfile, mockst)
+        {
         }
+
+        MOCK_CONST_METHOD1(function, ::range::compiler::range_function_sp_t(const std::string& name));
+        MOCK_METHOD0(lex, int(void));
+        MOCK_CONST_METHOD0(matched, std::string(void));
 };
+
+
+#endif

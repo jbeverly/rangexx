@@ -244,6 +244,29 @@ TEST_F(TestScannerV1, test_squotes_escaped) {
     EXPECT_EQ("foo'123", sc->matched());
 }
 
+TEST_F(TestScannerV1, test_regex_specials) {
+    std::string word { "/[foo123]/" };
+
+    auto sc = ::rangecompiler::make_string_scanner_v1(word, symtable);
+
+    auto token = sc->lex();
+    EXPECT_EQ(::rangecompiler::RangeParser_v1::REGEX, token);
+    EXPECT_EQ("[foo123]", sc->matched());
+
+    word = "/.*?(\\/|asdf)/";
+    sc = ::rangecompiler::make_string_scanner_v1(word, symtable);
+
+    token = sc->lex();
+    EXPECT_EQ(::rangecompiler::RangeParser_v1::REGEX, token);
+    EXPECT_EQ(".*?(/|asdf)", sc->matched());
+
+    word = "/[a-zA-Z0-9]/";
+    sc = ::rangecompiler::make_string_scanner_v1(word, symtable);
+    token = sc->lex();
+    EXPECT_EQ(::rangecompiler::RangeParser_v1::REGEX, token);
+    EXPECT_EQ("[a-zA-Z0-9]", sc->matched());
+
+}
 
 TEST_F(TestScannerV1, test_regex) {
     std::string word { "/foo123/" };

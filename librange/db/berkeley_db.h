@@ -38,8 +38,10 @@
 //#include "berkeley_db_lock.h"
 #include "berkeley_db_weak_deleter.h"
 
+#ifdef _ENABLE_TESTING
 class TestGraphDB; // For test introspection
 class TestDB; // For test introspection
+#endif
 
 namespace range {
 namespace db {
@@ -77,8 +79,10 @@ class BerkeleyDB : public BackendInterface {
         friend BerkeleyDBGraph;
         friend BerkeleyDBLock;
         friend BerkeleyDBCursor;
+#ifdef _ENABLE_TESTING
         friend ::TestGraphDB; // enable test introspection
         friend ::TestDB; // For test introspection
+#endif
 
         const ConfigIface& conf_;
         DbEnv * env_;

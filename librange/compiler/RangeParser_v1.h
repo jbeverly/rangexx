@@ -34,7 +34,7 @@ namespace rangecompiler
 class RangeParser_v1: public RangeParser_v1Base, public ::range::compiler::RangeGrammar
 {
    public:
-       inline explicit RangeParser_v1(boost::shared_ptr<RangeScanner_v1> s) : d_scanner(*s), d_scanner_sp(s) { }
+       inline RangeParser_v1(boost::shared_ptr<RangeScanner_v1> s) : d_scanner(*s), d_scanner_sp(s) { }
        virtual ::range::compiler::ast::ASTNode ast() const override { return ast_; };
 
        //######################################################################
@@ -49,7 +49,7 @@ class RangeParser_v1: public RangeParser_v1Base, public ::range::compiler::Range
        //######################################################################
        // bisonc++ generated support functions for parse():
        //######################################################################
-       void error(char const *msg);    
+       void error(const char*);
        int lex();
        void print();
 
