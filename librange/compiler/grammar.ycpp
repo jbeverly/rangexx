@@ -40,7 +40,7 @@
 %left ':'
 %left '%' '*' '^'
 %left ';'
-%nonassoc SEQUENCE
+%left SEQUENCE
 %left '(' ')'
 %left '{' '}'
 
@@ -71,7 +71,7 @@ intersection:
     };
 
 sequence:
-    expr SEQUENCE expr
+    word SEQUENCE word
     {
         $$ = range::compiler::ast::ASTSequence($1, $3);
     };
