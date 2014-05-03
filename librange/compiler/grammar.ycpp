@@ -37,8 +37,8 @@
 
 %left ',' '-' '&'
 %left '!'
-%left ':'
 %left '%' '*' '^'
+%left ':'
 %left ';'
 %left SEQUENCE
 %left '(' ')'

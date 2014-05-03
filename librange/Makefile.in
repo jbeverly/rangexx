@@ -158,7 +158,7 @@ am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 librange_compiler_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am__dirstamp = $(am__leading_dot)dirstamp
 am_librange_compiler_la_OBJECTS = compiler/RangeParser_v1.lo \
-	compiler/RangeScanner_v1.lo
+	compiler/RangeScanner_v1.lo compiler/expanding_visitor.lo
 librange_compiler_la_OBJECTS = $(am_librange_compiler_la_OBJECTS)
 librange_core_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_core_la_OBJECTS =
@@ -488,10 +488,14 @@ nobase_librange_compiler_la_include_HEADERS = compiler/ast.h \
 											  compiler/RangeParser_v1base.h \
 											  compiler/RangeParser_v1.h \
 											  compiler/RangeScanner_v1base.h \
-											  compiler/RangeScanner_v1.h 
+											  compiler/RangeScanner_v1.h \
+											  compiler/scanner_input.h.in \
+											  compiler/scanner_input.cpp.in \
+											  compiler/expanding_visitor.h 
 
 librange_compiler_la_SOURCES = compiler/RangeParser_v1.cpp \
-							   compiler/RangeScanner_v1.cpp
+							   compiler/RangeScanner_v1.cpp \
+							   compiler/expanding_visitor.cpp
 
 librange_compiler_la_LIBADD = $(AM_LIBADD)
 librange_db_la_includedir = $(includedir)
@@ -630,6 +634,8 @@ compiler/RangeParser_v1.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/RangeScanner_v1.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/expanding_visitor.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
 
 librange_compiler.la: $(librange_compiler_la_OBJECTS) $(librange_compiler_la_DEPENDENCIES) $(EXTRA_librange_compiler_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_compiler_la_OBJECTS) $(librange_compiler_la_LIBADD) $(LIBS)
@@ -696,6 +702,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeParser_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeScanner_v1.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/expanding_visitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db_cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db_graph.Plo@am__quote@

@@ -38,22 +38,22 @@ class RangeExpandingVisitor : public boost::static_visitor<>
         
         //######################################################################
         //######################################################################
-        void operator()(ast::ASTWord&);
-        void operator()(ast::ASTLiteral&);
-        void operator()(ast::ASTRegex&);
-        void operator()(ast::ASTNull&);
-        void operator()(ast::ASTUnion&);
-        void operator()(ast::ASTDifference&);
-        void operator()(ast::ASTIntersection&);
-        void operator()(ast::ASTSequence&);
-        void operator()(ast::ASTExpand&);
-        void operator()(ast::ASTGetCluster&);
-        void operator()(ast::ASTAdmin&);
-        void operator()(ast::ASTGroup&);
-        void operator()(ast::ASTBraceExpand&);
-        void operator()(ast::ASTFunctionArguments&);
-        void operator()(ast::ASTFunction&);
-        void operator()(ast::ASTKeyExpand&);
+        void operator()(ast::ASTWord&) const;
+        void operator()(ast::ASTLiteral&) const;
+        void operator()(ast::ASTRegex&) const;
+        void operator()(ast::ASTNull&) const;
+        void operator()(ast::ASTUnion&) const;
+        void operator()(ast::ASTDifference&) const;
+        void operator()(ast::ASTIntersection&) const;
+        void operator()(ast::ASTSequence&) const;
+        void operator()(ast::ASTExpand&) const;
+        void operator()(ast::ASTGetCluster&) const;
+        void operator()(ast::ASTAdmin&) const;
+        void operator()(ast::ASTGroup&) const;
+        void operator()(ast::ASTBraceExpand&) const;
+        void operator()(ast::ASTFunctionArguments&) const;
+        void operator()(ast::ASTFunction&) const;
+        void operator()(ast::ASTKeyExpand&) const;
 
     private:
         boost::shared_ptr<graph::GraphInterface> graph_;
@@ -68,7 +68,7 @@ class FetchChildrenVisitor : public boost::static_visitor<std::vector<std::strin
         //######################################################################
         //######################################################################
         template <typename ChildType>
-        std::vector<std::string> operator()(ChildType& n)
+        std::vector<std::string> operator()(const ChildType& n) const
         {
             return n.children;
         }
@@ -76,7 +76,7 @@ class FetchChildrenVisitor : public boost::static_visitor<std::vector<std::strin
         //######################################################################
         // Null doesn't have children
         //######################################################################
-        std::vector<std::string> operator()(ast::ASTNull&)
+        std::vector<std::string> operator()(const ast::ASTNull&) const
         { 
             return std::vector<std::string>();
         }
@@ -84,7 +84,7 @@ class FetchChildrenVisitor : public boost::static_visitor<std::vector<std::strin
         //######################################################################
         // FunctionArguments should never be evaluated for children; just in case
         //######################################################################
-        std::vector<std::string> operator()(ast::ASTFunctionArguments&)
+        std::vector<std::string> operator()(const ast::ASTFunctionArguments&) const
         {
             return std::vector<std::string>();
         }

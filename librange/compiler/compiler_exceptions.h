@@ -21,7 +21,8 @@ namespace range { namespace compiler {
 
 class InvalidRangeExpression : public ::range::Exception
 {
-    InvalidRangeExpression(const std::string& s) : ::range::Exception(s) { }
+    public:
+        InvalidRangeExpression(const std::string& s) : ::range::Exception(s) { }
 };
 
 

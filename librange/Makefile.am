@@ -45,13 +45,15 @@ nobase_librange_compiler_la_include_HEADERS = compiler/ast.h \
 											  compiler/RangeParser_v1base.h \
 											  compiler/RangeParser_v1.h \
 											  compiler/RangeScanner_v1base.h \
-											  compiler/RangeScanner_v1.h 
+											  compiler/RangeScanner_v1.h \
+											  compiler/scanner_input.h.in \
+											  compiler/scanner_input.cpp.in \
+											  compiler/expanding_visitor.h 
 											
 										
-									
-
 librange_compiler_la_SOURCES = compiler/RangeParser_v1.cpp \
-							   compiler/RangeScanner_v1.cpp
+							   compiler/RangeScanner_v1.cpp \
+							   compiler/expanding_visitor.cpp
 librange_compiler_la_LIBADD = $(AM_LIBADD)
 
 

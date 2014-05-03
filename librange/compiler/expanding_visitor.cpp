@@ -16,6 +16,8 @@
  */
 #include <algorithm>
 #include <cstdio>
+#include <queue>
+#include <unordered_map>
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/lexical_cast.hpp>
@@ -29,7 +31,7 @@ namespace range { namespace compiler {
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTWord& word)
+RangeExpandingVisitor::operator()(ast::ASTWord& word) const
 {
     word.children.push_back(word.word);
 }
@@ -37,7 +39,7 @@ RangeExpandingVisitor::operator()(ast::ASTWord& word)
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTLiteral & lit)
+RangeExpandingVisitor::operator()(ast::ASTLiteral & lit) const
 {
     lit.children.push_back(lit.word);
 }
@@ -45,7 +47,7 @@ RangeExpandingVisitor::operator()(ast::ASTLiteral & lit)
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTRegex& re)
+RangeExpandingVisitor::operator()(ast::ASTRegex& re) const
 {
     re.children.push_back(re.word);
 }
@@ -53,7 +55,7 @@ RangeExpandingVisitor::operator()(ast::ASTRegex& re)
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTNull&)
+RangeExpandingVisitor::operator()(ast::ASTNull&) const
 {
     return;
 }
@@ -61,7 +63,7 @@ RangeExpandingVisitor::operator()(ast::ASTNull&)
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTUnion& u)
+RangeExpandingVisitor::operator()(ast::ASTUnion& u) const
 {
     boost::apply_visitor(RangeExpandingVisitor(graph_), u.lhs);
     boost::apply_visitor(RangeExpandingVisitor(graph_), u.rhs);
@@ -80,7 +82,7 @@ RangeExpandingVisitor::operator()(ast::ASTUnion& u)
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTDifference& diff)
+RangeExpandingVisitor::operator()(ast::ASTDifference& diff) const
 {
     boost::apply_visitor(RangeExpandingVisitor(graph_), diff.lhs);
     boost::apply_visitor(RangeExpandingVisitor(graph_), diff.rhs);
@@ -100,7 +102,7 @@ RangeExpandingVisitor::operator()(ast::ASTDifference& diff)
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTIntersection& inter)
+RangeExpandingVisitor::operator()(ast::ASTIntersection& inter) const
 {
     boost::apply_visitor(RangeExpandingVisitor(graph_), inter.lhs);
     boost::apply_visitor(RangeExpandingVisitor(graph_), inter.rhs);
@@ -120,56 +122,68 @@ RangeExpandingVisitor::operator()(ast::ASTIntersection& inter)
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTSequence& seq)
+RangeExpandingVisitor::operator()(ast::ASTSequence& seq) const
 {
     namespace qi = boost::spirit::qi;
     std::string lword = boost::get<ast::ASTWord>(seq.lhs).word;
     std::string rword = boost::get<ast::ASTWord>(seq.rhs).word;
 
-    int64_t lnum, rnum;
+    uint32_t lnum = 0, rnum = 0;
+    std::string lprefix, rsuffix;
 
     auto l_it_b = lword.cbegin();
     auto l_it_e = lword.cend();
     auto r_it_b = rword.cbegin();
     auto r_it_e = rword.cend();
 
-    qi::parse(l_it_b, l_it_e, qi::omit[*qi::char_] >> +qi::int_, lnum);
-    qi::parse(r_it_b, r_it_e, +qi::int_ >> qi::omit[*qi::char_], rnum);
+    bool p1ok = qi::parse(l_it_b, l_it_e, *qi::char_ >> qi::uint_, lprefix, lnum);
+    bool p2ok = qi::parse(r_it_b, r_it_e, qi::uint_ >> *qi::char_, rnum, rsuffix);
+
+    if (!p1ok || !p2ok) {
+        throw InvalidRangeExpression("invalid sequence: " + lword + ".." + rword);
+    }
 
     std::string lpad = boost::lexical_cast<std::string>(lnum);
     std::string rpad = boost::lexical_cast<std::string>(rnum);
 
-    std::string lprefix = lword.substr(0, lpad.size());
-    std::string rsuffix = lword.substr(rpad.size(), std::string::npos);
-
-    std::string fmt { std::string("%s%0") + boost::lexical_cast<std::string>(std::max(lpad.size(), rpad.size())) + "d%s" };
-    for (int n = lnum; n < rnum; ++n) {
+    for (uint32_t n = lnum; n < rnum; ++n) {
         char buf[1024] = {0};
-        std::snprintf(buf, sizeof(buf) - 1, fmt.c_str(), lprefix.c_str(), n, rsuffix.c_str());
+        std::snprintf(buf, sizeof(buf) - 1, "%s%0*d%s", lprefix.c_str(), static_cast<int>(std::max(lpad.size(), rpad.size())), n, rsuffix.c_str());
         seq.children.push_back(std::string(buf));
-    }
+    } 
 }
 
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTExpand& expand)
+RangeExpandingVisitor::operator()(ast::ASTExpand& expand) const
 {
     boost::apply_visitor(RangeExpandingVisitor(graph_), expand.child);
     auto children = boost::apply_visitor(FetchChildrenVisitor(), expand.child);
 
-    for(auto child : children) { 
-        auto n = graph_->get_node(child);
-        auto edges = n->forward_edges();
-        expand.children.reserve(edges.size());
-        expand.children.insert(expand.children.end(), edges.begin(), edges.end());
+    if (typeid(ast::ASTKeyExpand) == expand.child.type()) {
+        expand.children = children;
+    }
+    else {
+        for(auto child : children) { 
+            auto n = graph_->get_node(child);
+            auto edges = n->forward_edges();
+
+            std::vector<std::string> edge_names; 
+            for (auto edge : edges) {
+                edge_names.push_back(edge->name());
+            }
+
+            expand.children.reserve(edges.size());
+            expand.children.insert(expand.children.end(), edge_names.begin(), edge_names.end());
+        }
     }
 }
 
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTGetCluster& getcl)
+RangeExpandingVisitor::operator()(ast::ASTGetCluster& getcl) const
 {
     boost::apply_visitor(RangeExpandingVisitor(graph_), getcl.child);
     auto children = boost::apply_visitor(FetchChildrenVisitor(), getcl.child);
@@ -177,23 +191,66 @@ RangeExpandingVisitor::operator()(ast::ASTGetCluster& getcl)
     for(auto child : children) { 
         auto n = graph_->get_node(child);
         auto edges = n->reverse_edges();
+
+        std::vector<std::string> edge_names; 
+        for (auto edge : edges) {
+            edge_names.push_back(edge->name());
+        }
+
         getcl.children.reserve(edges.size());
-        getcl.children.insert(getcl.children.end(), edges.begin(), edges.end());
+        getcl.children.insert(getcl.children.end(), edge_names.begin(), edge_names.end());
     }
 }
 
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTAdmin&)
+RangeExpandingVisitor::operator()(ast::ASTAdmin& adm) const
 {
-    /* MOCKED */
+    boost::apply_visitor(RangeExpandingVisitor(graph_), adm.child);
+    auto children = boost::apply_visitor(FetchChildrenVisitor(), adm.child);
+
+    std::unordered_map<std::string, bool> visited;
+    std::unordered_map<std::string, bool> found_admins;
+
+    for (auto child : children) {
+        std::queue<boost::shared_ptr<::range::graph::NodeIface>> q;             // BFS traveral; want the admin nearest the child node
+        visited.clear();
+
+        auto n = graph_->get_node(child);
+        if(n) {
+            q.push(n);
+        }
+        while(q.size() > 0) {
+            auto v = q.front(); q.pop();
+            if (visited.find(v->name()) == visited.end()) {
+                visited[v->name()] = true;
+
+                auto edges = v->reverse_edges();
+                for (auto e: edges) {
+                    q.push(e);
+                }
+                auto tags = n->tags();
+                auto t = tags.find("ADMIN_NODE");                               // FIXME: This should come from the configuration file not be hard-coded
+                if(t != tags.end()) {
+                    for (std::string a : t->second) {
+                        found_admins[a] = true;
+                    }
+                    break;  // Break out of BFS
+                }
+            }
+        }
+    }
+
+    for (auto it = found_admins.begin(); it != found_admins.end(); ++it) {
+        adm.children.push_back(it->first);
+    }
 }
 
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTGroup& grp)
+RangeExpandingVisitor::operator()(ast::ASTGroup& grp) const
 {
     boost::apply_visitor(RangeExpandingVisitor(graph_), grp.child);
     auto children = boost::apply_visitor(FetchChildrenVisitor(), grp.child);
@@ -204,7 +261,7 @@ RangeExpandingVisitor::operator()(ast::ASTGroup& grp)
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTBraceExpand& brace)
+RangeExpandingVisitor::operator()(ast::ASTBraceExpand& brace) const
 {
     boost::apply_visitor(RangeExpandingVisitor(graph_), brace.left);
     boost::apply_visitor(RangeExpandingVisitor(graph_), brace.center);
@@ -242,7 +299,7 @@ RangeExpandingVisitor::operator()(ast::ASTBraceExpand& brace)
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTFunctionArguments& args)
+RangeExpandingVisitor::operator()(ast::ASTFunctionArguments& args) const
 {
     for (auto arg_node : args.args) {
         boost::apply_visitor(RangeExpandingVisitor(graph_), arg_node);
@@ -254,7 +311,7 @@ RangeExpandingVisitor::operator()(ast::ASTFunctionArguments& args)
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTFunction& fn)
+RangeExpandingVisitor::operator()(ast::ASTFunction& fn) const
 {
     (*this)(fn.args_node);
     fn.children = (*fn.fn)(fn.args_node.argument_vecs );
@@ -263,7 +320,7 @@ RangeExpandingVisitor::operator()(ast::ASTFunction& fn)
 //##############################################################################
 //##############################################################################
 void
-RangeExpandingVisitor::operator()(ast::ASTKeyExpand& key)
+RangeExpandingVisitor::operator()(ast::ASTKeyExpand& key) const
 {
     boost::apply_visitor(RangeExpandingVisitor(graph_), key.lhs);
     auto children = boost::apply_visitor(FetchChildrenVisitor(), key.lhs);

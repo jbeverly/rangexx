@@ -694,14 +694,70 @@ TEST_F(TestParserV1, test_get_key_expand) {
 
     auto a = p.ast();
 
-    EXPECT_EQ(15, a.which()); 
-    EXPECT_EQ(typeid(ast::ASTKeyExpand), a.type()); 
+    EXPECT_EQ(typeid(ast::ASTExpand), a.type()); 
 
-    auto n = boost::get<ast::ASTKeyExpand>(a);
+    auto n = boost::get<ast::ASTExpand>(a);
 
-    EXPECT_EQ(typeid(ast::ASTExpand), n.lhs.type()); 
-    EXPECT_EQ(typeid(ast::ASTWord), n.rhs.type()); 
+    EXPECT_EQ(typeid(ast::ASTKeyExpand), n.child.type()); 
+
+    auto c = boost::get<ast::ASTKeyExpand>(n.child);
+
+    EXPECT_EQ(typeid(ast::ASTWord), c.lhs.type());
+    EXPECT_EQ(typeid(ast::ASTWord), c.rhs.type());
+
 }
+
+
+TEST_F(TestParserV1, test_get_nested_key_expand) {
+    ::rangecompiler::RangeParser_v1 p { scanner };
+
+    EXPECT_CALL(*scanner, lex())
+        .Times(8)
+        .WillOnce(Return('%'))
+        .WillOnce(Return('{'))
+        .WillOnce(Return('%'))
+        .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
+        .WillOnce(Return('}'))
+        .WillOnce(Return(':'))
+        .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
+        .WillOnce(Return(-1));
+
+    EXPECT_CALL(*scanner, matched())
+        .Times(2)
+        .WillOnce(Return("foo"))
+        .WillOnce(Return("SOMEKEY"));
+
+    int success = p.parse();
+
+    EXPECT_EQ(0, success);
+
+    auto a = p.ast();
+
+    EXPECT_EQ(typeid(ast::ASTExpand), a.type()); 
+
+    auto n = boost::get<ast::ASTExpand>(a);
+
+    EXPECT_EQ(typeid(ast::ASTKeyExpand), n.child.type()); 
+
+    auto c = boost::get<ast::ASTKeyExpand>(n.child);
+
+    EXPECT_EQ(typeid(ast::ASTBraceExpand), c.lhs.type());
+    EXPECT_EQ(typeid(ast::ASTWord), c.rhs.type());
+    EXPECT_EQ("SOMEKEY", boost::get<ast::ASTWord>(c.rhs).word);
+
+    auto brace = boost::get<ast::ASTBraceExpand>(c.lhs);
+
+    EXPECT_EQ(typeid(ast::ASTNull), brace.left.type());
+    EXPECT_EQ(typeid(ast::ASTExpand), brace.center.type());
+    EXPECT_EQ(typeid(ast::ASTNull), brace.right.type());
+
+    auto e = boost::get<ast::ASTExpand>(brace.center);
+
+    EXPECT_EQ(typeid(ast::ASTWord), e.child.type());
+    EXPECT_EQ("foo", boost::get<ast::ASTWord>(e.child).word);
+}
+
+
 
 
 
