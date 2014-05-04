@@ -3,7 +3,7 @@ export LD_LIBRARY_PATH:=@GMOCK_LD_LIBRARY_PATH@:@GTEST_LD_LIBRARY_PATH@:@PROTOBU
 
 AM_CPPFLAGS = @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ -I$(top_builddir)/librange
 AM_LDFLAGS = @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_LDFLAGS@ @DB_CXX_LDFLAGS@ @DB_STL_LDFLAGS@ 
-LDADD = $(top_builddir)/librange/librange.la @GTEST_LIBS@ @GMOCK_LIBS@ @DB_CXX_LIBS@ @DB_STL_LIBS@
+LDADD = $(top_builddir)/librange/librange.la @GTEST_LIBS@ @GMOCK_LIBS@ @DB_CXX_LIBS@ @DB_STL_LIBS@ @BOOST_REGEX_LIB@
 LIBADD = $(top_builddir)/librange/librange.la
 
 AM_DEFAULT_SOURCE_EXT = .cpp
@@ -13,7 +13,8 @@ check_PROGRAMS = test_graph_iterator \
 				 test_db \
 				 test_graphdb \
 				 test_compiler_range_scanner_v1 \
-				 test_compiler_range_parser_v1
+				 test_compiler_range_parser_v1 \
+				 test_compiler_expanding_visitor
 
 
 TESTS = $(check_PROGRAMS)

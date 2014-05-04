@@ -72,7 +72,7 @@ TEST_F(TestParserV1, test_word) {
     EXPECT_CALL(*scanner, lex())
         .Times(2)
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(1)
@@ -96,7 +96,7 @@ TEST_F(TestParserV1, test_regex) {
     EXPECT_CALL(*scanner, lex())
         .Times(2)
         .WillOnce(Return(::rangecompiler::RangeParser_v1::REGEX))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(1)
@@ -112,13 +112,15 @@ TEST_F(TestParserV1, test_regex) {
     EXPECT_EQ("[a-zA-Z0-9]", e.word);
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_function_bareword) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
     EXPECT_CALL(*scanner, lex())
         .Times(2)
         .WillOnce(Return(::rangecompiler::RangeParser_v1::FUNCTION))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(1)
@@ -134,6 +136,8 @@ TEST_F(TestParserV1, test_function_bareword) {
     EXPECT_EQ("HelloWorld", e.word);
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_function_call_one_arg) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -147,7 +151,7 @@ TEST_F(TestParserV1, test_function_call_one_arg) {
         .WillOnce(Return('('))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::DOUBLEQUOTED))
         .WillOnce(Return(')'))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(2)
@@ -166,6 +170,8 @@ TEST_F(TestParserV1, test_function_call_one_arg) {
     EXPECT_EQ("Argument!", arg.word);
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_function_call_two_args) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -181,7 +187,7 @@ TEST_F(TestParserV1, test_function_call_two_args) {
         .WillOnce(Return(';'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::DOUBLEQUOTED))
         .WillOnce(Return(')'))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(3)
@@ -207,6 +213,8 @@ TEST_F(TestParserV1, test_function_call_two_args) {
     EXPECT_EQ("Argument2", arg.word);
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_function_call_three_args) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -224,7 +232,7 @@ TEST_F(TestParserV1, test_function_call_three_args) {
         .WillOnce(Return(';'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
         .WillOnce(Return(')'))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(4)
@@ -254,6 +262,8 @@ TEST_F(TestParserV1, test_function_call_three_args) {
     EXPECT_EQ("Argument3", wordarg.word);
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_sequence) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -262,7 +272,7 @@ TEST_F(TestParserV1, test_sequence) {
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::SEQUENCE))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(2)
@@ -284,6 +294,8 @@ TEST_F(TestParserV1, test_sequence) {
     EXPECT_EQ("2234", boost::get<ast::ASTWord>(n.rhs).word);
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_union) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -292,7 +304,7 @@ TEST_F(TestParserV1, test_union) {
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
         .WillOnce(Return(','))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(2)
@@ -314,6 +326,8 @@ TEST_F(TestParserV1, test_union) {
     EXPECT_EQ("2234", boost::get<ast::ASTWord>(n.rhs).word);
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_difference) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -322,7 +336,7 @@ TEST_F(TestParserV1, test_difference) {
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
         .WillOnce(Return('-'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(2)
@@ -345,6 +359,8 @@ TEST_F(TestParserV1, test_difference) {
 }
 
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_intersection) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -353,7 +369,7 @@ TEST_F(TestParserV1, test_intersection) {
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
         .WillOnce(Return('&'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(2)
@@ -375,6 +391,8 @@ TEST_F(TestParserV1, test_intersection) {
     EXPECT_EQ("2234", boost::get<ast::ASTWord>(n.rhs).word);
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_expand_union) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -385,7 +403,7 @@ TEST_F(TestParserV1, test_expand_union) {
         .WillOnce(Return(','))
         .WillOnce(Return('%'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(2)
@@ -404,8 +422,8 @@ TEST_F(TestParserV1, test_expand_union) {
     EXPECT_EQ(typeid(ast::ASTExpand), n.rhs.type()); 
 }
 
-
-
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_expand) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -413,7 +431,7 @@ TEST_F(TestParserV1, test_expand) {
         .Times(3)
         .WillOnce(Return('%'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(1)
@@ -432,6 +450,8 @@ TEST_F(TestParserV1, test_expand) {
     EXPECT_EQ("asdf1234", boost::get<ast::ASTWord>(n.child).word);
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_expand_nested) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -440,7 +460,7 @@ TEST_F(TestParserV1, test_expand_nested) {
         .WillOnce(Return('%'))
         .WillOnce(Return('%'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(1)
@@ -464,6 +484,8 @@ TEST_F(TestParserV1, test_expand_nested) {
 }
 
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_admin) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -471,7 +493,7 @@ TEST_F(TestParserV1, test_admin) {
         .Times(3)
         .WillOnce(Return('^'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(1)
@@ -490,6 +512,8 @@ TEST_F(TestParserV1, test_admin) {
     EXPECT_EQ("asdf1234", boost::get<ast::ASTWord>(n.child).word);
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_admin_nested) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -498,7 +522,7 @@ TEST_F(TestParserV1, test_admin_nested) {
         .WillOnce(Return('^'))
         .WillOnce(Return('^'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(1)
@@ -522,6 +546,8 @@ TEST_F(TestParserV1, test_admin_nested) {
 }
 
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_get_cluster) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -529,7 +555,7 @@ TEST_F(TestParserV1, test_get_cluster) {
         .Times(3)
         .WillOnce(Return('*'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(1)
@@ -548,6 +574,8 @@ TEST_F(TestParserV1, test_get_cluster) {
     EXPECT_EQ("asdf1234", boost::get<ast::ASTWord>(n.child).word);
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_get_cluster_nested) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -556,7 +584,7 @@ TEST_F(TestParserV1, test_get_cluster_nested) {
         .WillOnce(Return('*'))
         .WillOnce(Return('*'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(1)
@@ -579,6 +607,8 @@ TEST_F(TestParserV1, test_get_cluster_nested) {
     EXPECT_EQ("asdf1234", boost::get<ast::ASTWord>(boost::get<ast::ASTGetCluster>(n.child).child).word);
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_get_brace_nested_expand) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -589,7 +619,7 @@ TEST_F(TestParserV1, test_get_brace_nested_expand) {
         .WillOnce(Return('%'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
         .WillOnce(Return('}'))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(1)
@@ -617,6 +647,75 @@ TEST_F(TestParserV1, test_get_brace_nested_expand) {
     EXPECT_EQ("asdf1234", boost::get<ast::ASTWord>(inner_n.child).word);
 }
 
+//##############################################################################
+//##############################################################################
+TEST_F(TestParserV1, test_get_simple_brace_expand) {
+    ::rangecompiler::RangeParser_v1 p { scanner };
+
+    EXPECT_CALL(*scanner, lex())
+        .Times(12)
+        .WillOnce(Return('{'))
+        .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
+        .WillOnce(Return(','))
+        .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
+        .WillOnce(Return(','))
+        .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
+        .WillOnce(Return(','))
+        .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
+        .WillOnce(Return(','))
+        .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
+        .WillOnce(Return('}'))
+        .WillOnce(Return(0));
+
+    EXPECT_CALL(*scanner, matched())
+        .Times(5)
+        .WillOnce(Return("1"))
+        .WillOnce(Return("2"))
+        .WillOnce(Return("3"))
+        .WillOnce(Return("4"))
+        .WillOnce(Return("5"));
+
+    int success = p.parse();
+
+    EXPECT_EQ(0, success);
+
+    auto a = p.ast();
+
+    EXPECT_EQ(typeid(ast::ASTBraceExpand), a.type()); 
+    auto n = boost::get<ast::ASTBraceExpand>(a);
+
+    EXPECT_EQ(typeid(ast::ASTNull), n.left.type()); 
+    EXPECT_EQ(typeid(ast::ASTUnion), n.center.type()); 
+    EXPECT_EQ(typeid(ast::ASTNull), n.right.type()); 
+
+    auto u1 = boost::get<ast::ASTUnion>(n.center);
+
+    EXPECT_EQ(typeid(ast::ASTUnion), u1.lhs.type()); 
+    EXPECT_EQ(typeid(ast::ASTWord),  u1.rhs.type()); 
+
+    auto u2 = boost::get<ast::ASTUnion>(u1.lhs);
+    EXPECT_EQ(typeid(ast::ASTUnion), u2.lhs.type()); 
+    EXPECT_EQ(typeid(ast::ASTWord),  u2.rhs.type()); 
+
+    auto u3 = boost::get<ast::ASTUnion>(u2.lhs);
+    EXPECT_EQ(typeid(ast::ASTUnion), u3.lhs.type()); 
+    EXPECT_EQ(typeid(ast::ASTWord),  u3.rhs.type()); 
+
+    auto u4 = boost::get<ast::ASTUnion>(u3.lhs);
+    EXPECT_EQ(typeid(ast::ASTWord), u4.lhs.type()); 
+    EXPECT_EQ(typeid(ast::ASTWord), u3.rhs.type()); 
+
+    EXPECT_EQ("1", boost::get<ast::ASTWord>(u4.lhs).word);
+    EXPECT_EQ("2", boost::get<ast::ASTWord>(u4.rhs).word);
+    EXPECT_EQ("3", boost::get<ast::ASTWord>(u3.rhs).word);
+    EXPECT_EQ("4", boost::get<ast::ASTWord>(u2.rhs).word);
+    EXPECT_EQ("5", boost::get<ast::ASTWord>(u1.rhs).word);
+}
+
+
+
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_get_shell_brace_expand) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -631,7 +730,7 @@ TEST_F(TestParserV1, test_get_shell_brace_expand) {
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
         .WillOnce(Return('}'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(5)
@@ -671,7 +770,8 @@ TEST_F(TestParserV1, test_get_shell_brace_expand) {
     EXPECT_EQ("3", boost::get<ast::ASTWord>(u1.rhs).word);
 }
 
-
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_get_key_expand) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -681,7 +781,7 @@ TEST_F(TestParserV1, test_get_key_expand) {
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
         .WillOnce(Return(':'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(2)
@@ -708,6 +808,8 @@ TEST_F(TestParserV1, test_get_key_expand) {
 }
 
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestParserV1, test_get_nested_key_expand) {
     ::rangecompiler::RangeParser_v1 p { scanner };
 
@@ -720,7 +822,7 @@ TEST_F(TestParserV1, test_get_nested_key_expand) {
         .WillOnce(Return('}'))
         .WillOnce(Return(':'))
         .WillOnce(Return(::rangecompiler::RangeParser_v1::BAREWORD))
-        .WillOnce(Return(-1));
+        .WillOnce(Return(0));
 
     EXPECT_CALL(*scanner, matched())
         .Times(2)

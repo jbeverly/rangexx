@@ -5,7 +5,7 @@ find . -iname '*.gcno' | xargs rm
 
 MAKE=make
 if [ -x ./config.status ]; then
-	FLAGS='-ggdb -O0 --coverage'
+	FLAGS='-ggdb -O0 --coverage -D_ENABLE_TESTING'
 	oldconfigure=$(./config.status --config)
 	./config.status --config | grep -q -- "${FLAGS}" || eval 'CXXFLAGS="'"$FLAGS"'" CFLAGS="'"$FLAGS"'" '"./configure $(./config.status --config)"
 else
@@ -24,6 +24,8 @@ lcov --no-checksum --directory $(pwd) --capture --output-file rangexx_test.info
 lcov --remove rangexx_test.info "/usr*" -o rangexx_test.info
 lcov --remove rangexx_test.info "/opt*" -o rangexx_test.info
 lcov --remove rangexx_test.info "*.pb.*" -o rangexx_test.info
+lcov --remove rangexx_test.info "*.ycpp*" -o rangexx_test.info
+lcov --remove rangexx_test.info "*.lcpp*" -o rangexx_test.info
 rm -rf $(pwd)/test_coverage
 genhtml -o $(pwd)/test_coverage -t "range++ test coverage" --num-spaces 4 rangexx_test.info
 

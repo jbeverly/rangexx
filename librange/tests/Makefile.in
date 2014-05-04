@@ -80,7 +80,8 @@ host_triplet = @host@
 check_PROGRAMS = test_graph_iterator$(EXEEXT) test_pbuff_node$(EXEEXT) \
 	test_db$(EXEEXT) test_graphdb$(EXEEXT) \
 	test_compiler_range_scanner_v1$(EXEEXT) \
-	test_compiler_range_parser_v1$(EXEEXT)
+	test_compiler_range_parser_v1$(EXEEXT) \
+	test_compiler_expanding_visitor$(EXEEXT)
 subdir = librange/tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp $(top_srcdir)/test-driver
@@ -105,6 +106,17 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/range_config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+test_compiler_expanding_visitor_SOURCES =  \
+	test_compiler_expanding_visitor.cpp
+test_compiler_expanding_visitor_OBJECTS =  \
+	test_compiler_expanding_visitor.$(OBJEXT)
+test_compiler_expanding_visitor_LDADD = $(LDADD)
+test_compiler_expanding_visitor_DEPENDENCIES =  \
+	$(top_builddir)/librange/librange.la
+AM_V_lt = $(am__v_lt_@AM_V@)
+am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
+am__v_lt_0 = --silent
+am__v_lt_1 = 
 test_compiler_range_parser_v1_SOURCES =  \
 	test_compiler_range_parser_v1.cpp
 test_compiler_range_parser_v1_OBJECTS =  \
@@ -112,10 +124,6 @@ test_compiler_range_parser_v1_OBJECTS =  \
 test_compiler_range_parser_v1_LDADD = $(LDADD)
 test_compiler_range_parser_v1_DEPENDENCIES =  \
 	$(top_builddir)/librange/librange.la
-AM_V_lt = $(am__v_lt_@AM_V@)
-am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
-am__v_lt_0 = --silent
-am__v_lt_1 = 
 test_compiler_range_scanner_v1_SOURCES =  \
 	test_compiler_range_scanner_v1.cpp
 test_compiler_range_scanner_v1_OBJECTS =  \
@@ -174,10 +182,12 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = test_compiler_range_parser_v1.cpp \
+SOURCES = test_compiler_expanding_visitor.cpp \
+	test_compiler_range_parser_v1.cpp \
 	test_compiler_range_scanner_v1.cpp test_db.cpp \
 	test_graph_iterator.cpp test_graphdb.cpp test_pbuff_node.cpp
-DIST_SOURCES = test_compiler_range_parser_v1.cpp \
+DIST_SOURCES = test_compiler_expanding_visitor.cpp \
+	test_compiler_range_parser_v1.cpp \
 	test_compiler_range_scanner_v1.cpp test_db.cpp \
 	test_graph_iterator.cpp test_graphdb.cpp test_pbuff_node.cpp
 am__can_run_installinfo = \
@@ -569,7 +579,7 @@ top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = color-tests
 AM_CPPFLAGS = @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ -I$(top_builddir)/librange
 AM_LDFLAGS = @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_LDFLAGS@ @DB_CXX_LDFLAGS@ @DB_STL_LDFLAGS@ 
-LDADD = $(top_builddir)/librange/librange.la @GTEST_LIBS@ @GMOCK_LIBS@ @DB_CXX_LIBS@ @DB_STL_LIBS@
+LDADD = $(top_builddir)/librange/librange.la @GTEST_LIBS@ @GMOCK_LIBS@ @DB_CXX_LIBS@ @DB_STL_LIBS@ @BOOST_REGEX_LIB@
 LIBADD = $(top_builddir)/librange/librange.la
 AM_DEFAULT_SOURCE_EXT = .cpp
 TESTS = $(check_PROGRAMS)
@@ -617,6 +627,10 @@ clean-checkPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
+test_compiler_expanding_visitor$(EXEEXT): $(test_compiler_expanding_visitor_OBJECTS) $(test_compiler_expanding_visitor_DEPENDENCIES) $(EXTRA_test_compiler_expanding_visitor_DEPENDENCIES) 
+	@rm -f test_compiler_expanding_visitor$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(test_compiler_expanding_visitor_OBJECTS) $(test_compiler_expanding_visitor_LDADD) $(LIBS)
+
 test_compiler_range_parser_v1$(EXEEXT): $(test_compiler_range_parser_v1_OBJECTS) $(test_compiler_range_parser_v1_DEPENDENCIES) $(EXTRA_test_compiler_range_parser_v1_DEPENDENCIES) 
 	@rm -f test_compiler_range_parser_v1$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_compiler_range_parser_v1_OBJECTS) $(test_compiler_range_parser_v1_LDADD) $(LIBS)
@@ -647,6 +661,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_compiler_expanding_visitor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_compiler_range_parser_v1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_compiler_range_scanner_v1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_db.Po@am__quote@
@@ -912,6 +927,13 @@ test_compiler_range_scanner_v1.log: test_compiler_range_scanner_v1$(EXEEXT)
 test_compiler_range_parser_v1.log: test_compiler_range_parser_v1$(EXEEXT)
 	@p='test_compiler_range_parser_v1$(EXEEXT)'; \
 	b='test_compiler_range_parser_v1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_compiler_expanding_visitor.log: test_compiler_expanding_visitor$(EXEEXT)
+	@p='test_compiler_expanding_visitor$(EXEEXT)'; \
+	b='test_compiler_expanding_visitor'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

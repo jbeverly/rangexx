@@ -15405,6 +15405,8 @@ ac_config_headers="$ac_config_headers range_config.h"
 ACLOCAL_AMFLAGS="-I m4"
 
 
+#CPPFLAGS="-fPIC -fPIE"
+
 
 
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
@@ -17155,17 +17157,17 @@ else
 fi
 
 
+	CPPFLAGS_SAVED="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
+	export CPPFLAGS
+
+	LDFLAGS_SAVED="$LDFLAGS"
+	LDFLAGS="$LDFLAGS $BOOST_LDFLAGS"
+	export LDFLAGS
+
 	if test "x$want_boost" = "xyes"; then
 
 
-
-		CPPFLAGS_SAVED="$CPPFLAGS"
-		CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
-		export CPPFLAGS
-
-		LDFLAGS_SAVED="$LDFLAGS"
-		LDFLAGS="$LDFLAGS $BOOST_LDFLAGS"
-		export LDFLAGS
 
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the Boost::Log library is available" >&5
 $as_echo_n "checking whether the Boost::Log library is available... " >&6; }
@@ -17373,10 +17375,9 @@ fi
 				as_fn_error $? "Could not link against $ax_lib !" "$LINENO" 5
 			fi
 		fi
-
-		CPPFLAGS="$CPPFLAGS_SAVED"
-		LDFLAGS="$LDFLAGS_SAVED"
 	fi
+	CPPFLAGS="$CPPFLAGS_SAVED"
+	LDFLAGS="$LDFLAGS_SAVED"
 
 
 

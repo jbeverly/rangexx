@@ -51,18 +51,18 @@ AC_DEFUN([AX_BOOST_LOG],
 		], [want_boost="yes"]
 	)
 
+	CPPFLAGS_SAVED="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
+	export CPPFLAGS
+
+	LDFLAGS_SAVED="$LDFLAGS"
+	LDFLAGS="$LDFLAGS $BOOST_LDFLAGS"
+	export LDFLAGS
+
 	if test "x$want_boost" = "xyes"; then
 		AC_REQUIRE([AC_PROG_CC])
 		AC_REQUIRE([AC_CANONICAL_BUILD])
-
-		CPPFLAGS_SAVED="$CPPFLAGS"
-		CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
-		export CPPFLAGS
-
-		LDFLAGS_SAVED="$LDFLAGS"
-		LDFLAGS="$LDFLAGS $BOOST_LDFLAGS"
-		export LDFLAGS
-
+		
 		AC_CACHE_CHECK(whether the Boost::Log library is available,
 			ax_cv_boost_log,
 			[AC_LANG_PUSH([C++])
@@ -115,8 +115,7 @@ AC_DEFUN([AX_BOOST_LOG],
 				AC_MSG_ERROR(Could not link against $ax_lib !)
 			fi
 		fi
-
-		CPPFLAGS="$CPPFLAGS_SAVED"
-		LDFLAGS="$LDFLAGS_SAVED"
 	fi
+	CPPFLAGS="$CPPFLAGS_SAVED"
+	LDFLAGS="$LDFLAGS_SAVED"
 ])

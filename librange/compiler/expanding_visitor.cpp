@@ -16,11 +16,17 @@
  */
 #include <algorithm>
 #include <cstdio>
+#include <cmath>
 #include <queue>
 #include <unordered_map>
+#include <iostream>
+#include <iterator>
 
-#include <boost/spirit/include/qi.hpp>
+#include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/iterator/filter_iterator.hpp>
+#define BOOST_SPIRIT_NO_PREDEFINED_TERMINALS
+#include <boost/spirit/include/qi.hpp>
 
 #include "expanding_visitor.h"
 #include "ast.h"
@@ -71,12 +77,42 @@ RangeExpandingVisitor::operator()(ast::ASTUnion& u) const
     auto lchildren = boost::apply_visitor(FetchChildrenVisitor(), u.lhs);
     auto rchildren = boost::apply_visitor(FetchChildrenVisitor(), u.rhs);
 
+    std::sort(lchildren.begin(), lchildren.end());
+    std::sort(rchildren.begin(), rchildren.end());
+
     u.children.reserve(lchildren.size() + rchildren.size());
     std::set_union(
                 lchildren.begin(), lchildren.end(),
                 rchildren.begin(), rchildren.end(), 
-                u.children.begin()
+                std::back_inserter(u.children)
             );
+    u.children.shrink_to_fit();
+}
+
+//##############################################################################
+//##############################################################################
+template <typename T, typename L>
+static inline void 
+regex_filter(T& elem, L& lchildren)
+{
+    std::string re_word = boost::get<ast::ASTRegex>(elem.rhs).word;
+    bool positive = ! boost::get<ast::ASTRegex>(elem.rhs).positive;
+    boost::regex re;
+    try {
+        re = boost::regex( re_word );
+    } catch(boost::regex_error& e) {
+        throw InvalidRangeExpression(e.what());
+    }
+    auto pred = [&re, positive](typename L::value_type w)
+        {
+            bool found = boost::regex_search(w, re);
+            return (positive) ? ! found : found;
+        };
+
+    auto f_begin = boost::make_filter_iterator(pred, lchildren.begin(), lchildren.end());
+    auto f_end = boost::make_filter_iterator(pred, lchildren.end(), lchildren.end());
+
+    elem.children.insert(elem.children.begin(), f_begin, f_end);
 }
 
 //##############################################################################
@@ -85,18 +121,27 @@ void
 RangeExpandingVisitor::operator()(ast::ASTDifference& diff) const
 {
     boost::apply_visitor(RangeExpandingVisitor(graph_), diff.lhs);
-    boost::apply_visitor(RangeExpandingVisitor(graph_), diff.rhs);
-
     auto lchildren = boost::apply_visitor(FetchChildrenVisitor(), diff.lhs);
-    auto rchildren = boost::apply_visitor(FetchChildrenVisitor(), diff.rhs);
+    std::sort(lchildren.begin(), lchildren.end());
+ 
+    if (typeid(ast::ASTRegex) == diff.rhs.type()) {
+        boost::get<ast::ASTRegex>(diff.rhs).positive = ! boost::get<ast::ASTRegex>(diff.rhs).positive;
+        regex_filter(diff, lchildren);
+    }
+    else {
+        boost::apply_visitor(RangeExpandingVisitor(graph_), diff.rhs);
+        auto rchildren = boost::apply_visitor(FetchChildrenVisitor(), diff.rhs);
 
-    diff.children.reserve(lchildren.size() + rchildren.size());
-    std::set_difference(
-                lchildren.begin(), lchildren.end(),
-                rchildren.begin(), rchildren.end(), 
-                diff.children.begin()
-            );
-    diff.children.shrink_to_fit();
+        std::sort(rchildren.begin(), rchildren.end());
+
+        diff.children.reserve(lchildren.size() + rchildren.size());
+        std::set_difference(
+                    lchildren.begin(), lchildren.end(),
+                    rchildren.begin(), rchildren.end(), 
+                    std::back_inserter(diff.children)
+                );
+        diff.children.shrink_to_fit();
+    }
 }
 
 //##############################################################################
@@ -105,18 +150,26 @@ void
 RangeExpandingVisitor::operator()(ast::ASTIntersection& inter) const
 {
     boost::apply_visitor(RangeExpandingVisitor(graph_), inter.lhs);
-    boost::apply_visitor(RangeExpandingVisitor(graph_), inter.rhs);
-
     auto lchildren = boost::apply_visitor(FetchChildrenVisitor(), inter.lhs);
-    auto rchildren = boost::apply_visitor(FetchChildrenVisitor(), inter.rhs);
+    std::sort(lchildren.begin(), lchildren.end());
 
-    inter.children.reserve(lchildren.size() + rchildren.size());
-    std::set_intersection(
-                lchildren.begin(), lchildren.end(),
-                rchildren.begin(), rchildren.end(), 
-                inter.children.begin()
-            );
-    inter.children.shrink_to_fit();
+    if (typeid(ast::ASTRegex) == inter.rhs.type()) {
+        regex_filter(inter, lchildren);
+    }
+    else {
+        boost::apply_visitor(RangeExpandingVisitor(graph_), inter.rhs);
+        auto rchildren = boost::apply_visitor(FetchChildrenVisitor(), inter.rhs);
+
+        std::sort(rchildren.begin(), rchildren.end());
+
+        inter.children.reserve(lchildren.size() + rchildren.size());
+        std::set_intersection(
+                    lchildren.begin(), lchildren.end(),
+                    rchildren.begin(), rchildren.end(), 
+                    std::back_inserter(inter.children)
+                );
+        inter.children.shrink_to_fit();
+    }
 }
 
 //##############################################################################
@@ -127,28 +180,44 @@ RangeExpandingVisitor::operator()(ast::ASTSequence& seq) const
     namespace qi = boost::spirit::qi;
     std::string lword = boost::get<ast::ASTWord>(seq.lhs).word;
     std::string rword = boost::get<ast::ASTWord>(seq.rhs).word;
+    // To speed up compilation I have disabled predefined terminals
+    // as such, I must define the terminals I require
+    qi::char_type char_;
+    qi::uint_type uint_;
 
     uint32_t lnum = 0, rnum = 0;
     std::string lprefix, rsuffix;
 
-    auto l_it_b = lword.cbegin();
-    auto l_it_e = lword.cend();
-    auto r_it_b = rword.cbegin();
-    auto r_it_e = rword.cend();
+    auto l_it_b = lword.cbegin(), l_it_e = lword.cend();
+    auto r_it_b = rword.cbegin(), r_it_e = rword.cend();
 
-    bool p1ok = qi::parse(l_it_b, l_it_e, *qi::char_ >> qi::uint_, lprefix, lnum);
-    bool p2ok = qi::parse(r_it_b, r_it_e, qi::uint_ >> *qi::char_, rnum, rsuffix);
+    bool p1ok = qi::parse(l_it_b, l_it_e, *(char_ - uint_) >> uint_,
+            lprefix, lnum);
+    bool p2ok = qi::parse(r_it_b, r_it_e, uint_ >> *char_, rnum, rsuffix);
 
     if (!p1ok || !p2ok) {
-        throw InvalidRangeExpression("invalid sequence: " + lword + ".." + rword);
+        std::string er;
+        if (!p1ok) er += "left ";
+        if (!p2ok) {
+            if (er.size() > 0)
+                er += "and ";
+            er += "right ";
+        }
+        throw InvalidRangeExpression("invalid " + er + "portion of sequence: "
+                                         + lword + ".." + rword);
     }
 
-    std::string lpad = boost::lexical_cast<std::string>(lnum);
-    std::string rpad = boost::lexical_cast<std::string>(rnum);
+    if (rnum < lnum) rnum += lnum;
 
-    for (uint32_t n = lnum; n < rnum; ++n) {
+    uint32_t lpad = std::floor(std::log10(lnum)) + 1;
+    uint32_t rpad = std::floor(std::log10(rnum)) + 1;
+    uint32_t pad = std::max(lpad, rpad);
+
+
+    for (uint32_t n = lnum; n <= rnum; ++n) {
         char buf[1024] = {0};
-        std::snprintf(buf, sizeof(buf) - 1, "%s%0*d%s", lprefix.c_str(), static_cast<int>(std::max(lpad.size(), rpad.size())), n, rsuffix.c_str());
+        std::snprintf(buf, sizeof(buf) - 1, "%s%0*d%s",
+                lprefix.c_str(), pad, n, rsuffix.c_str());
         seq.children.push_back(std::string(buf));
     } 
 }
@@ -178,6 +247,10 @@ RangeExpandingVisitor::operator()(ast::ASTExpand& expand) const
             expand.children.insert(expand.children.end(), edge_names.begin(), edge_names.end());
         }
     }
+
+    std::sort(expand.children.begin(), expand.children.end());
+    auto it = std::unique(expand.children.begin(), expand.children.end());
+    expand.children.resize(std::distance(expand.children.begin(), it)); 
 }
 
 //##############################################################################
@@ -226,17 +299,18 @@ RangeExpandingVisitor::operator()(ast::ASTAdmin& adm) const
             if (visited.find(v->name()) == visited.end()) {
                 visited[v->name()] = true;
 
-                auto edges = v->reverse_edges();
-                for (auto e: edges) {
-                    q.push(e);
-                }
-                auto tags = n->tags();
+                auto tags = v->tags();
                 auto t = tags.find("ADMIN_NODE");                               // FIXME: This should come from the configuration file not be hard-coded
                 if(t != tags.end()) {
                     for (std::string a : t->second) {
                         found_admins[a] = true;
                     }
                     break;  // Break out of BFS
+                }
+
+                auto edges = v->reverse_edges();
+                for (auto e: edges) {
+                    q.push(e);
                 }
             }
         }
@@ -271,7 +345,13 @@ RangeExpandingVisitor::operator()(ast::ASTBraceExpand& brace) const
     auto cchildren = boost::apply_visitor(FetchChildrenVisitor(), brace.center);
     auto rchildren = boost::apply_visitor(FetchChildrenVisitor(), brace.right);
 
-    std::vector<std::string> tmp { cchildren.size() };
+#ifdef _ENABLE_TESTING // much easier to validate if sorted
+    std::sort(lchildren.begin(), lchildren.end());
+    std::sort(cchildren.begin(), cchildren.end());
+    std::sort(rchildren.begin(), rchildren.end());
+#endif
+
+    std::vector<std::string> tmp; 
 
     if (lchildren.size() > 0) {
         for (auto lchild : lchildren) {
@@ -294,6 +374,9 @@ RangeExpandingVisitor::operator()(ast::ASTBraceExpand& brace) const
     else {
         brace.children = tmp;
     }
+
+    /* auto it = std::unique(brace.children.begin(), brace.children.end());
+    brace.children.resize(std::distance(brace.children.begin(), it)); */
 }
 
 //##############################################################################

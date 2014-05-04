@@ -62,6 +62,8 @@ class TestScannerV1 : public ::testing::Test
 #include <fstream>
 #include <sstream>
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_word) {
     std::string word { "Hello" };
 
@@ -71,6 +73,8 @@ TEST_F(TestScannerV1, test_word) {
     EXPECT_EQ(word, sc->matched()); 
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_dot_word) { 
     std::string word { "Hello.world" };
     auto sc = ::rangecompiler::make_string_scanner_v1(word, symtable);
@@ -80,6 +84,8 @@ TEST_F(TestScannerV1, test_dot_word) {
     EXPECT_EQ(word, sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_hyphen_word) {
     std::string word { "Hello-world" };
     auto sc = ::rangecompiler::make_string_scanner_v1(word, symtable);
@@ -89,6 +95,8 @@ TEST_F(TestScannerV1, test_hyphen_word) {
     EXPECT_EQ(word, sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_function) {
     std::string word { "function1" };
 
@@ -98,6 +106,8 @@ TEST_F(TestScannerV1, test_function) {
     EXPECT_EQ(word, sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_sequence) {
     std::string word { "foo123..456asdf" };
 
@@ -112,6 +122,8 @@ TEST_F(TestScannerV1, test_sequence) {
     EXPECT_EQ("456asdf", sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_union) {
     std::string word { "foo123,456asdf" };
 
@@ -129,6 +141,8 @@ TEST_F(TestScannerV1, test_union) {
     EXPECT_EQ("456asdf", sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_difference) {
     std::string word { "foo123,-456asdf" };
 
@@ -147,6 +161,8 @@ TEST_F(TestScannerV1, test_difference) {
 }
 
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_intersection) {
     std::string word { "foo123,&456asdf" };
 
@@ -164,6 +180,8 @@ TEST_F(TestScannerV1, test_intersection) {
     EXPECT_EQ("456asdf", sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_expand) {
     std::string word { "%foo123" };
 
@@ -178,6 +196,8 @@ TEST_F(TestScannerV1, test_expand) {
 }
 
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_admin) {
     std::string word { "^foo123" };
 
@@ -191,6 +211,8 @@ TEST_F(TestScannerV1, test_admin) {
     EXPECT_EQ("foo123", sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_getcluster) {
     std::string word { "*foo123" };
 
@@ -204,6 +226,8 @@ TEST_F(TestScannerV1, test_getcluster) {
     EXPECT_EQ("foo123", sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_dquotes) {
     std::string word { "\"foo123\"" };
 
@@ -214,6 +238,8 @@ TEST_F(TestScannerV1, test_dquotes) {
     EXPECT_EQ("foo123", sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_dquotes_escaped) {
     std::string word { "\"foo\\\"123\"" };
 
@@ -224,6 +250,8 @@ TEST_F(TestScannerV1, test_dquotes_escaped) {
     EXPECT_EQ("foo\"123", sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_squotes) {
     std::string word { "'foo123'" };
 
@@ -234,6 +262,8 @@ TEST_F(TestScannerV1, test_squotes) {
     EXPECT_EQ("foo123", sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_squotes_escaped) {
     std::string word { "'foo\\'123'" };
 
@@ -244,6 +274,8 @@ TEST_F(TestScannerV1, test_squotes_escaped) {
     EXPECT_EQ("foo'123", sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_regex_specials) {
     std::string word { "/[foo123]/" };
 
@@ -268,6 +300,8 @@ TEST_F(TestScannerV1, test_regex_specials) {
 
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_regex) {
     std::string word { "/foo123/" };
 
@@ -278,6 +312,8 @@ TEST_F(TestScannerV1, test_regex) {
     EXPECT_EQ("foo123", sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_regex_escaped) {
     std::string word { "/foo\\/123/" };
 
@@ -288,6 +324,57 @@ TEST_F(TestScannerV1, test_regex_escaped) {
     EXPECT_EQ("foo/123", sc->matched());
 }
 
+//##############################################################################
+//##############################################################################
+TEST_F(TestScannerV1, test_brace_tokens) {
+    std::string word { "{1,2,3,4,5}" };
+
+    auto sc = ::rangecompiler::make_string_scanner_v1(word, symtable);
+
+    auto token = sc->lex();
+    EXPECT_EQ('{', token);
+
+    token = sc->lex();
+    EXPECT_EQ(::rangecompiler::RangeParser_v1::BAREWORD, token);
+    EXPECT_EQ("1", sc->matched());
+
+    token = sc->lex();
+    EXPECT_EQ(',', token);
+
+    token = sc->lex();
+    EXPECT_EQ(::rangecompiler::RangeParser_v1::BAREWORD, token);
+    EXPECT_EQ("2", sc->matched());
+
+    token = sc->lex();
+    EXPECT_EQ(',', token);
+
+    token = sc->lex();
+    EXPECT_EQ(::rangecompiler::RangeParser_v1::BAREWORD, token);
+    EXPECT_EQ("3", sc->matched());
+
+    token = sc->lex();
+    EXPECT_EQ(',', token);
+
+    token = sc->lex();
+    EXPECT_EQ(::rangecompiler::RangeParser_v1::BAREWORD, token);
+    EXPECT_EQ("4", sc->matched());
+
+    token = sc->lex();
+    EXPECT_EQ(',', token);
+
+    token = sc->lex();
+    EXPECT_EQ(::rangecompiler::RangeParser_v1::BAREWORD, token);
+    EXPECT_EQ("5", sc->matched());
+
+    token = sc->lex();
+    EXPECT_EQ('}', token);
+
+    token = sc->lex();
+    EXPECT_EQ(0, token);
+}
+
+//##############################################################################
+//##############################################################################
 TEST_F(TestScannerV1, test_operators) {
     std::string word { "!-&^;:*%(){}" };
 

@@ -15,6 +15,8 @@ AC_CONFIG_HEADERS([range_config.h])
 ACLOCAL_AMFLAGS="-I m4"
 AC_CONFIG_MACRO_DIR([m4])
 
+#CPPFLAGS="-fPIC -fPIE"
+
 PKG_PROG_PKG_CONFIG
 
 # Checks for programs.
