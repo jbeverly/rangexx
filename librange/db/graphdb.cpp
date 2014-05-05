@@ -101,7 +101,23 @@ GraphDB::get_cursor(GraphDB::node_t node) const
 GraphDB::node_t
 GraphDB::get_node(const std::string& name) const
 {
-    return get_cursor()->fetch(name);
+    auto n = get_cursor()->fetch(name);
+    if (n) {
+        uint64_t cmp_version = (static_cast<int64_t>(wanted_version_) == -1)
+                                    ? this->version() : wanted_version_;
+
+        for (uint64_t node_version : boost::adaptors::reverse(n->graph_versions()))
+        {
+            if (node_version == cmp_version) {
+                return n;
+            }
+            if (node_version < cmp_version) {                                   // we've gone too far back, bail out
+                return nullptr;
+            }
+        }
+        return n;
+    }
+    return nullptr;
 }
 
 //##############################################################################

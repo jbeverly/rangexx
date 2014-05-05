@@ -68,15 +68,18 @@ class FetchChildrenVisitor : public boost::static_visitor<std::vector<std::strin
         //######################################################################
         //######################################################################
         template <typename ChildType>
-        std::vector<std::string> operator()(const ChildType& n) const
+        std::vector<std::string> operator()(ChildType& n) const
         {
-            return n.children;
+            std::vector<std::string> tmp = n.children;
+            n.children.clear();                                                 // Cleanup after ourselves as we go
+            n.children.shrink_to_fit();
+            return tmp;
         }
 
         //######################################################################
         // Null doesn't have children
         //######################################################################
-        std::vector<std::string> operator()(const ast::ASTNull&) const
+        std::vector<std::string> operator()(ast::ASTNull&) const
         { 
             return std::vector<std::string>();
         }
@@ -84,7 +87,7 @@ class FetchChildrenVisitor : public boost::static_visitor<std::vector<std::strin
         //######################################################################
         // FunctionArguments should never be evaluated for children; just in case
         //######################################################################
-        std::vector<std::string> operator()(const ast::ASTFunctionArguments&) const
+        std::vector<std::string> operator()(ast::ASTFunctionArguments&) const
         {
             return std::vector<std::string>();
         }

@@ -593,7 +593,6 @@ TEST_F(TestCompiler, test_braces_shell_expand)
     ASSERT_EQ(0, success);
 
     auto top = parser.ast();
-    std::cerr << top.which() << std::endl;
     
     boost::apply_visitor(c::RangeExpandingVisitor(graph_), top);
     auto children = boost::apply_visitor(c::FetchChildrenVisitor(), top);

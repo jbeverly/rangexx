@@ -1,6 +1,7 @@
-SUBDIRS = librange
+SUBDIRS = librange rangexxstored
 ACLOCAL_AMFLAGS    = -I m4
 
-valgrind:
-	(cd librange; make valgrind)
+valgrind: librange/librange.la 
+	(cd librange; make valgrind) \
+	(cd rangexxstored; make valgrind)
 
