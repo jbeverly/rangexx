@@ -1,0 +1,114 @@
+package range.core.stored;
+
+message Request {
+    enum Type { 
+        CREATE_GRAPH                                    = 0;
+        REMOVE_NODE                                     = 1;
+        CREATE_NODE                                     = 2;
+        ADD_TAG_VALUES                                  = 3;
+        REMOVE_TAG_VALUES                               = 4;
+        DELETE_TAG                                      = 5;
+        ADD_FORWARD_EDGE                                = 6;
+        ADD_REVERSE_EDGE                                = 7;
+        REMOVE_FORWARD_EDGE                             = 8;
+        REMOVE_REVERSE_EDGE                             = 9;
+    };
+
+    message CreateGraph {
+        required string graph_name                      = 1;
+        optional bool prepopulate                       = 2 [default = true];
+        optional string prepopulate_source              = 3 [default = "primary"];
+    }
+
+    message RemoveNode {
+        required string graph_name                      = 1;
+        required string name                            = 2;
+    }
+
+    message CreateNode {
+        required string graph_name                      = 1;
+        required string name                            = 2;
+        required uint32 type                            = 3;
+    }
+
+    message AddTagValues {
+        message Values {
+            repeated string values                      = 1;
+        }
+
+        required string graph_name                      = 1;
+        required string node_name                       = 2;
+        required string tag_key                         = 3;
+        required Values values                          = 4;
+    }
+
+    message RemoveTagValues {
+        message Values {
+            repeated string values                      = 1;
+        }
+
+        required string graph_name                      = 1;
+        required string node_name                       = 2;
+        required string tag_key                         = 3;
+        required Values values                          = 4;
+    }
+
+    message DeleteTag {
+        required string graph_name                      = 1;
+        required string node_name                       = 2;
+        required string tag_key                         = 3;
+    }
+
+    message AddForwardEdge {
+        required string graph_name                      = 1;
+        required string node_name                       = 2;
+        required string edge_name                       = 3;
+    }
+
+    message RemoveForwardEdge {
+        required string graph_name                      = 1;
+        required string node_name                       = 2;
+        required string edge_name                       = 3;
+    }
+    
+    message AddReverseEdge {
+        required string graph_name                      = 1;
+        required string node_name                       = 2;
+        required string edge_name                       = 3;
+    }
+
+    message RemoveReverseEdge {
+        required string graph_name                      = 1;
+        required string node_name                       = 2;
+        required string edge_name                       = 3;
+    }
+    
+    required Type               request_type            = 1;
+    required bool               blocking                = 2;
+	required string             client_id               = 3;
+    optional CreateGraph        create_graph            = 4;
+    optional RemoveNode         remove_node             = 5;
+    optional CreateNode         create_node             = 6;
+    optional AddTagValues       add_tag_values          = 7;
+    optional RemoveTagValues    remove_tag_values       = 8;
+    optional DeleteTag          delete_tag              = 9;
+    optional AddForwardEdge     add_forward_edge        = 10;
+    optional RemoveForwardEdge  remove_foreward_edge    = 11;
+    optional AddReverseEdge     add_reverse_edge        = 12;
+    optional RemoveReverseEdge  remove_reverse_edge     = 13;
+}
+
+message Ack {
+    required bool status = 1;
+    optional uint64 code = 2;
+    optional string reason = 3;
+}
+    
+    
+        
+    
+        
+        
+        
+        
+        

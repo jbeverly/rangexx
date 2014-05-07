@@ -15,6 +15,11 @@ AM_LIBADD   = @BOOST_REGEX_LIB@ @DB_CXX_LIBS@     @DB_STL_LIBS@ @PROTOBUF_LIBS@ 
 lib_LTLIBRARIES    = librange.la
 noinst_LTLIBRARIES = librange_db.la librange_graph.la librange_compiler.la librange_util.la librange_core.la
 
+core/store.pb.h: core/store.proto
+	    $(PROTOC) -I=core/ --cpp_out=core/ core/store.proto && mv core/store.pb.cc core/store.pb.cpp
+
+core/store.pb.cpp: core/store.pb.h
+
 db/nodeinfo.pb.h: db/nodeinfo.proto
 	$(PROTOC) -I=db/ --cpp_out=db/ db/nodeinfo.proto && mv db/nodeinfo.pb.cc db/nodeinfo.pb.cpp
 
@@ -30,7 +35,11 @@ db/changelist.pb.h: db/changelist.proto
 
 db/changelist.pb.cpp: db/changelist.pb.h
 
-BUILT_SOURCES = db/nodeinfo.pb.h db/nodeinfo.pb.cpp db/graph_list.pb.h db/graph_list.pb.cpp
+BUILT_SOURCES = db/nodeinfo.pb.h \
+				db/nodeinfo.pb.cpp \
+				db/graph_list.pb.h \
+				db/graph_list.pb.cpp \
+				core/store.pb.cpp
 
 librange_util_la_includedir = $(includedir)
 nobase_librange_util_la_include_HEADERS = util/crc32.h
@@ -97,7 +106,7 @@ librange_graph_la_LIBADD = $(AM_LIBADD)
 
 librange_core_la_includedir = $(includedir)
 nobase_librange_core_la_include_HEADERS = core/exceptions.h core/config_interface.h
-librange_core_la_SOURCES = 
+librange_core_la_SOURCES = ./core/store.pb.cpp
 librange_core_la_LIBADD = $(AM_LIBADD)
 
 

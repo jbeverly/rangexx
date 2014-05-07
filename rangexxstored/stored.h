@@ -15,25 +15,11 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../db/config_interface.h"
-#include "stored_config_interface.h"
-#include "reader_config_interface.h"
+#include <boost/interprocess/managed_heap_memory.hpp>
+#include <boost/interprocess/ipc/message_queue.hpp>
 
-namespace range {
-
-//##############################################################################
-//##############################################################################
-class ConfigIface {
-    public:
-        virtual ~ConfigIface() = default;
-        virtual db::ConfigIface& db() const = 0;
-        virtual StoredConfigIface& stored() const = 0;
-        virtual ReaderConfigIface& reader() const = 0;
-        
-    protected:
-        ConfigIface() = default;
-
-};
+namespace range { namespace stored {
+namespace ipc = boost::interprocess;
 
 
-} // namespace range
+} /* stored */ } /* range */

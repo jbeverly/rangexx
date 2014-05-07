@@ -14,7 +14,8 @@ check_PROGRAMS = test_graph_iterator \
 				 test_graphdb \
 				 test_compiler_range_scanner_v1 \
 				 test_compiler_range_parser_v1 \
-				 test_compiler_expanding_visitor
+				 test_compiler_expanding_visitor \
+				 test_mq
 
 
 TESTS = $(check_PROGRAMS)

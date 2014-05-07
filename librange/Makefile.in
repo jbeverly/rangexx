@@ -161,7 +161,7 @@ am_librange_compiler_la_OBJECTS = compiler/RangeParser_v1.lo \
 	compiler/RangeScanner_v1.lo compiler/expanding_visitor.lo
 librange_compiler_la_OBJECTS = $(am_librange_compiler_la_OBJECTS)
 librange_core_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
-am_librange_core_la_OBJECTS =
+am_librange_core_la_OBJECTS = ./core/store.pb.lo
 librange_core_la_OBJECTS = $(am_librange_core_la_OBJECTS)
 librange_db_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_db_la_OBJECTS = db/graphdb.lo db/pbuff_node.lo \
@@ -480,7 +480,12 @@ AM_LDFLAGS = @BOOST_LDFLAGS@ @DB_CXX_LDFLAGS@  @DB_STL_LDFLAGS@ @PROTOBUF_LDFLAG
 AM_LIBADD = @BOOST_REGEX_LIB@ @DB_CXX_LIBS@     @DB_STL_LIBS@ @PROTOBUF_LIBS@     $(AM_LIBADD_G)
 lib_LTLIBRARIES = librange.la
 noinst_LTLIBRARIES = librange_db.la librange_graph.la librange_compiler.la librange_util.la librange_core.la
-BUILT_SOURCES = db/nodeinfo.pb.h db/nodeinfo.pb.cpp db/graph_list.pb.h db/graph_list.pb.cpp
+BUILT_SOURCES = db/nodeinfo.pb.h \
+				db/nodeinfo.pb.cpp \
+				db/graph_list.pb.h \
+				db/graph_list.pb.cpp \
+				core/store.pb.cpp
+
 librange_util_la_includedir = $(includedir)
 nobase_librange_util_la_include_HEADERS = util/crc32.h
 librange_util_la_SOURCES = util/crc32.cpp
@@ -540,7 +545,7 @@ librange_graph_la_SOURCES = graph/graph_iter.cpp
 librange_graph_la_LIBADD = $(AM_LIBADD)
 librange_core_la_includedir = $(includedir)
 nobase_librange_core_la_include_HEADERS = core/exceptions.h core/config_interface.h
-librange_core_la_SOURCES = 
+librange_core_la_SOURCES = ./core/store.pb.cpp
 librange_core_la_LIBADD = $(AM_LIBADD)
 librange_la_SOURCES = 
 librange_la_LDFLAGS = -version-info $(RANGEXX_LIBRARY_VERSION)
@@ -644,9 +649,17 @@ compiler/expanding_visitor.lo: compiler/$(am__dirstamp) \
 
 librange_compiler.la: $(librange_compiler_la_OBJECTS) $(librange_compiler_la_DEPENDENCIES) $(EXTRA_librange_compiler_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_compiler_la_OBJECTS) $(librange_compiler_la_LIBADD) $(LIBS)
+core/$(am__dirstamp):
+	@$(MKDIR_P) ./core
+	@: > core/$(am__dirstamp)
+core/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) ./core/$(DEPDIR)
+	@: > core/$(DEPDIR)/$(am__dirstamp)
+./core/store.pb.lo: core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
 
 librange_core.la: $(librange_core_la_OBJECTS) $(librange_core_la_DEPENDENCIES) $(EXTRA_librange_core_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(librange_core_la_OBJECTS) $(librange_core_la_LIBADD) $(LIBS)
+	$(AM_V_CXXLD)$(CXXLINK)  $(librange_core_la_OBJECTS) $(librange_core_la_LIBADD) $(LIBS)
 db/$(am__dirstamp):
 	@$(MKDIR_P) db
 	@: > db/$(am__dirstamp)
@@ -693,6 +706,8 @@ librange_util.la: $(librange_util_la_OBJECTS) $(librange_util_la_DEPENDENCIES) $
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f ./core/*.$(OBJEXT)
+	-rm -f ./core/*.lo
 	-rm -f compiler/*.$(OBJEXT)
 	-rm -f compiler/*.lo
 	-rm -f db/*.$(OBJEXT)
@@ -705,6 +720,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/store.pb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeParser_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeScanner_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/expanding_visitor.Plo@am__quote@
@@ -750,6 +766,7 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+	-rm -rf ./core/.libs ./core/_libs
 	-rm -rf compiler/.libs compiler/_libs
 	-rm -rf db/.libs db/_libs
 	-rm -rf graph/.libs graph/_libs
@@ -1067,6 +1084,8 @@ distclean-generic:
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
 	-rm -f compiler/$(DEPDIR)/$(am__dirstamp)
 	-rm -f compiler/$(am__dirstamp)
+	-rm -f core/$(DEPDIR)/$(am__dirstamp)
+	-rm -f core/$(am__dirstamp)
 	-rm -f db/$(DEPDIR)/$(am__dirstamp)
 	-rm -f db/$(am__dirstamp)
 	-rm -f graph/$(DEPDIR)/$(am__dirstamp)
@@ -1084,7 +1103,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	clean-noinstLTLIBRARIES mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
+	-rm -rf ./core/$(DEPDIR) compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1134,7 +1153,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
+	-rm -rf ./core/$(DEPDIR) compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1187,6 +1206,11 @@ uninstall-am: uninstall-libLTLIBRARIES \
 	uninstall-nobase_librange_graph_la_includeHEADERS \
 	uninstall-nobase_librange_util_la_includeHEADERS
 
+
+core/store.pb.h: core/store.proto
+	    $(PROTOC) -I=core/ --cpp_out=core/ core/store.proto && mv core/store.pb.cc core/store.pb.cpp
+
+core/store.pb.cpp: core/store.pb.h
 
 db/nodeinfo.pb.h: db/nodeinfo.proto
 	$(PROTOC) -I=db/ --cpp_out=db/ db/nodeinfo.proto && mv db/nodeinfo.pb.cc db/nodeinfo.pb.cpp

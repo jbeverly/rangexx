@@ -15,25 +15,14 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../db/config_interface.h"
-#include "stored_config_interface.h"
-#include "reader_config_interface.h"
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
-namespace range {
-
-//##############################################################################
-//##############################################################################
-class ConfigIface {
-    public:
-        virtual ~ConfigIface() = default;
-        virtual db::ConfigIface& db() const = 0;
-        virtual StoredConfigIface& stored() const = 0;
-        virtual ReaderConfigIface& reader() const = 0;
-        
-    protected:
-        ConfigIface() = default;
-
-};
-
-
-} // namespace range
+int
+main(int argc, char **argv)
+{
+//    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    ::testing::InitGoogleTest(&argc, argv);
+//    range::db::ProtobufNode::s_shutdown();
+    return RUN_ALL_TESTS();
+}

@@ -15,25 +15,22 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../db/config_interface.h"
-#include "stored_config_interface.h"
-#include "reader_config_interface.h"
+#ifndef _RANGE_CORE_STORED_CONFIG_H
+#define _RANGE_CORE_STORED_CONFIG_H
 
 namespace range {
 
-//##############################################################################
-//##############################################################################
-class ConfigIface {
+class StoredConfigIface
+{
     public:
-        virtual ~ConfigIface() = default;
-        virtual db::ConfigIface& db() const = 0;
-        virtual StoredConfigIface& stored() const = 0;
-        virtual ReaderConfigIface& reader() const = 0;
-        
-    protected:
-        ConfigIface() = default;
+        virtual ~StoredConfigIface() = default;
 
+    protected: 
+        StoredConfigIface() = default;
 };
 
 
 } // namespace range
+
+
+#endif

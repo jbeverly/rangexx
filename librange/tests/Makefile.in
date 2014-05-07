@@ -81,7 +81,7 @@ check_PROGRAMS = test_graph_iterator$(EXEEXT) test_pbuff_node$(EXEEXT) \
 	test_db$(EXEEXT) test_graphdb$(EXEEXT) \
 	test_compiler_range_scanner_v1$(EXEEXT) \
 	test_compiler_range_parser_v1$(EXEEXT) \
-	test_compiler_expanding_visitor$(EXEEXT)
+	test_compiler_expanding_visitor$(EXEEXT) test_mq$(EXEEXT)
 subdir = librange/tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp $(top_srcdir)/test-driver
@@ -144,6 +144,10 @@ test_graphdb_SOURCES = test_graphdb.cpp
 test_graphdb_OBJECTS = test_graphdb.$(OBJEXT)
 test_graphdb_LDADD = $(LDADD)
 test_graphdb_DEPENDENCIES = $(top_builddir)/librange/librange.la
+test_mq_SOURCES = test_mq.cpp
+test_mq_OBJECTS = test_mq.$(OBJEXT)
+test_mq_LDADD = $(LDADD)
+test_mq_DEPENDENCIES = $(top_builddir)/librange/librange.la
 test_pbuff_node_SOURCES = test_pbuff_node.cpp
 test_pbuff_node_OBJECTS = test_pbuff_node.$(OBJEXT)
 test_pbuff_node_LDADD = $(LDADD)
@@ -185,11 +189,13 @@ am__v_CXXLD_1 =
 SOURCES = test_compiler_expanding_visitor.cpp \
 	test_compiler_range_parser_v1.cpp \
 	test_compiler_range_scanner_v1.cpp test_db.cpp \
-	test_graph_iterator.cpp test_graphdb.cpp test_pbuff_node.cpp
+	test_graph_iterator.cpp test_graphdb.cpp test_mq.cpp \
+	test_pbuff_node.cpp
 DIST_SOURCES = test_compiler_expanding_visitor.cpp \
 	test_compiler_range_parser_v1.cpp \
 	test_compiler_range_scanner_v1.cpp test_db.cpp \
-	test_graph_iterator.cpp test_graphdb.cpp test_pbuff_node.cpp
+	test_graph_iterator.cpp test_graphdb.cpp test_mq.cpp \
+	test_pbuff_node.cpp
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -656,6 +662,10 @@ test_graphdb$(EXEEXT): $(test_graphdb_OBJECTS) $(test_graphdb_DEPENDENCIES) $(EX
 	@rm -f test_graphdb$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_graphdb_OBJECTS) $(test_graphdb_LDADD) $(LIBS)
 
+test_mq$(EXEEXT): $(test_mq_OBJECTS) $(test_mq_DEPENDENCIES) $(EXTRA_test_mq_DEPENDENCIES) 
+	@rm -f test_mq$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(test_mq_OBJECTS) $(test_mq_LDADD) $(LIBS)
+
 test_pbuff_node$(EXEEXT): $(test_pbuff_node_OBJECTS) $(test_pbuff_node_DEPENDENCIES) $(EXTRA_test_pbuff_node_DEPENDENCIES) 
 	@rm -f test_pbuff_node$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_pbuff_node_OBJECTS) $(test_pbuff_node_LDADD) $(LIBS)
@@ -672,6 +682,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_db.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_graph_iterator.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_graphdb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_mq.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_pbuff_node.Po@am__quote@
 
 .cpp.o:
@@ -939,6 +950,13 @@ test_compiler_range_parser_v1.log: test_compiler_range_parser_v1$(EXEEXT)
 test_compiler_expanding_visitor.log: test_compiler_expanding_visitor$(EXEEXT)
 	@p='test_compiler_expanding_visitor$(EXEEXT)'; \
 	b='test_compiler_expanding_visitor'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_mq.log: test_mq$(EXEEXT)
+	@p='test_mq$(EXEEXT)'; \
+	b='test_mq'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

@@ -23,4 +23,12 @@ struct Exception : public std::runtime_error::runtime_error {
     Exception(const std::string& what) : std::runtime_error::runtime_error(what) { }
 };
 
+namespace core { namespace stored {
+
+struct MqueueException : public ::range::Exception {
+    MqueueException(const std::string& what) : Exception(what) {}
+};
+
+} /* namespace stored */ } /* core */ 
+
 } // namespace range

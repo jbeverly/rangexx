@@ -845,7 +845,7 @@ uninstall-am:
 
 
 valgrind: librange/librange.la 
-	(cd librange; make valgrind) \
+	(cd librange; make valgrind) 
 	(cd rangexxstored; make valgrind)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

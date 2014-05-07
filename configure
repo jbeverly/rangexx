@@ -16295,6 +16295,7 @@ rm -f core conftest.err conftest.$ac_objext \
           CPPFLAGS="$tmp_CPPFLAGS"
 
 
+LDFLAGS="$LDFLAGS -ldb"
 
 
 
