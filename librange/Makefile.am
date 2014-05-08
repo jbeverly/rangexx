@@ -106,7 +106,9 @@ librange_graph_la_LIBADD = $(AM_LIBADD)
 
 librange_core_la_includedir = $(includedir)
 nobase_librange_core_la_include_HEADERS = core/exceptions.h core/config_interface.h
-librange_core_la_SOURCES = ./core/store.pb.cpp
+librange_core_la_SOURCES = ./core/store.pb.cpp \
+						   ./core/stored_message.cpp 
+	
 librange_core_la_LIBADD = $(AM_LIBADD)
 
 

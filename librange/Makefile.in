@@ -161,7 +161,8 @@ am_librange_compiler_la_OBJECTS = compiler/RangeParser_v1.lo \
 	compiler/RangeScanner_v1.lo compiler/expanding_visitor.lo
 librange_compiler_la_OBJECTS = $(am_librange_compiler_la_OBJECTS)
 librange_core_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
-am_librange_core_la_OBJECTS = ./core/store.pb.lo
+am_librange_core_la_OBJECTS = ./core/store.pb.lo \
+	./core/stored_message.lo
 librange_core_la_OBJECTS = $(am_librange_core_la_OBJECTS)
 librange_db_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_db_la_OBJECTS = db/graphdb.lo db/pbuff_node.lo \
@@ -545,7 +546,9 @@ librange_graph_la_SOURCES = graph/graph_iter.cpp
 librange_graph_la_LIBADD = $(AM_LIBADD)
 librange_core_la_includedir = $(includedir)
 nobase_librange_core_la_include_HEADERS = core/exceptions.h core/config_interface.h
-librange_core_la_SOURCES = ./core/store.pb.cpp
+librange_core_la_SOURCES = ./core/store.pb.cpp \
+						   ./core/stored_message.cpp 
+
 librange_core_la_LIBADD = $(AM_LIBADD)
 librange_la_SOURCES = 
 librange_la_LDFLAGS = -version-info $(RANGEXX_LIBRARY_VERSION)
@@ -657,6 +660,8 @@ core/$(DEPDIR)/$(am__dirstamp):
 	@: > core/$(DEPDIR)/$(am__dirstamp)
 ./core/store.pb.lo: core/$(am__dirstamp) \
 	core/$(DEPDIR)/$(am__dirstamp)
+./core/stored_message.lo: core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
 
 librange_core.la: $(librange_core_la_OBJECTS) $(librange_core_la_DEPENDENCIES) $(EXTRA_librange_core_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_core_la_OBJECTS) $(librange_core_la_LIBADD) $(LIBS)
@@ -721,6 +726,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/store.pb.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/stored_message.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeParser_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeScanner_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/expanding_visitor.Plo@am__quote@

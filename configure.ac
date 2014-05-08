@@ -25,6 +25,8 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 
+AC_CHECK_LIB([rt], [shm_open], [], AC_MSG_ERROR([*** could not find librt]))
+
 AX_CXX_COMPILE_STDCXX_11([ext],[mandatory])
 AX_CHECK_EXT_LIB_CLASS([db_cxx], [<db_cxx.h>], [DbStream], [], [AC_MSG_ERROR([Berkeley db6 is required])])
 

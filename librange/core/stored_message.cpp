@@ -117,7 +117,7 @@ RequestQueueListener::receive(Request& req)
 bool
 RequestQueueListener::send_ack(const std::string &client_id, const Ack &ack)
 {
-    MessageQueue<> ackq { CreateMQ(ack_queue_prefix + client_id), 500, 500 };
+    MessageQueue<> ackq { CreateMQ(ack_queue_prefix + client_id), cfg_->reader_ack_timeout(), 100 };
     return ackq.send(ack.SerializeAsString());
 }
 

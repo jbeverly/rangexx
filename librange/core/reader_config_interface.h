@@ -29,8 +29,7 @@ class ReaderConfigIface
         virtual bool use_stored() const = 0;
         virtual std::string stored_mq_name() const = 0;
         virtual boost::shared_ptr<::range::db::BackendInterface> backend() const = 0; 
-
-
+        virtual uint32_t stored_request_timeout() const = 0;
     protected: 
         ReaderConfigIface() = default;
 };

@@ -22,7 +22,10 @@
 
 #include <boost/make_shared.hpp>
 #include <boost/interprocess/managed_heap_memory.hpp>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"                      // boost uses autoptr, for shame... 
 #include <boost/interprocess/ipc/message_queue.hpp>
+#pragma GCC diagnostic pop
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace range { namespace core { namespace stored { 
@@ -35,7 +38,7 @@ namespace bpt = boost::posix_time;
 template <typename mqImpl = ipc::message_queue>
 class MessageQueue {
     public:
-        static const size_t bufsize = 16384;
+        static const size_t bufsize; // = 16384; /* compiler having difficulty with c++11 ... */
 
         //######################################################################
         //######################################################################
@@ -103,7 +106,7 @@ class MessageQueue {
                     std::memcpy(buf + overhead, s_ptr, sending);
                 }
                 else {
-                    std::memcpy(buf, s_ptr + sent, sending);
+                    std::memcpy(buf, s_ptr, sending);
                 }
                 sent += sending;
                 s_ptr += sending;
@@ -133,16 +136,24 @@ class MessageQueue {
         boost::shared_ptr<mqImpl> q_;
         uint32_t send_timeout_;
         uint32_t recv_timeout_;
-        static const uint32_t msg_ordinal = 0xAAAAAAAA; 
+        static const uint32_t msg_ordinal; // = 0xAAAAAAAA; 
 };
 
 //##############################################################################
+// Workaround g++ 4.8 issue with C++11 inline initialization
 //##############################################################################
-boost::shared_ptr<ipc::message_queue> CreateMQ(std::string name, size_t qlen=512) {
-    return boost::make_shared<ipc::message_queue>(
-                    ipc::open_or_create, name.c_str(), qlen,
-                    MessageQueue<ipc::message_queue>::bufsize
-            );
+template <typename mqImpl>
+const size_t MessageQueue<mqImpl>::bufsize = 16384;
+
+template <typename mqImpl>
+const uint32_t MessageQueue<mqImpl>::msg_ordinal = 0xAAAAAAAA; 
+
+//##############################################################################
+//##############################################################################
+template <typename T = ipc::message_queue>
+boost::shared_ptr<T> CreateMQ(std::string name, size_t qlen=512) {
+    return boost::make_shared<T>( ipc::open_or_create, name.c_str(), qlen,
+                    MessageQueue<T>::bufsize);
 }
 
 

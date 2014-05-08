@@ -81,7 +81,7 @@ TEST_F(TestMQ, test_send_almost_full)
     auto sendq = boost::make_shared<MockMQ>();
     uint32_t ord = 0xAAAAAAAA; 
     size_t n = ::range::core::stored::MessageQueue<MockMQ>::bufsize - sizeof(ord);
-    std::string msg(n , 'A');
+    std::string msg(n, 'A'); 
 
     uint32_t size = msg.size();
     char buf1[::range::core::stored::MessageQueue<MockMQ>::bufsize] = {0};
@@ -93,8 +93,9 @@ TEST_F(TestMQ, test_send_almost_full)
         .Times(1)
         .WillOnce(Return(true));
 
-    char buf2[::range::core::stored::MessageQueue<MockMQ>::bufsize] = {0};
-    std::memcpy(buf2, msg.c_str() + (::range::core::stored::MessageQueue<MockMQ>::bufsize - sizeof(ord)), sizeof(ord));
+    char buf2[sizeof(ord) + 1] = {0};
+    std::memcpy(buf2, "AAAA", sizeof(ord));
+
     EXPECT_CALL(*sendq, timed_send(PointeeUptoLen(buf2, sizeof(ord)), sizeof(ord), 0, _))
         .Times(1)
         .WillOnce(Return(true));

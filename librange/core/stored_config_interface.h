@@ -18,12 +18,15 @@
 #ifndef _RANGE_CORE_STORED_CONFIG_H
 #define _RANGE_CORE_STORED_CONFIG_H
 
+#include <cstdint>
+
 namespace range {
 
 class StoredConfigIface
 {
     public:
         virtual ~StoredConfigIface() = default;
+        virtual uint32_t reader_ack_timeout() const = 0;
 
     protected: 
         StoredConfigIface() = default;
