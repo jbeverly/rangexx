@@ -101,9 +101,14 @@ TEST_F(TestGraphDB, test_wanted_version) {
         .Times(1)
         .WillRepeatedly(Return(10));
 
+    std::list<::range::db::GraphInstanceInterface::changelist_t> clist;
+    for(int i = 0; i < 99; ++i) {
+        clist.push_back(::range::db::GraphInstanceInterface::changelist_t());
+    }
+
     EXPECT_CALL(*inst, get_change_history())
         .Times(1)
-        .WillRepeatedly(Return(std::list<::range::db::GraphInstanceInterface::changelist_t>()));
+        .WillRepeatedly(Return(clist));
 
 
     range::db::GraphDB gdb { "primary", inst, range::db::GraphDB::node_factory_t(new range::db::NodeIfaceConcreteFactory<MockNode>()) };

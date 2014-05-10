@@ -20,7 +20,9 @@
 #include <algorithm>
 
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/lexical_cast.hpp>
 
+#include "db_exceptions.h"
 #include "graphdb.h"
 #include "pbuff_node.h"
 
@@ -197,31 +199,34 @@ GraphDB::set_wanted_version(uint64_t ver)
         node_version_map.reserve(instance_->n_vertices());
 
         auto changehistory = instance_->get_change_history();
-        auto it = changehistory.rbegin();
         uint64_t v = version();
-        
-        while (v >= ver) {
-            if (it != changehistory.rend()) {                                   /* This should never happen */
-                for (auto change : *it) {
-                    record_type type;
-                    std::string node_name;
-                    uint64_t node_version;
-                    std::string data;
-                    std::tie(type, node_name, node_version, data) = change;
 
-                    if(type != record_type::NODE) { continue; }
-
-                    node_version_map[node_name] = node_version;
-                }
-                --v;
-                --it;
-            } else {
-                break;
-            }
+        if (changehistory.size() != v) {
+            std::string msg { "changehistory inconsistent with graph version" };
+            msg += ", found: " + boost::lexical_cast<std::string>(changehistory.size()); 
+            msg += ", expected: " + boost::lexical_cast<std::string>(v);
+            throw db::DatabaseVersioningError(msg);
         }
+
+        auto it = changehistory.rbegin();
+
+        while (v >= ver) {
+            for (auto change : *it) {
+                record_type type;
+                std::string node_name;
+                uint64_t node_version;
+                std::string data;
+                std::tie(type, node_name, node_version, data) = change;
+
+                if(type != record_type::NODE) { continue; }
+
+                node_version_map[node_name] = node_version;
+            }
+            --v;
+            ++it;
+        } 
         return true;
     }
-
     return false;
 }
 

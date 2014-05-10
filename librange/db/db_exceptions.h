@@ -23,22 +23,38 @@
 namespace range {
 namespace db {
 
+//##############################################################################
+//##############################################################################
 struct Exception : public ::range::Exception {
         explicit Exception(const std::string& what) : ::range::Exception(what) { }
 };
 
+//##############################################################################
+//##############################################################################
 struct InstanceUnitializedException : public Exception { 
         explicit InstanceUnitializedException(const std::string& what) : Exception(what) { }
 };
 
+//##############################################################################
+//##############################################################################
 struct DatabaseEnvironmentException : public Exception {
         explicit DatabaseEnvironmentException(const std::string& what) : Exception(what) { }
 };
 
+//##############################################################################
+//##############################################################################
 struct DatabaseLockingException : public Exception {
         explicit DatabaseLockingException(const std::string& what) : Exception(what) { }
 };
 
+//##############################################################################
+//##############################################################################
+struct DatabaseVersioningError : public Exception {
+        explicit DatabaseVersioningError(const std::string& what) : Exception(what) { }
+};
+
+//##############################################################################
+//##############################################################################
 struct UnknownTransactionException : public Exception {
     explicit UnknownTransactionException(const std::string& what) : Exception(what) { }
 };
