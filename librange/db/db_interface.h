@@ -19,6 +19,8 @@
 #define _RANGE_DB_DB_INTERFACE_H
 
 #include <string>
+#include <map>
+#include <list>
 #include <boost/shared_ptr.hpp>
 #include <memory>
 
@@ -27,6 +29,7 @@
 
 namespace range {
 namespace db {
+
 
 //##############################################################################
 // RAII base-class, just wrap whatever you need in your constructor/destructor
@@ -74,7 +77,11 @@ class GraphInstanceInterface {
         typedef boost::shared_ptr<GraphInstanceLock> lock_t;                    ///< alias for unique_ptr to lock interface type
         typedef graph::GraphCursorInterface cursor_iface_t;                     ///< alias for shared_ptr to cursor interfacetype
         typedef boost::shared_ptr<cursor_iface_t> cursor_t;                     ///< alias for shared_ptr to cursor interfacetype
+
         typedef graph::GraphInterface::record_type record_type;
+        typedef std::tuple<record_type, std::string, uint64_t, std::string> change_t;
+        typedef std::vector<change_t> changelist_t;
+        typedef std::list<changelist_t> history_list_t;
 
         //######################################################################
         virtual ~GraphInstanceInterface() = default;
@@ -141,8 +148,13 @@ class GraphInstanceInterface {
         
         //######################################################################
         /// @param[in] version graph version you want to query
-        /// return prior wanted version
-        virtual uint64_t set_wanted_version(uint64_t version) = 0;
+        /// @return prior wanted version
+//        virtual uint64_t set_wanted_version(uint64_t version) = 0;
+
+        //######################################################################
+        /// @return an ordered map of graph version history (map of list of
+        ///          vectors of change tuples)
+        virtual history_list_t get_change_history() const = 0;
 
     //##########################################################################
     //##########################################################################

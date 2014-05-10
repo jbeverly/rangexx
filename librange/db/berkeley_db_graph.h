@@ -98,7 +98,10 @@ class BerkeleyDBGraph
         virtual bool write_record(record_type type, const std::string& key,
                     uint64_t object_version, const std::string& data) override;
         //######################################################################
-        virtual uint64_t set_wanted_version(uint64_t version) override;
+        //virtual uint64_t set_wanted_version(uint64_t version) override;
+
+        //######################################################################
+        virtual history_list_t get_change_history() const override;
 
     private: 
         //######################################################################
@@ -111,7 +114,7 @@ class BerkeleyDBGraph
 
         std::string name_;
         BerkeleyDB& backend_;
-        uint64_t wanted_version_;
+        //uint64_t wanted_version_;
 
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBTxn>> transaction_table; 
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBTxn>>& weak_table; 
@@ -123,7 +126,8 @@ class BerkeleyDBGraph
 
         //######################################################################
         static std::string key_prefix(record_type type); 
-        static std::string key_name(record_type type, const std::string& name); 
+        static std::string key_name(record_type type, const std::string& name);
+        static record_type get_type_from_keyname(const std::string& keyname);
 
 };
 

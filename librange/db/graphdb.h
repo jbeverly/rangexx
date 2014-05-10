@@ -19,6 +19,7 @@
 #define _RANGE_DB_GRAPHDB_H
 
 #include <string>
+#include <unordered_map>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -116,6 +117,7 @@ class GraphDB
         instance_t instance_;
         uint64_t wanted_version_;
         node_factory_t node_factory_;
+        std::unordered_map<std::string, uint64_t> node_version_map;
 
         //######################################################################
         virtual graph::GraphInterface::cursor_t get_cursor() const override;

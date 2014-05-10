@@ -94,8 +94,17 @@ TEST_F(TestGraphDB, test_version) {
 TEST_F(TestGraphDB, test_wanted_version) {
     auto inst = boost::make_shared<MockInstance>();
     EXPECT_CALL(*inst, version())
-        .Times(2)
+        .Times(3)
         .WillRepeatedly(Return(99));
+
+    EXPECT_CALL(*inst, n_vertices())
+        .Times(1)
+        .WillRepeatedly(Return(10));
+
+    EXPECT_CALL(*inst, get_change_history())
+        .Times(1)
+        .WillRepeatedly(Return(std::list<::range::db::GraphInstanceInterface::changelist_t>()));
+
 
     range::db::GraphDB gdb { "primary", inst, range::db::GraphDB::node_factory_t(new range::db::NodeIfaceConcreteFactory<MockNode>()) };
 

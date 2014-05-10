@@ -37,7 +37,7 @@ namespace db {
 //##############################################################################
 //##############################################################################
 BerkeleyDBGraph::BerkeleyDBGraph(const std::string& name, BerkeleyDB& backend)
-    : name_(name), backend_(backend), wanted_version_(-1), weak_table(transaction_table)
+    : name_(name), backend_(backend), weak_table(transaction_table)
 { 
 }
 
@@ -130,7 +130,6 @@ BerkeleyDBGraph::inculcate_change(std::thread::id id)
     changes.set_current_version( changes.current_version() + 1 );
 
     (*map_instance)[key] = changes.SerializeAsString();
-    //assert((*map_instance)[key] == changes.SerializeAsString());
 }
 
 //##############################################################################
@@ -320,6 +319,7 @@ BerkeleyDBGraph::write_record(record_type type, const std::string& key,
 
 //##############################################################################
 //##############################################################################
+/*
 uint64_t
 BerkeleyDBGraph::set_wanted_version(uint64_t version)
 {
@@ -327,13 +327,65 @@ BerkeleyDBGraph::set_wanted_version(uint64_t version)
     wanted_version_ = version;
     return old_version;
 }
+*/
+
+//##############################################################################
+//##############################################################################
+BerkeleyDBGraph::history_list_t
+BerkeleyDBGraph::get_change_history() const
+{
+    history_list_t history_list;
+    auto it = backend_.graph_map_instances.find(name_);
+    if (it == backend_.graph_map_instances.end()) {
+        throw InstanceUnitializedException("Map instance not found");
+    }
+    auto map_instance = it->second;
+    auto lock = read_lock(record_type::GRAPH_META, "changelist");
+
+    auto key = key_name(record_type::GRAPH_META, "changelist");
+    ChangeList changes;
+    if (map_instance->find(key) != map_instance->end()) {
+        changes.ParseFromString((*map_instance)[key]);
+    }
+
+    for (int v = 0; v < changes.change_size(); ++v) {
+        auto v_change = changes.change(v);
+        changelist_t clist;
+
+        for (int i = 0; i < v_change.items_size(); ++i) {
+            auto item = v_change.items(i);
+            record_type type = get_type_from_keyname(item.key());
+            std::string key = item.key().substr(key_prefix(type).size());
+            clist.push_back(std::make_tuple(type, key, item.version(), ""));
+        }
+        history_list.push_back(clist);
+    }
+
+    return history_list;
+}
+
+//##############################################################################
+//##############################################################################
+BerkeleyDBGraph::record_type
+BerkeleyDBGraph::get_type_from_keyname(const std::string& keyname)
+{
+    std::string type_prefix;
+    for (char c : keyname) {
+        if (c == '\a') break;
+        type_prefix.push_back(c);
+    }
+    if (type_prefix.size() > 0) 
+        return record_type(boost::lexical_cast<int>(type_prefix));
+
+    return record_type::UNKNOWN;
+}
 
 //##############################################################################
 //##############################################################################
 std::string
 BerkeleyDBGraph::key_prefix(record_type type)
 {
-    return std::to_string(static_cast<int>(type)) + "0" + '\a';  
+    return boost::lexical_cast<std::string>(static_cast<int>(type)) + '\a' + '0' + '\a';
 }
 
 //##############################################################################

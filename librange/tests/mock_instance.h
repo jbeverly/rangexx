@@ -70,7 +70,8 @@ class MockInstance : public range::db::GraphInstanceInterface {
 
         MOCK_METHOD0(start_txn, txn_t(void));
         MOCK_METHOD4(write_record, bool(record_type, const std::string&, uint64_t, const std::string&));
-        MOCK_METHOD1(set_wanted_version, uint64_t(uint64_t));
+//        MOCK_METHOD1(set_wanted_version, uint64_t(uint64_t));
+        MOCK_CONST_METHOD0(get_change_history, ::range::db::GraphInstanceInterface::history_list_t());
 };
 
 #endif

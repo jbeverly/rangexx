@@ -109,6 +109,12 @@ GraphDB::get_node(const std::string& name) const
         for (uint64_t node_version : boost::adaptors::reverse(n->graph_versions()))
         {
             if (node_version == cmp_version) {
+                if (cmp_version != version()) {
+                    auto it = node_version_map.find(name);
+                    if (it != node_version_map.end()) {
+                        n->set_wanted_version(it->second);
+                    }
+                }
                 return n;
             }
             if (node_version < cmp_version) {                                   // we've gone too far back, bail out
@@ -187,8 +193,35 @@ GraphDB::set_wanted_version(uint64_t ver)
 {
     if (ver <= version()) {
         wanted_version_ = ver;
+
+        node_version_map.reserve(instance_->n_vertices());
+
+        auto changehistory = instance_->get_change_history();
+        auto it = changehistory.rbegin();
+        uint64_t v = version();
+        
+        while (v >= ver) {
+            if (it != changehistory.rend()) {                                   /* This should never happen */
+                for (auto change : *it) {
+                    record_type type;
+                    std::string node_name;
+                    uint64_t node_version;
+                    std::string data;
+                    std::tie(type, node_name, node_version, data) = change;
+
+                    if(type != record_type::NODE) { continue; }
+
+                    node_version_map[node_name] = node_version;
+                }
+                --v;
+                --it;
+            } else {
+                break;
+            }
+        }
         return true;
     }
+
     return false;
 }
 

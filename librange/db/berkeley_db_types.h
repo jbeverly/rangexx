@@ -34,9 +34,10 @@ namespace range {
 namespace db {
 
 typedef dbstl::db_map<std::string, std::string> map_t;
-typedef GraphInstanceInterface::record_type record_type;
-typedef std::tuple<record_type, std::string, uint64_t, std::string> change_t;
-typedef std::vector<change_t> changelist_t;
+typedef db::GraphInstanceInterface::record_type record_type;
+typedef db::GraphInstanceInterface::change_t change_t;
+typedef db::GraphInstanceInterface::changelist_t changelist_t;
+typedef db::GraphInstanceInterface::history_list_t history_list_t;
 
 } // namespace db
 } // namespace range
