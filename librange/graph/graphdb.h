@@ -24,13 +24,13 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
-#include "../graph/node_interface.h"
-#include "../graph/graph_interface.h"
-#include "db_interface.h"
+#include "node_interface.h"
+#include "graph_interface.h"
 #include "node_factory.h"
+#include "../db/db_interface.h"
 
 namespace range {
-namespace db {
+namespace graph {
 
 //##############################################################################
 //##############################################################################
@@ -42,8 +42,8 @@ class GraphDB
     //##########################################################################
     public:
         //######################################################################
-        typedef boost::shared_ptr<NodeIfaceAbstractFactory> node_factory_t;
-        typedef boost::shared_ptr<GraphInstanceInterface> instance_t;
+        typedef boost::shared_ptr<graph::NodeIfaceAbstractFactory> node_factory_t;
+        typedef boost::shared_ptr<db::GraphInstanceInterface> instance_t;
         typedef graph::NodeIface::node_t node_t;
         typedef graph::GraphInterface::iterator_t iterator_t;
         typedef graph::GraphInterface::const_iterator_t const_iterator_t;
@@ -124,7 +124,7 @@ class GraphDB
         virtual graph::GraphInterface::cursor_t get_cursor(node_t node) const override;
 };
 
-} // namespace db
+} // namespace graph
 } // namespace range
 
 #endif

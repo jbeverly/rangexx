@@ -22,12 +22,11 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "db_exceptions.h"
+#include "../db/db_exceptions.h"
 #include "graphdb.h"
-#include "pbuff_node.h"
 
 namespace range {
-namespace db {
+namespace graph {
 
 //##############################################################################
 //##############################################################################
@@ -169,7 +168,7 @@ GraphDB::cend() const
 GraphDB::node_t
 GraphDB::create(const std::string& name)
 {
-    auto lock = instance_->write_lock(GraphInstanceInterface::record_type::NODE, name);
+    auto lock = instance_->write_lock(db::GraphInstanceInterface::record_type::NODE, name);
     auto txn = instance_->start_txn();
 
     node_t node =  this->node_factory_->createNode(name, instance_);
@@ -270,5 +269,5 @@ GraphDB::remove(node_t node)
 
 
 
-} // namespace db
+} // namespace graph
 } // namespace range

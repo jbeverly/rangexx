@@ -165,14 +165,13 @@ am_librange_core_la_OBJECTS = ./core/store.pb.lo \
 	./core/stored_message.lo
 librange_core_la_OBJECTS = $(am_librange_core_la_OBJECTS)
 librange_db_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
-am_librange_db_la_OBJECTS = db/graphdb.lo db/pbuff_node.lo \
-	db/nodeinfo.pb.lo db/berkeley_db_cursor.lo \
-	db/berkeley_db_graph.lo db/berkeley_db_lock.lo \
-	db/berkeley_db_txn.lo db/berkeley_db.lo db/graph_list.pb.lo \
-	db/changelist.pb.lo
+am_librange_db_la_OBJECTS = db/pbuff_node.lo db/nodeinfo.pb.lo \
+	db/berkeley_db_cursor.lo db/berkeley_db_graph.lo \
+	db/berkeley_db_lock.lo db/berkeley_db_txn.lo db/berkeley_db.lo \
+	db/graph_list.pb.lo db/changelist.pb.lo
 librange_db_la_OBJECTS = $(am_librange_db_la_OBJECTS)
 librange_graph_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
-am_librange_graph_la_OBJECTS = graph/graph_iter.lo
+am_librange_graph_la_OBJECTS = graph/graphdb.lo graph/graph_iter.lo
 librange_graph_la_OBJECTS = $(am_librange_graph_la_OBJECTS)
 librange_util_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_util_la_OBJECTS = util/crc32.lo
@@ -487,10 +486,14 @@ BUILT_SOURCES = db/nodeinfo.pb.h \
 				db/graph_list.pb.cpp \
 				core/store.pb.cpp
 
+
+################################################################################
 librange_util_la_includedir = $(includedir)
 nobase_librange_util_la_include_HEADERS = util/crc32.h
 librange_util_la_SOURCES = util/crc32.cpp
 librange_util_la_LIBADD = $(AM_LIBADD)
+
+################################################################################
 librange_compiler_la_includedir = $(includedir)
 nobase_librange_compiler_la_include_HEADERS = compiler/ast.h \
 											  compiler/compiler_types.h \
@@ -509,11 +512,11 @@ librange_compiler_la_SOURCES = compiler/RangeParser_v1.cpp \
 							   compiler/expanding_visitor.cpp
 
 librange_compiler_la_LIBADD = $(AM_LIBADD)
+
+################################################################################
 librange_db_la_includedir = $(includedir)
-nobase_librange_db_la_include_HEADERS = db/graphdb.h \
-										 db/pbuff_node.h \
+nobase_librange_db_la_include_HEADERS = db/pbuff_node.h \
 										 db/db_interface.h \
-										 db/node_factory.h \
 										 db/db_exceptions.h \
 										 db/berkeley_db.h \
 										 db/berkeley_db_graph.h \
@@ -527,8 +530,7 @@ nobase_librange_db_la_include_HEADERS = db/graphdb.h \
 										 db/nodeinfo.pb.h \
 										 db/graph_list.pb.h
 
-librange_db_la_SOURCES = db/graphdb.cpp \
-						 db/pbuff_node.cpp \
+librange_db_la_SOURCES = db/pbuff_node.cpp \
 						 db/nodeinfo.pb.cpp \
 						 db/berkeley_db_cursor.cpp \
 						 db/berkeley_db_graph.cpp \
@@ -540,10 +542,20 @@ librange_db_la_SOURCES = db/graphdb.cpp \
 						 $(top_builddir)/range_config.h 
 
 librange_db_la_LIBADD = $(AM_LIBADD)
+
+################################################################################
 librange_graph_la_includedir = $(includedir)
-nobase_librange_graph_la_include_HEADERS = graph/graph_interface.h graph/node_interface.h
-librange_graph_la_SOURCES = graph/graph_iter.cpp
+nobase_librange_graph_la_include_HEADERS = graph/graph_interface.h \
+										   graph/node_interface.h \
+										   graph/node_factory.h \
+										   graph/graphdb.h
+
+librange_graph_la_SOURCES = graph/graphdb.cpp \
+							graph/graph_iter.cpp
+
 librange_graph_la_LIBADD = $(AM_LIBADD)
+
+################################################################################
 librange_core_la_includedir = $(includedir)
 nobase_librange_core_la_include_HEADERS = core/exceptions.h core/config_interface.h
 librange_core_la_SOURCES = ./core/store.pb.cpp \
@@ -671,7 +683,6 @@ db/$(am__dirstamp):
 db/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) db/$(DEPDIR)
 	@: > db/$(DEPDIR)/$(am__dirstamp)
-db/graphdb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
 db/pbuff_node.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
 db/nodeinfo.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
 db/berkeley_db_cursor.lo: db/$(am__dirstamp) \
@@ -693,6 +704,8 @@ graph/$(am__dirstamp):
 graph/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) graph/$(DEPDIR)
 	@: > graph/$(DEPDIR)/$(am__dirstamp)
+graph/graphdb.lo: graph/$(am__dirstamp) \
+	graph/$(DEPDIR)/$(am__dirstamp)
 graph/graph_iter.lo: graph/$(am__dirstamp) \
 	graph/$(DEPDIR)/$(am__dirstamp)
 
@@ -737,10 +750,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_db_txn.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/changelist.pb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/graph_list.pb.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/graphdb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/nodeinfo.pb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/pbuff_node.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@graph/$(DEPDIR)/graph_iter.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@graph/$(DEPDIR)/graphdb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/crc32.Plo@am__quote@
 
 .cpp.o:

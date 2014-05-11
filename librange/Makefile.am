@@ -41,10 +41,14 @@ BUILT_SOURCES = db/nodeinfo.pb.h \
 				db/graph_list.pb.cpp \
 				core/store.pb.cpp
 
+################################################################################
+
 librange_util_la_includedir = $(includedir)
 nobase_librange_util_la_include_HEADERS = util/crc32.h
 librange_util_la_SOURCES = util/crc32.cpp
 librange_util_la_LIBADD = $(AM_LIBADD)
+
+################################################################################
 
 librange_compiler_la_includedir = $(includedir)
 nobase_librange_compiler_la_include_HEADERS = compiler/ast.h \
@@ -65,12 +69,11 @@ librange_compiler_la_SOURCES = compiler/RangeParser_v1.cpp \
 							   compiler/expanding_visitor.cpp
 librange_compiler_la_LIBADD = $(AM_LIBADD)
 
+################################################################################
 
 librange_db_la_includedir = $(includedir)
-nobase_librange_db_la_include_HEADERS  = db/graphdb.h \
-										 db/pbuff_node.h \
+nobase_librange_db_la_include_HEADERS  = db/pbuff_node.h \
 										 db/db_interface.h \
-										 db/node_factory.h \
 										 db/db_exceptions.h \
 										 db/berkeley_db.h \
 										 db/berkeley_db_graph.h \
@@ -84,8 +87,7 @@ nobase_librange_db_la_include_HEADERS  = db/graphdb.h \
 										 db/nodeinfo.pb.h \
 										 db/graph_list.pb.h
 
-librange_db_la_SOURCES = db/graphdb.cpp \
-						 db/pbuff_node.cpp \
+librange_db_la_SOURCES = db/pbuff_node.cpp \
 						 db/nodeinfo.pb.cpp \
 						 db/berkeley_db_cursor.cpp \
 						 db/berkeley_db_graph.cpp \
@@ -98,11 +100,20 @@ librange_db_la_SOURCES = db/graphdb.cpp \
 
 librange_db_la_LIBADD = $(AM_LIBADD)
 
+################################################################################
+
 librange_graph_la_includedir = $(includedir)
-nobase_librange_graph_la_include_HEADERS = graph/graph_interface.h graph/node_interface.h
-librange_graph_la_SOURCES = graph/graph_iter.cpp
+nobase_librange_graph_la_include_HEADERS = graph/graph_interface.h \
+										   graph/node_interface.h \
+										   graph/node_factory.h \
+										   graph/graphdb.h
+
+librange_graph_la_SOURCES = graph/graphdb.cpp \
+							graph/graph_iter.cpp
+
 librange_graph_la_LIBADD = $(AM_LIBADD)
 
+################################################################################
 
 librange_core_la_includedir = $(includedir)
 nobase_librange_core_la_include_HEADERS = core/exceptions.h core/config_interface.h

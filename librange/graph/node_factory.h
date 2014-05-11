@@ -20,14 +20,16 @@
 #include <string>
 #include <boost/make_shared.hpp>
 
-#include "db_interface.h"
+#include "../db/db_interface.h"
 
 namespace range {
-namespace db { 
+namespace graph { 
 
+//##############################################################################
+//##############################################################################
 class NodeIfaceAbstractFactory {
     public:
-        typedef boost::shared_ptr<GraphInstanceInterface> instance_t;
+        typedef boost::shared_ptr<::range::db::GraphInstanceInterface> instance_t;
         typedef boost::shared_ptr<::range::graph::NodeIface> node_t;
 
         virtual ~NodeIfaceAbstractFactory() = default;
@@ -37,6 +39,8 @@ class NodeIfaceAbstractFactory {
 
 };
 
+//##############################################################################
+//##############################################################################
 template <class T>
 struct NodeIfaceConcreteFactory : public NodeIfaceAbstractFactory
 {
