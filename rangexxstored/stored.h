@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef _RANGEXXSTORED_STORED_H
+#define _RANGEXXSTORED_STORED_H
 
 #include <boost/interprocess/managed_heap_memory.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
@@ -23,3 +25,5 @@ namespace ipc = boost::interprocess;
 
 
 } /* stored */ } /* range */
+
+#endif

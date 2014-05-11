@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef _RANGE_CORE_EXCEPTION_H
+#define _RANGE_CORE_EXCEPTION_H
 
 #include <stdexcept>
 
@@ -32,3 +34,5 @@ struct MqueueException : public ::range::Exception {
 } /* namespace stored */ } /* core */ 
 
 } // namespace range
+
+#endif

@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef _RANGE_COMPILER_EXCEPTIONS_H
+#define _RANGE_COMPILER_EXCEPTIONS_H
 
 #include "../core/exceptions.h"
 
@@ -28,3 +30,5 @@ class InvalidRangeExpression : public ::range::Exception
 
 
 } /* namespace compiler */ } /* namespace range */
+
+#endif

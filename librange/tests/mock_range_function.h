@@ -15,6 +15,9 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _RANGE_TESTS_MOCK_RANGE_FUNCTION_H
+#define _RANGE_TESTS_MOCK_RANGE_FUNCTION_H
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -28,3 +31,4 @@ class MockRangeFunction : public ::range::compiler::RangeFunction {
             return call(vs);
         }
 };
+#endif

@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef _RANGE_CORE_CONFIG_INTERFACE_H
+#define _RANGE_CORE_CONFIG_INTERFACE_H
 
 #include "../db/config_interface.h"
 #include "stored_config_interface.h"
@@ -37,3 +39,5 @@ class ConfigIface {
 
 
 } // namespace range
+
+#endif

@@ -15,6 +15,9 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _RANGE_COMPILER_EXPANDING_VISITOR_H
+#define _RANGE_COMPILER_EXPANDING_VISITOR_H
+
 #include <boost/variant/static_visitor.hpp>
 
 #include "../graph/graph_interface.h"
@@ -102,5 +105,5 @@ class FetchChildrenVisitor : public boost::static_visitor<std::vector<std::strin
 
 } /* namespace compiler */ } /* namespace range */
 
-
+#endif
 
