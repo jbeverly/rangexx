@@ -104,13 +104,17 @@ GraphDB::get_node(const std::string& name) const
 {
     auto n = get_cursor()->fetch(name);
     if (n) {
-        uint64_t cmp_version = (static_cast<int64_t>(wanted_version_) == -1)
-                                    ? this->version() : wanted_version_;
+        uint64_t this_version = this->version();
 
-        for (uint64_t node_version : boost::adaptors::reverse(n->graph_versions()))
-        {
+        uint64_t cmp_version = (static_cast<int64_t>(wanted_version_) == -1)
+                                    ? this_version : wanted_version_;
+
+        uint64_t last_version = -1;
+        auto g_versions = n->graph_versions();
+
+        for (uint64_t node_version : boost::adaptors::reverse(g_versions)) {
             if (node_version == cmp_version) {
-                if (cmp_version != version()) {
+                if (cmp_version != this_version) {
                     auto it = node_version_map.find(name);
                     if (it != node_version_map.end()) {
                         n->set_wanted_version(it->second);
@@ -121,6 +125,10 @@ GraphDB::get_node(const std::string& name) const
             if (node_version < cmp_version) {                                   // we've gone too far back, bail out
                 return nullptr;
             }
+            last_version = node_version;
+        }
+        if (last_version > cmp_version) {
+            return nullptr;
         }
         return n;
     }
@@ -192,6 +200,17 @@ GraphDB::create(const std::string& name)
 bool
 GraphDB::set_wanted_version(uint64_t ver) 
 {
+    if (ver == wanted_version_) {
+        return true;
+    }
+
+    node_version_map.clear();
+
+    if (ver == static_cast<uint64_t>(-1)) {
+        wanted_version_ = ver;
+        return true;
+    }
+
     if (ver <= version()) {
         wanted_version_ = ver;
 

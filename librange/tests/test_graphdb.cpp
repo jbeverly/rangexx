@@ -17,6 +17,7 @@
 #include <stack>
 
 #include <boost/make_shared.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -24,8 +25,8 @@
 #include "../graph/graphdb.h"
 #include "../graph/node_interface.h"
 #include "../graph/graph_interface.h"
-#include "../db/pbuff_node.h"
 #include "../graph/node_factory.h"
+#include "../db/pbuff_node.h"
 
 using namespace ::testing;
 
@@ -122,9 +123,147 @@ TEST_F(TestGraphDB, test_wanted_version) {
 //##############################################################################
 //##############################################################################
 TEST_F(TestGraphDB, test_wanted_version_history) {
-    auto node = boost::make_shared<MockNode>();
+    auto inst = boost::make_shared<MockInstance>();
+    const int max = 3;
+
+    std::vector<boost::shared_ptr<MockNode>> nodes;
+    for (int n = 1; n < max + 1; ++n) {
+        auto node = boost::make_shared<MockNode>();
+
+        EXPECT_CALL(*node, name())
+            .Times(AtLeast(0))
+            .WillRepeatedly(Return("node" + boost::lexical_cast<std::string>(n)));
+
+        int max_graph_ver = (n == 3) ? 6 : 7;
+
+        std::vector<uint64_t> graph_versions; //max_graph_ver - n);
+
+        for (int i = n; i < max_graph_ver; ++i) {
+            graph_versions.push_back(i);
+        }
+
+        EXPECT_CALL(*node, graph_versions())
+            .Times(AtLeast(0))
+            .WillRepeatedly(Return(graph_versions));
+
+        nodes.push_back(node);
+    }
+
+    EXPECT_CALL(*inst, n_vertices())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(3));
+
+    EXPECT_CALL(*inst, version())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(6));
+
+    auto cur = boost::make_shared<MockCursor>();
+
+    EXPECT_CALL(*cur, fetch("node1"))
+        .Times(AtLeast(0))
+        .WillRepeatedly(Return(nodes[0]));
+
+    EXPECT_CALL(*cur, fetch("node2"))
+        .Times(AtLeast(0))
+        .WillRepeatedly(Return(nodes[1]));
+
+    EXPECT_CALL(*cur, fetch("node3"))
+        .Times(AtLeast(0))
+        .WillRepeatedly(Return(nodes[2]));
+
+    EXPECT_CALL(*inst, get_cursor())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(cur));
 
 
+    std::list<::range::db::GraphInstanceInterface::changelist_t> hlist;
+    ::range::db::GraphInstanceInterface::changelist_t clist1;
+    ::range::db::GraphInstanceInterface::changelist_t clist2;
+    ::range::db::GraphInstanceInterface::changelist_t clist3;
+    ::range::db::GraphInstanceInterface::changelist_t clist4;
+    ::range::db::GraphInstanceInterface::changelist_t clist5;
+    ::range::db::GraphInstanceInterface::changelist_t clist6;
+
+    clist1.push_back(std::make_tuple(::range::db::GraphInstanceInterface::record_type::NODE, "node1", 1, ""));
+    hlist.push_back(clist1);
+
+    clist2.push_back(std::make_tuple(::range::db::GraphInstanceInterface::record_type::NODE, "node2", 1, ""));
+    hlist.push_back(clist2);
+
+    clist3.push_back(std::make_tuple(::range::db::GraphInstanceInterface::record_type::NODE, "node3", 1, ""));
+    hlist.push_back(clist3);
+
+    clist4.push_back(std::make_tuple(::range::db::GraphInstanceInterface::record_type::NODE, "node1", 2, ""));
+    clist4.push_back(std::make_tuple(::range::db::GraphInstanceInterface::record_type::NODE, "node2", 2, ""));
+    hlist.push_back(clist4);
+
+    clist5.push_back(std::make_tuple(::range::db::GraphInstanceInterface::record_type::NODE, "node1", 3, ""));
+    clist5.push_back(std::make_tuple(::range::db::GraphInstanceInterface::record_type::NODE, "node3", 2, ""));
+    hlist.push_back(clist5);
+
+    hlist.push_back(clist6);
+
+    EXPECT_CALL(*inst, get_change_history())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(hlist));
+
+
+    range::graph::GraphDB gdb { "primary", inst, range::graph::GraphDB::node_factory_t(new range::graph::NodeIfaceConcreteFactory<MockNode>()) };
+
+    auto n1 = gdb.get_node("node1");
+    auto n2 = gdb.get_node("node2");
+    auto n3 = gdb.get_node("node3");
+
+    ASSERT_NE(nullptr, n1);
+    EXPECT_EQ("node1", n1->name());
+
+    ASSERT_NE(nullptr, n2);
+    EXPECT_EQ("node2", n2->name());
+
+    EXPECT_EQ(nullptr, n3);
+
+    EXPECT_CALL(*nodes[0], set_wanted_version(3))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    EXPECT_CALL(*nodes[2], set_wanted_version(2))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    gdb.set_wanted_version(5);
+
+    n1 = gdb.get_node("node1");
+
+    ASSERT_NE(nullptr, n1);
+    EXPECT_EQ("node1", n1->name());
+
+    n2 = gdb.get_node("node2");
+
+    ASSERT_NE(nullptr, n2);
+    EXPECT_EQ("node2", n2->name());
+
+    n3 = gdb.get_node("node3");
+    ASSERT_NE(nullptr, n3);
+    EXPECT_EQ("node3", n3->name());
+
+    EXPECT_CALL(*nodes[0], set_wanted_version(1))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    gdb.set_wanted_version(1);
+
+    n1 = gdb.get_node("node1");
+
+    ASSERT_NE(nullptr, n1);
+    EXPECT_EQ("node1", n1->name());
+
+    n2 = gdb.get_node("node2");
+    EXPECT_EQ(nullptr, n2);
+
+    n3 = gdb.get_node("node3");
+    EXPECT_EQ(nullptr, n3);
+
+    std::for_each(std::begin(nodes), std::end(nodes), [](boost::shared_ptr<range::graph::NodeIface> p) { Mock::VerifyAndClearExpectations(p.get()); });
 }
 
 
