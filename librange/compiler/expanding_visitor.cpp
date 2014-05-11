@@ -25,8 +25,6 @@
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/iterator/filter_iterator.hpp>
-#define BOOST_SPIRIT_NO_PREDEFINED_TERMINALS
-#include <boost/spirit/include/qi.hpp>
 
 #include "expanding_visitor.h"
 #include "ast.h"
@@ -177,23 +175,27 @@ RangeExpandingVisitor::operator()(ast::ASTIntersection& inter) const
 void
 RangeExpandingVisitor::operator()(ast::ASTSequence& seq) const
 {
-    namespace qi = boost::spirit::qi;
     std::string lword = boost::get<ast::ASTWord>(seq.lhs).word;
     std::string rword = boost::get<ast::ASTWord>(seq.rhs).word;
-    // To speed up compilation I have disabled predefined terminals
-    // as such, I must define the terminals I require
-    qi::char_type char_;
-    qi::uint_type uint_;
 
-    uint32_t lnum = 0, rnum = 0;
-    std::string lprefix, rsuffix;
+    uint32_t lnum = 0, rnum = 0, p = 0;
+    bool p1ok = false, p2ok = false;
 
-    auto l_it_b = lword.cbegin(), l_it_e = lword.cend();
-    auto r_it_b = rword.cbegin(), r_it_e = rword.cend();
+    auto rev_it = std::find_if(lword.rbegin(), lword.rend(), [&lnum, &p](char c) {
+            if (std::isdigit(c)) { lnum += (c - '0') * std::pow(10, p++); return false;
+            } else { return true; }
+        });
 
-    bool p1ok = qi::parse(l_it_b, l_it_e, *(char_ - uint_) >> uint_,
-            lprefix, lnum);
-    bool p2ok = qi::parse(r_it_b, r_it_e, uint_ >> *char_, rnum, rsuffix);
+    std::string lprefix { lword.begin(), (rev_it).base() };
+    if (lprefix.size() != lword.size())
+        p1ok = true;
+
+    auto it = std::find_if(rword.begin(), rword.end(), [](char c) { return isalpha(c); });
+    rnum = boost::lexical_cast<uint32_t>(std::string(rword.begin(), it));
+    std::string rsuffix { it, rword.end() };
+
+    if (rsuffix.size() != rword.size())
+        p2ok = true;
 
     if (!p1ok || !p2ok) {
         std::string er;
@@ -374,9 +376,6 @@ RangeExpandingVisitor::operator()(ast::ASTBraceExpand& brace) const
     else {
         brace.children = tmp;
     }
-
-    /* auto it = std::unique(brace.children.begin(), brace.children.end());
-    brace.children.resize(std::distance(brace.children.begin(), it)); */
 }
 
 //##############################################################################
