@@ -46,7 +46,17 @@ class NodeIface {
             UNKNOWN  = 65537,                                                   ///< For nodes that have no known type
         };
 
+        
+        //######################################################################
+        static constexpr node_type node_types[] = {                             // c++11 is neat
+            node_type::ENVIRONMENT,
+            node_type::CLUSTER, 
+            node_type::HOST,
+            node_type::STRING,
+        };
+
         typedef boost::shared_ptr<NodeIface> node_t;                            ///< handy shared_ptr type for this abstract interface
+
         //######################################################################
         virtual ~NodeIface() noexcept = default;
 
