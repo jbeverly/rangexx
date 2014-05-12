@@ -99,12 +99,12 @@
 
 ".."                                { return RangeParser_v1::SEQUENCE; }
 
-[a-zA-Z0-9_]                        { 
+[a-zA-Z0-9_#]                       { 
                                         more();
                                         begin(StartCondition__::bareword);
                                     }
 <bareword>{
-    [a-zA-Z0-9_\-]                  { more(); }
+    [a-zA-Z0-9_\-#]                 { more(); }
     ".."                            { 
                                         redo(2);
                                         begin(StartCondition__::INITIAL);
