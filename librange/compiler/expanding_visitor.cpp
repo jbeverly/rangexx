@@ -237,6 +237,7 @@ RangeExpandingVisitor::operator()(ast::ASTExpand& expand) const
     }
     else {
         for(auto child : children) { 
+            prefix_child(child);
             auto n = graph_->get_node(child);
             auto edges = n->forward_edges();
 
@@ -264,6 +265,7 @@ RangeExpandingVisitor::operator()(ast::ASTGetCluster& getcl) const
     auto children = boost::apply_visitor(FetchChildrenVisitor(), getcl.child);
 
     for(auto child : children) { 
+        prefix_child(child);
         auto n = graph_->get_node(child);
         auto edges = n->reverse_edges();
 
@@ -291,6 +293,8 @@ RangeExpandingVisitor::operator()(ast::ASTAdmin& adm) const
     for (auto child : children) {
         std::queue<boost::shared_ptr<::range::graph::NodeIface>> q;             // BFS traveral; want the admin nearest the child node
         visited.clear();
+
+        prefix_child(child);
 
         auto n = graph_->get_node(child);
         if(n) {
@@ -408,12 +412,29 @@ RangeExpandingVisitor::operator()(ast::ASTKeyExpand& key) const
     auto children = boost::apply_visitor(FetchChildrenVisitor(), key.lhs);
 
     for (auto child : children) {
+        prefix_child(child);
         auto n = graph_->get_node(child);
         auto tags = n->tags();
         auto tag_it = tags.find(boost::get<ast::ASTWord>(key.rhs).word);
 
         if (tag_it != tags.end()) {
             key.children = tag_it->second;
+        }
+    }
+}
+
+//##############################################################################
+//##############################################################################
+void
+RangeExpandingVisitor::prefix_child(std::string& child) const
+{
+    if (prefix_.size() == 0) {
+        return;
+    }
+    if (child.size() < prefix_.size() || child.substr(0, prefix_.size()) != prefix_) {
+        auto n = graph_->get_node(prefix_ + child);                             // inefficient, but checks if the prefixed node makes sense; if not leaves it alone
+        if (n) {
+            child = prefix_ + child;
         }
     }
 }
