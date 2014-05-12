@@ -43,14 +43,14 @@ BUILT_SOURCES = db/nodeinfo.pb.h \
 
 ################################################################################
 
-librange_util_la_includedir = $(includedir)
+librange_util_la_includedir = $(includedir)/rangexx
 nobase_librange_util_la_include_HEADERS = util/crc32.h
 librange_util_la_SOURCES = util/crc32.cpp
 librange_util_la_LIBADD = $(AM_LIBADD)
 
 ################################################################################
 
-librange_compiler_la_includedir = $(includedir)
+librange_compiler_la_includedir = $(includedir)/rangexx
 nobase_librange_compiler_la_include_HEADERS = compiler/ast.h \
 											  compiler/compiler_types.h \
 											  compiler/grammar_factory.h \
@@ -71,7 +71,7 @@ librange_compiler_la_LIBADD = $(AM_LIBADD)
 
 ################################################################################
 
-librange_db_la_includedir = $(includedir)
+librange_db_la_includedir = $(includedir)/rangexx
 nobase_librange_db_la_include_HEADERS  = db/pbuff_node.h \
 										 db/db_interface.h \
 										 db/db_exceptions.h \
@@ -102,7 +102,7 @@ librange_db_la_LIBADD = $(AM_LIBADD)
 
 ################################################################################
 
-librange_graph_la_includedir = $(includedir)
+librange_graph_la_includedir = $(includedir)/rangexx
 nobase_librange_graph_la_include_HEADERS = graph/graph_interface.h \
 										   graph/node_interface.h \
 										   graph/node_factory.h \
@@ -115,7 +115,7 @@ librange_graph_la_LIBADD = $(AM_LIBADD)
 
 ################################################################################
 
-librange_core_la_includedir = $(includedir)
+librange_core_la_includedir = $(includedir)/rangexx
 nobase_librange_core_la_include_HEADERS = core/exceptions.h core/config_interface.h
 librange_core_la_SOURCES = ./core/store.pb.cpp \
 						   ./core/stored_message.cpp 
