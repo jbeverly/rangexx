@@ -61,7 +61,7 @@ class GraphDB
         /// @param[in] name name of the graph instance
         /// @param[in] instance shared_ptr to object implementing
         ///             GraphInstanceInterface 
-        /// @paran[in] node_factory shared_ptr to object implementing
+        /// @param[in] node_factory shared_ptr to object implementing
         ///             NodeIfaceAbstractFactory
         inline GraphDB(const std::string& name, instance_t instance, 
                 node_factory_t node_factory)

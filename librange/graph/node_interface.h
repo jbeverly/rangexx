@@ -153,7 +153,7 @@ class NodeIface {
         
         //######################################################################
         /// @param[in] key The tag identifier
-        /// @param[in] value The value to assign to the tag 
+        /// @param[in] values The value to assign to the tag 
         /// @return true if successful, false otherwise, throws for errors 
         virtual bool update_tag(
                 const std::string& key, const std::vector<std::string>& values) = 0;          

@@ -85,6 +85,7 @@ class RangeAPI_v1
         /// @param[in] env_name name of an environment
         /// @param[in] node_name name of the node to expand
         /// @param[in] version version of primary graph to query
+        /// @param[in] type verify node is of specified type, ignored if UNKNOWN
         /// @return vector of strings expanded
         virtual std::vector<std::string> simple_expand(
                                                 const std::string &env_name,
@@ -369,8 +370,8 @@ class RangeAPI_v1
         /// Remove a cluster from all of its parents, and remove any orphans
         /// created by its removal (history retained)
         ///
-        /// @paran[in] env_name name of environment
-        /// @paran[in] cluster_name name of cluster to remove
+        /// @param[in] env_name name of environment
+        /// @param[in] cluster_name name of cluster to remove
         /// @return true on success, false on failure (e.g. cluster doesn't exist)
         virtual bool remove_cluster(const std::string &env_name, 
                                     const std::string &cluster_name);
