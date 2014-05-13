@@ -109,16 +109,22 @@ nobase_librange_graph_la_include_HEADERS = graph/graph_interface.h \
 										   graph/graphdb.h
 
 librange_graph_la_SOURCES = graph/graphdb.cpp \
-							graph/graph_iter.cpp
+							graph/graph_iter.cpp \
+							graph/node_interface.cpp
 
 librange_graph_la_LIBADD = $(AM_LIBADD)
 
 ################################################################################
 
 librange_core_la_includedir = $(includedir)/rangexx
-nobase_librange_core_la_include_HEADERS = core/exceptions.h core/config_interface.h
+nobase_librange_core_la_include_HEADERS = core/exceptions.h \
+										  core/config_interface.h \
+										  core/api.h \
+										  core/range_struct.h
+
 librange_core_la_SOURCES = ./core/store.pb.cpp \
-						   ./core/stored_message.cpp 
+						   ./core/stored_message.cpp \
+						   ./core/read_api.cpp
 	
 librange_core_la_LIBADD = $(AM_LIBADD)
 

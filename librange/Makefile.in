@@ -162,7 +162,7 @@ am_librange_compiler_la_OBJECTS = compiler/RangeParser_v1.lo \
 librange_compiler_la_OBJECTS = $(am_librange_compiler_la_OBJECTS)
 librange_core_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_core_la_OBJECTS = ./core/store.pb.lo \
-	./core/stored_message.lo
+	./core/stored_message.lo ./core/read_api.lo
 librange_core_la_OBJECTS = $(am_librange_core_la_OBJECTS)
 librange_db_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_db_la_OBJECTS = db/pbuff_node.lo db/nodeinfo.pb.lo \
@@ -171,7 +171,8 @@ am_librange_db_la_OBJECTS = db/pbuff_node.lo db/nodeinfo.pb.lo \
 	db/graph_list.pb.lo db/changelist.pb.lo
 librange_db_la_OBJECTS = $(am_librange_db_la_OBJECTS)
 librange_graph_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
-am_librange_graph_la_OBJECTS = graph/graphdb.lo graph/graph_iter.lo
+am_librange_graph_la_OBJECTS = graph/graphdb.lo graph/graph_iter.lo \
+	graph/node_interface.lo
 librange_graph_la_OBJECTS = $(am_librange_graph_la_OBJECTS)
 librange_util_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_util_la_OBJECTS = util/crc32.lo
@@ -551,15 +552,21 @@ nobase_librange_graph_la_include_HEADERS = graph/graph_interface.h \
 										   graph/graphdb.h
 
 librange_graph_la_SOURCES = graph/graphdb.cpp \
-							graph/graph_iter.cpp
+							graph/graph_iter.cpp \
+							graph/node_interface.cpp
 
 librange_graph_la_LIBADD = $(AM_LIBADD)
 
 ################################################################################
 librange_core_la_includedir = $(includedir)/rangexx
-nobase_librange_core_la_include_HEADERS = core/exceptions.h core/config_interface.h
+nobase_librange_core_la_include_HEADERS = core/exceptions.h \
+										  core/config_interface.h \
+										  core/api.h \
+										  core/range_struct.h
+
 librange_core_la_SOURCES = ./core/store.pb.cpp \
-						   ./core/stored_message.cpp 
+						   ./core/stored_message.cpp \
+						   ./core/read_api.cpp
 
 librange_core_la_LIBADD = $(AM_LIBADD)
 librange_la_SOURCES = 
@@ -674,6 +681,8 @@ core/$(DEPDIR)/$(am__dirstamp):
 	core/$(DEPDIR)/$(am__dirstamp)
 ./core/stored_message.lo: core/$(am__dirstamp) \
 	core/$(DEPDIR)/$(am__dirstamp)
+./core/read_api.lo: core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
 
 librange_core.la: $(librange_core_la_OBJECTS) $(librange_core_la_DEPENDENCIES) $(EXTRA_librange_core_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_core_la_OBJECTS) $(librange_core_la_LIBADD) $(LIBS)
@@ -708,6 +717,8 @@ graph/graphdb.lo: graph/$(am__dirstamp) \
 	graph/$(DEPDIR)/$(am__dirstamp)
 graph/graph_iter.lo: graph/$(am__dirstamp) \
 	graph/$(DEPDIR)/$(am__dirstamp)
+graph/node_interface.lo: graph/$(am__dirstamp) \
+	graph/$(DEPDIR)/$(am__dirstamp)
 
 librange_graph.la: $(librange_graph_la_OBJECTS) $(librange_graph_la_DEPENDENCIES) $(EXTRA_librange_graph_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_graph_la_OBJECTS) $(librange_graph_la_LIBADD) $(LIBS)
@@ -738,6 +749,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/read_api.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/store.pb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/stored_message.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeParser_v1.Plo@am__quote@
@@ -754,6 +766,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/pbuff_node.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@graph/$(DEPDIR)/graph_iter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@graph/$(DEPDIR)/graphdb.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@graph/$(DEPDIR)/node_interface.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/crc32.Plo@am__quote@
 
 .cpp.o:

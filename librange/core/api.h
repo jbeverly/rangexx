@@ -25,6 +25,8 @@
 
 #include "exceptions.h"
 #include "../db/db_exceptions.h"
+#include "../compiler/compiler_exceptions.h"
+#include "../graph/graph_exceptions.h"
 #include "../db/db_interface.h"
 #include "../graph/graph_interface.h"
 #include "range_struct.h"
@@ -53,16 +55,17 @@ class RangeAPI_v1
         //######################################################################
         
         //######################################################################
-        /// Get a list of all clusters in an environment
+        /// Get a list of all clusters connected to an environment
         ///
         /// @return vector of cluster names
-        virtual std::vector<std::string> all_clusters(const std::string &env_name) const;
+        virtual std::vector<std::string> all_clusters(const std::string &env_name,
+                                                      uint64_t version=-1) const;
         
         //######################################################################
         /// Get a list of all environments known to range
         ///
         /// @return vector of environment names
-        virtual std::vector<std::string> all_environments() const;
+        virtual std::vector<std::string> all_environments(uint64_t version=-1) const;
 
         //######################################################################
         /// Expand a range expression
@@ -80,15 +83,14 @@ class RangeAPI_v1
         /// Expand a node one level
         ///
         /// @param[in] env_name name of an environment
-        /// @param[in] type type of node being expanded
         /// @param[in] node_name name of the node to expand
         /// @param[in] version version of primary graph to query
         /// @return vector of strings expanded
         virtual std::vector<std::string> simple_expand(
                                                 const std::string &env_name,
-                                                node_type type,
                                                 const std::string &node_name,
-                                                uint64_t version=-1) const;
+                                                uint64_t version=-1,
+                                                node_type type=node_type::UNKNOWN) const;
 
         //######################################################################
         /// Expand a cluster one level; verifies that the node name is a cluster
@@ -117,12 +119,10 @@ class RangeAPI_v1
         /// Retrieve the names of keys for a given node.
         ///
         /// @param[in] env_name Name of an environment
-        /// @param[in] type type of node (if UNKNOWN, will try each type in order
         /// @param[in] node_name name of the node to get list of keys from
         /// @param[in] version version of primary graph to query
         /// @return vector of keys 
         virtual std::vector<std::string> get_keys(const std::string &env_name, 
-                                                  node_type type,
                                                   const std::string &node_name,
                                                   uint64_t version=-1) const;
 
@@ -130,13 +130,11 @@ class RangeAPI_v1
         /// retrieve values for a given key on a node
         ///
         /// @param[in] env_name Name of an environment
-        /// @param[in] type type of node (if UNKNOWN, will try each type in order)
         /// @param[in] node_name name of the node to retrieve values for key from
         /// @param[in] key Name of key to retrieve values from
         /// @param[in] version version of primary graph to query
         /// @return vector of values
         virtual std::vector<std::string> fetch_key(const std::string &env_name,
-                                                   node_type type,
                                                    const std::string &node_name,
                                                    const std::string &key,
                                                    uint64_t version=-1) const;
@@ -146,12 +144,10 @@ class RangeAPI_v1
         /// (As RangeString:RangeArray pairs, suitable for generating JSON)
         ///
         /// @param[in] env_name Name of an environment
-        /// @param[in] type type of node (if UNKNOWN, will try each type in order)
         /// @param[in] node_name name of node to retrieve key/values pairs from
         /// @param[in] version version of primary graph to query
         /// @return RangeObject of RangeString:RangeArray pairs
         virtual RangeStruct fetch_all_keys(const std::string &env_name,
-                                           node_type type,
                                            const std::string &node_name,
                                            uint64_t version=-1) const;
 
@@ -162,14 +158,12 @@ class RangeAPI_v1
         /// (cycles will be broken)
         ///
         /// @param[in] env_name Name of environment
-        /// @param[in] type type of node
         /// @param[in] node_name name of node to expand from
         /// @param[in] version version of primary graph to query
         /// @param[in] depth limit of traversal
         /// @return A structure suitable for conversion to JSON
         virtual RangeStruct expand(
                 const std::string &env_name,
-                node_type type,
                 const std::string &node_name,
                 uint64_t version=-1, 
                 size_t depth=std::numeric_limits<size_t>::max()) const;
@@ -208,13 +202,11 @@ class RangeAPI_v1
         /// Get list of parent nodes for node_name
         ///
         /// @param[in] env_name Name of environment
-        /// @param[in] type type of node (if UNKNOWN, will try each type in order)
         /// @param[in] node_name name of node to query
         /// @param[in] version version of primary graph to query
         /// @return vector of parent node names
         virtual std::vector<std::string> get_clusters(
                                                 const std::string &env_name,
-                                                node_type type,
                                                 const std::string &node_name,
                                                 uint64_t version=-1) const;
 
@@ -228,7 +220,6 @@ class RangeAPI_v1
         /// Return values for given key
         ///
         /// @param[in] env_name Name of environment
-        /// @param[in] type type of node.
         /// @param[in] node_name name of node to query
         /// @param[in] key name of key to search for
         /// @param[in] version version of primary graph to query
@@ -236,7 +227,6 @@ class RangeAPI_v1
         ///         of values found 
         virtual std::pair<std::string, std::vector<std::string>>
             bfs_search_parents_for_first_key(const std::string &env_name,
-                                             node_type type,
                                              const std::string &node_name,
                                              const std::string &key,
                                              uint64_t version=-1) const;
@@ -247,7 +237,6 @@ class RangeAPI_v1
         /// Return values for given key
         ///
         /// @param[in] env_name Name of environment
-        /// @param[in] type type of node.
         /// @param[in] node_name name of node to query
         /// @param[in] key name of key to search for
         /// @param[in] version version of primary graph to query
@@ -255,7 +244,6 @@ class RangeAPI_v1
         ///         of values found 
         virtual std::pair<std::string, std::vector<std::string>>
             dfs_search_parents_for_first_key(const std::string &env_name,
-                                             node_type type,
                                              const std::string &node_name,
                                              const std::string &key,
                                              uint64_t version=-1) const;
@@ -266,18 +254,14 @@ class RangeAPI_v1
         ///
         /// @param[out] ancestor will be populated with name of ancestor node 
         /// @param[in] env_name Name of environment
-        /// @paran[in] node1_type type of node1
         /// @param[in] node1_name name of first node
-        /// @param[in] node2_type type of node2
         /// @param[in] node2_name name of second node
         /// @param[in] version version of primary graph to query
         /// @return true if found, false if no ancestor exists
         virtual bool nearest_common_ancestor(
                                     std::string &ancestor,
                                     const std::string &env_name,
-                                    node_type node1_type,
                                     const std::string &node1_name,
-                                    node_type node2_type,
                                     const std::string &node2_name,
                                     uint64_t version=-1) const;
 
@@ -295,12 +279,12 @@ class RangeAPI_v1
         //######################################################################
         /// Find disconnected/orphaned nodes
         ///
-        /// @param[in] prune Prune children of disconnected parents from result
-        /// @return list of environment-name:node-type:node-name tuples that are
+        /// @param[in] version version of graph to query
+        /// @return list of node-type:node-name tuples that are
         ///         disconnected from the graph (do not connect to an
         ///         environment; will not list environment nodes)
-        virtual std::vector<std::tuple<std::string, node_type, std::string>>
-            find_orphaned_nodes(bool prune=true) const;
+        virtual std::vector<std::tuple<node_type, std::string>>
+            find_orphaned_nodes(uint64_t version=-1) const;
 
        
 
@@ -442,14 +426,12 @@ class RangeAPI_v1
         /// appended to the list of values for that key. 
         ///
         /// @param[in] env_name Name of environment
-        /// @param[in] type type of node
         /// @param[in] node_name name of node
         /// @param[in] key key to add the value to
         /// @param[in] value value to add to the key
         /// @return true on success, false on failure (e.g. value already in
         ///         list of values)
         virtual bool add_node_key_value(const std::string &env_name,
-                                        node_type type,
                                         const std::string &node_name,
                                         const std::string &key,
                                         const std::string &value);
@@ -460,14 +442,12 @@ class RangeAPI_v1
         /// removed from the list of values for that key. 
         ///
         /// @param[in] env_name Name of environment
-        /// @param[in] type type of node
         /// @param[in] node_name name of node
         /// @param[in] key key to remove the value from
         /// @param[in] value value to remove from the key
         /// @return true on success, false on failure (e.g. value not in
         ///         list of values)
         virtual bool remove_node_key_value(const std::string &env_name,
-                                        node_type type,
                                         const std::string &node_name,
                                         const std::string &key,
                                         const std::string &value);
@@ -476,12 +456,10 @@ class RangeAPI_v1
         /// Remove a key from a node
         ///
         /// @param[in] env_name name of environment
-        /// @param[in] type type of node 
         /// @param[in] node_name name of node to remove key from
         /// @param[in] key name of key to remove
         /// @return true on success, false on failure (e.g. key doesn't exist on node)
         virtual bool remove_key_from_node(const std::string &env_name,
-                                          node_type type,
                                           const std::string &node_name,
                                           const std::string &key);
 
@@ -490,30 +468,22 @@ class RangeAPI_v1
         /// Both nodes must exist.
         ///
         /// @param[in] env_name name of environment
-        /// @param[in] type type of node which has the dependency (the dependent)
         /// @param[in] node_name name of the node which has the dependency (the dependent)
-        /// @param[in] dependency_type type of node upon which node_name depends
         /// @param[in] dependency_name name of node upon which node_name depends.
         /// @return true on success, false on failure
         virtual bool add_node_env_dependency(const std::string &env_name,
-                                             node_type type,
                                              const std::string &node_name,
-                                             node_type dependency_type,
                                              const std::string &dependency_name);
 
         //######################################################################
         /// Remove a dependency from a node to another node within the same environment
         ///
         /// @param[in] env_name name of environment
-        /// @param[in] type type of node which has the dependency (the dependent)
         /// @param[in] node_name name of the node which has the dependency (the dependent)
-        /// @param[in] dependency_type type of node upon which node_name depends
         /// @param[in] dependency_name name of node upon which node_name depends.
         /// @return true on success, false on failure
         virtual bool remove_node_env_dependency(const std::string &env_name,
-                                                node_type type,
                                                 const std::string &node_name,
-                                                node_type dependency_type,
                                                 const std::string &dependency_name);
 
         //######################################################################
@@ -521,41 +491,38 @@ class RangeAPI_v1
         /// Both nodes must exist.
         ///
         /// @param[in] env_name name of environment within which node_name is in
-        /// @param[in] type type of node which has the dependency (the dependent)
         /// @param[in] node_name name of the node which has the dependency (the dependent)
         /// @param[in] dependency_env Name of the environment wherein dependency_name exists
-        /// @param[in] dependency_type type of node upon which node_name depends
         /// @param[in] dependency_name name of node upon which node_name depends.
         /// @return true on success, false on failure
         virtual bool add_node_ext_dependency(const std::string &env_name,
-                                             node_type type,
                                              const std::string &node_name,
                                              const std::string &dependency_env,
-                                             node_type dependency_type,
                                              const std::string &dependency_name);
 
         //######################################################################
         /// Remove a dependency from a node to another node within the same environment
         ///
         /// @param[in] env_name name of environment within which node_name is in
-        /// @param[in] type type of node which has the dependency (the dependent)
         /// @param[in] node_name name of the node which has the dependency (the dependent)
         /// @param[in] dependency_env Name of the environment wherein dependency_name exists
-        /// @param[in] dependency_type type of node upon which node_name depends
         /// @param[in] dependency_name name of node upon which node_name depends.
         /// @return true on success, false on failure
         virtual bool remove_node_ext_dependency(const std::string &env_name,
-                                                node_type type,
                                                 const std::string &node_name,
                                                 const std::string &dependency_env,
-                                                node_type dependency_type,
                                                 const std::string &dependency_name);
 
 
     private:
         boost::shared_ptr<ConfigIface> cfg_;
-
-
+        boost::shared_ptr<graph::GraphInterface> graphdb(const std::string &name, uint64_t version) const;
+        std::string env_prefix(const std::string &env_name) const;
+        std::string prefixed_node_name(const std::string &env_name, const std::string &node_name) const;
+        std::string unprefix_node_name(const std::string &env_name, const std::string &node_name) const;
+        graph::NodeIface::node_t get_node(boost::shared_ptr<graph::GraphInterface> graph,
+                                          const std::string &env_name,
+                                          const std::string &node_name) const;
 };
 
 } // namespace range

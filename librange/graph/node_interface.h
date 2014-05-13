@@ -20,6 +20,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include <unordered_map>
 #include <boost/shared_ptr.hpp>
 
@@ -48,12 +49,18 @@ class NodeIface {
 
         
         //######################################################################
-        static constexpr node_type node_types[] = {                             // c++11 is neat
+        static constexpr node_type known_node_types[] = {                       // c++11 is neat
             node_type::ENVIRONMENT,
             node_type::CLUSTER, 
             node_type::HOST,
             node_type::STRING,
         };
+
+        
+        //######################################################################
+        //######################################################################
+        static const std::map<node_type, std::string> node_type_names;
+
 
         typedef boost::shared_ptr<NodeIface> node_t;                            ///< handy shared_ptr type for this abstract interface
 

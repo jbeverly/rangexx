@@ -41,11 +41,11 @@ class RangeNull;
 typedef boost::variant<
     boost::recursive_wrapper<RangeObject>,          // 0
     boost::recursive_wrapper<RangeArray>,           // 1
-    RangeNumber,                                    // 2
-    RangeString,                                    // 3
-    RangeTrue,                                      // 4
-    RangeFalse,                                     // 5
-    RangeNull                                       // 6
+    boost::recursive_wrapper<RangeNumber>,          // 2
+    boost::recursive_wrapper<RangeString>,          // 3
+    boost::recursive_wrapper<RangeTrue>,            // 4
+    boost::recursive_wrapper<RangeFalse>,           // 5
+    boost::recursive_wrapper<RangeNull>             // 6
 > RangeStruct;
 
 //##############################################################################
@@ -67,9 +67,8 @@ class RangeArray {
 //##############################################################################
 class RangeNumber {
     public:
-        template <typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
-        RangeNumber(T v) : value(v) { }
-        long double value;
+       RangeNumber(long double v) : value(v) { }
+       long double value;
 };
 
 //##############################################################################

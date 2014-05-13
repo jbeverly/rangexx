@@ -22,6 +22,9 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/iterator/iterator_facade.hpp>
+#include <boost/iterator/filter_iterator.hpp>
+#include <boost/range/adaptor/reversed.hpp>
+
 #include "node_interface.h"
 
 namespace range {
@@ -304,6 +307,62 @@ class const_GraphIterator : public boost::iterator_facade<
         void decrement();
 
 };
+
+//##############################################################################
+//##############################################################################
+class version_filter {
+    public:
+        //######################################################################
+        //######################################################################
+        explicit version_filter(uint64_t wanted_version)
+            : wanted(wanted_version)
+        { }
+
+        //######################################################################
+        //######################################################################
+        bool operator()(boost::shared_ptr<NodeIface> n) {
+            auto g_versions = n->graph_versions();
+
+            for (uint64_t node_version : boost::adaptors::reverse(g_versions)) {
+                if (node_version == wanted) {
+                    return true;
+                }
+                if (node_version < wanted) {                                    // we've gone too far back, bail out
+                    return false;
+                }
+            }
+            return false;                                                       // requested version is older than node
+        }
+
+        //######################################################################
+        //######################################################################
+        bool operator()(NodeIface& n) {
+            auto g_versions = n.graph_versions();
+
+            for (uint64_t node_version : boost::adaptors::reverse(g_versions)) {
+                if (node_version == wanted) {
+                    return true;
+                }
+                if (node_version < wanted) {                                    // we've gone too far back, bail out
+                    return false;
+                }
+            }
+            return false;                                                       // requested version is older than node
+        }
+
+    private:
+        uint64_t wanted;
+};
+
+//##############################################################################
+//##############################################################################
+template <typename Iter> 
+boost::filter_iterator<version_filter, Iter>
+makeVersionFilter(uint64_t wanted_version, Iter begin, Iter end)
+{
+    version_filter v { wanted_version };
+    return boost::filter_iterator<version_filter, Iter>(v, begin, end);
+}
 
 
 
