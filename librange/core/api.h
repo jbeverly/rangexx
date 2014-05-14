@@ -325,7 +325,7 @@ class RangeAPI_v1
 
         //######################################################################
         /// Remove a cluster from an environment (cluster in environment
-        /// must exist, orphaned children will be removed [history retained])
+        /// must exist
         ///
         /// @param[in] env_name name of existing environment
         /// @param[in] cluster_name Name of cluster to create
@@ -354,7 +354,7 @@ class RangeAPI_v1
         //######################################################################
         /// Remove a cluster from another existing cluster
         /// (parent cluster must exist, child_cluster must exist as a child of 
-        /// parent cluster, orphans will be removed [history retained]) 
+        /// parent cluster
         ///
         /// @param[in] env_name name of environment
         /// @param[in] parent_cluster name of existing cluster to add new 
@@ -367,8 +367,7 @@ class RangeAPI_v1
                                                  const std::string &child_cluster);
 
         //######################################################################
-        /// Remove a cluster from all of its parents, and remove any orphans
-        /// created by its removal (history retained)
+        /// Remove a cluster from all of its parents
         ///
         /// @param[in] env_name name of environment
         /// @param[in] cluster_name name of cluster to remove
@@ -408,6 +407,14 @@ class RangeAPI_v1
         virtual bool remove_host_from_cluster(const std::string &env_name,
                                               const std::string &parent_cluster,
                                               const std::string &hostname);
+
+        //######################################################################
+        /// Add a host to range. 
+        ///
+        /// @param[in] hostname name of host to remove from all parents
+        /// @return true on success, false on failure (e.g. hostnode doesn't exist,
+        ///         or hostnode not linked to specified environment)
+        virtual bool add_host(const std::string &hostname);
 
         //######################################################################
         /// Remove a host from all parent clusters. Verifies host is in the 

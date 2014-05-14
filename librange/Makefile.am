@@ -124,7 +124,8 @@ nobase_librange_core_la_include_HEADERS = core/exceptions.h \
 
 librange_core_la_SOURCES = ./core/store.pb.cpp \
 						   ./core/stored_message.cpp \
-						   ./core/read_api.cpp
+						   ./core/read_api.cpp \
+						   ./core/write_api.cpp
 	
 librange_core_la_LIBADD = $(AM_LIBADD)
 

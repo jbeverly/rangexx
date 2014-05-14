@@ -326,6 +326,7 @@ RangeAPI_v1::expand(const std::string &env_name, const std::string &node_name,
                     uint64_t version, size_t depth) const
 {
     const auto primary = graphdb("primary", version);
+    const auto dependency = graphdb("dependency", -1);                          // FIXME: I don't have version coherence for graphs; will treat dependency graph as unversioned for now
     auto n = get_node(primary, env_name, node_name);
  
     std::unordered_map<std::string, bool> visited;
@@ -344,6 +345,14 @@ RangeAPI_v1::expand(const std::string &env_name, const std::string &node_name,
             vnode.ret.values["name"] = unprefix_node_name(env_name, v->name());
             vnode.ret.values["tags"] = fetch_all_keys(env_name, node_name, version);
             vnode.ret.values["children"] = RangeObject();
+            auto deps_node = dependency->get_node(v->name());
+            RangeArray deps;
+            if(deps_node) {
+                for (auto d : deps_node->forward_edges()) {
+                    deps.values.push_back(d->name());
+                }
+            }
+            vnode.ret.values["dependencies"] = deps;
         }
 
         onstack[v->name()] = true;

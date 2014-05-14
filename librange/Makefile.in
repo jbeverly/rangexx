@@ -162,7 +162,8 @@ am_librange_compiler_la_OBJECTS = compiler/RangeParser_v1.lo \
 librange_compiler_la_OBJECTS = $(am_librange_compiler_la_OBJECTS)
 librange_core_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_core_la_OBJECTS = ./core/store.pb.lo \
-	./core/stored_message.lo ./core/read_api.lo
+	./core/stored_message.lo ./core/read_api.lo \
+	./core/write_api.lo
 librange_core_la_OBJECTS = $(am_librange_core_la_OBJECTS)
 librange_db_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_db_la_OBJECTS = db/pbuff_node.lo db/nodeinfo.pb.lo \
@@ -566,7 +567,8 @@ nobase_librange_core_la_include_HEADERS = core/exceptions.h \
 
 librange_core_la_SOURCES = ./core/store.pb.cpp \
 						   ./core/stored_message.cpp \
-						   ./core/read_api.cpp
+						   ./core/read_api.cpp \
+						   ./core/write_api.cpp
 
 librange_core_la_LIBADD = $(AM_LIBADD)
 librange_la_SOURCES = 
@@ -683,6 +685,8 @@ core/$(DEPDIR)/$(am__dirstamp):
 	core/$(DEPDIR)/$(am__dirstamp)
 ./core/read_api.lo: core/$(am__dirstamp) \
 	core/$(DEPDIR)/$(am__dirstamp)
+./core/write_api.lo: core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
 
 librange_core.la: $(librange_core_la_OBJECTS) $(librange_core_la_DEPENDENCIES) $(EXTRA_librange_core_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_core_la_OBJECTS) $(librange_core_la_LIBADD) $(LIBS)
@@ -752,6 +756,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/read_api.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/store.pb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/stored_message.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/write_api.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeParser_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeScanner_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/expanding_visitor.Plo@am__quote@
