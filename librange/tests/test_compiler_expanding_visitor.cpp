@@ -280,6 +280,38 @@ TEST_F(TestCompiler, test_sequence_suffix)
 
 //##############################################################################
 //##############################################################################
+TEST_F(TestCompiler, test_sequence_rprefix)
+{
+    ast::ASTNode top = ast::ASTSequence { ast::ASTWord("asdf1"), ast::ASTWord("asdf1000") };
+
+    boost::apply_visitor(c::RangeExpandingVisitor(graph_), top);
+    auto children = boost::apply_visitor(c::FetchChildrenVisitor(), top);
+
+    ASSERT_EQ(1000, children.size());
+    EXPECT_EQ("asdf0001", children[0]);
+    EXPECT_EQ("asdf0500", children[499]);
+    EXPECT_EQ("asdf1000", children[999]);
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestCompiler, test_sequence_rprefix_with_suffix)
+{
+    ast::ASTNode top = ast::ASTSequence { ast::ASTWord("asdf1"), ast::ASTWord("asdf1000foobar") };
+
+    boost::apply_visitor(c::RangeExpandingVisitor(graph_), top);
+    auto children = boost::apply_visitor(c::FetchChildrenVisitor(), top);
+
+    ASSERT_EQ(1000, children.size());
+    EXPECT_EQ("asdf0001foobar", children[0]);
+    EXPECT_EQ("asdf0500foobar", children[499]);
+    EXPECT_EQ("asdf1000foobar", children[999]);
+}
+
+
+
+//##############################################################################
+//##############################################################################
 TEST_F(TestCompiler, test_get_cluster)
 {
     ast::ASTNode top = ast::ASTGetCluster { ast::ASTWord("thing5") };

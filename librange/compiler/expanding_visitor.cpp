@@ -190,6 +190,10 @@ RangeExpandingVisitor::operator()(ast::ASTSequence& seq) const
     if (lprefix.size() != lword.size())
         p1ok = true;
 
+    if(rword.substr(0, lprefix.size()) == lprefix) {
+        rword = rword.substr(lprefix.size());
+    }
+
     auto it = std::find_if(rword.begin(), rword.end(), [](char c) { return isalpha(c); });
     rnum = boost::lexical_cast<uint32_t>(std::string(rword.begin(), it));
     std::string rsuffix { it, rword.end() };
