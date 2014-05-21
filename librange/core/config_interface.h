@@ -21,8 +21,6 @@
 #include "../graph/node_factory.h"
 #include "../graph/graphdb_factory.h"
 #include "../compiler/compiler_types.h"
-#include "stored_config.h"
-#include "reader_config.h"
 
 namespace range {
 
@@ -31,8 +29,6 @@ namespace range {
 class ConfigIface {
     public:
         virtual ~ConfigIface() = default;
-        virtual StoredConfig& stored() const = 0;
-        virtual ReaderConfig& reader() const = 0;
         
     protected:
         ConfigIface() = default;
