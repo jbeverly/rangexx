@@ -125,14 +125,15 @@ nobase_librange_core_la_include_HEADERS = core/exceptions.h \
 librange_core_la_SOURCES = ./core/store.pb.cpp \
 						   ./core/stored_message.cpp \
 						   ./core/read_api.cpp \
-						   ./core/write_api.cpp
+						   ./core/write_api.cpp \
+						   ./core/config_builder.cpp
 	
 librange_core_la_LIBADD = $(AM_LIBADD)
 
 
 librange_la_SOURCES = 
 librange_la_LDFLAGS = -version-info $(RANGEXX_LIBRARY_VERSION)
-librange_la_LIBADD = librange_graph.la librange_db.la librange_compiler.la librange_util.la 
+librange_la_LIBADD = librange_graph.la librange_db.la librange_compiler.la librange_util.la librange_core.la
 
 #nobase_librange_la_include_HEADERS = 
 

@@ -101,7 +101,7 @@ RangeAPI_v1::get_node(boost::shared_ptr<graph::GraphInterface> graph,
 
 //##############################################################################
 //##############################################################################
-std::vector<std::string>
+RangeStruct
 RangeAPI_v1::all_clusters(const std::string &env_name, uint64_t version) const
 {
     const auto primary = graphdb("primary", version);
@@ -113,7 +113,7 @@ RangeAPI_v1::all_clusters(const std::string &env_name, uint64_t version) const
 
     std::unordered_map<std::string, bool> visited;
    
-    std::vector<std::string> found;
+    RangeArray found;
     std::stack<graph::NodeIface::node_t> st;
     st.push(n);
 
@@ -125,7 +125,7 @@ RangeAPI_v1::all_clusters(const std::string &env_name, uint64_t version) const
                 st.push(e);
             }
             if (v->type() == node_type::CLUSTER) {
-                found.push_back(unprefix_node_name(env_name, v->name()));
+                found.push_back(RangeString(unprefix_node_name(env_name, v->name())));
             }
         }
     }
@@ -134,7 +134,7 @@ RangeAPI_v1::all_clusters(const std::string &env_name, uint64_t version) const
 
 //##############################################################################
 //##############################################################################
-std::vector<std::string>
+RangeStruct
 RangeAPI_v1::all_environments(uint64_t version) const
 {
     const auto primary = graphdb("primary", version);
@@ -151,13 +151,36 @@ RangeAPI_v1::all_environments(uint64_t version) const
         }
     }
 
+    return RangeArray(found);
+}
+
+
+//##############################################################################
+//##############################################################################
+RangeStruct
+RangeAPI_v1::all_hosts(uint64_t version) const
+{
+    const auto primary = graphdb("primary", version);
+    uint64_t cmp_v = (version == static_cast<uint64_t>(-1)) ? primary->version() : version;
+
+    auto first = graph::makeVersionFilter(cmp_v, primary->begin(), primary->end());
+    auto last = graph::makeVersionFilter(cmp_v, primary->end(), primary->end());
+
+    std::vector<std::string> found;
+
+    for(auto it = first; it != last; ++it) {
+        if (it->type() == node_type::HOST) {
+            found.push_back(it->name());
+        }
+    }
+
     return found;
 }
 
 
 //##############################################################################
 //##############################################################################
-std::vector<std::string>
+RangeStruct
 RangeAPI_v1::expand_range_expression(const std::string &env_name,
         const std::string &expression, uint64_t version) const
 {
@@ -177,7 +200,7 @@ RangeAPI_v1::expand_range_expression(const std::string &env_name,
 
 //##############################################################################
 //##############################################################################
-std::vector<std::string>
+RangeStruct
 RangeAPI_v1::simple_expand(const std::string &env_name,
                            const std::string &node_name,
                            uint64_t version,
@@ -208,7 +231,7 @@ RangeAPI_v1::simple_expand(const std::string &env_name,
 
 //##############################################################################
 //##############################################################################
-std::vector<std::string>
+RangeStruct
 RangeAPI_v1::simple_expand_cluster(const std::string &env_name,
                                    const std::string &cluster_name,
                                    uint64_t version) const
@@ -218,7 +241,7 @@ RangeAPI_v1::simple_expand_cluster(const std::string &env_name,
 
 //##############################################################################
 //##############################################################################
-std::vector<std::string>
+RangeStruct
 RangeAPI_v1::simple_expand_env(const std::string &env_name,
                                      uint64_t version) const
 {
@@ -701,7 +724,8 @@ RangeAPI_v1::find_orphaned_nodes(uint64_t version) const
     const auto primary = graphdb("primary", version);
     
     std::unordered_map<std::string, bool> visited;
-    for (auto env : all_environments(version)) {
+    for (auto env_variant : boost::get<RangeArray>(all_environments(version)).values) {
+        std::string env = boost::get<RangeString>(env_variant).value;
         std::stack<graph::NodeIface::node_t> st;
         st.push(primary->get_node(env));
 

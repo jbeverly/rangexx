@@ -30,6 +30,7 @@
 #include "../db/db_interface.h"
 #include "../graph/graph_interface.h"
 #include "range_struct.h"
+#include "config_builder.h"
 
 #include "config_interface.h"
 
@@ -46,7 +47,12 @@ class RangeAPI_v1
             : cfg_(cfg)
         {
         }
-
+        
+        //######################################################################
+        RangeAPI_v1(const std::string &cfg_file) 
+            : cfg_(config_builder(cfg_file))
+        {
+        }
         
         //######################################################################
         //######################################################################
@@ -58,14 +64,21 @@ class RangeAPI_v1
         /// Get a list of all clusters connected to an environment
         ///
         /// @return vector of cluster names
-        virtual std::vector<std::string> all_clusters(const std::string &env_name,
+        virtual RangeStruct all_clusters(const std::string &env_name,
                                                       uint64_t version=-1) const;
         
         //######################################################################
         /// Get a list of all environments known to range
         ///
         /// @return vector of environment names
-        virtual std::vector<std::string> all_environments(uint64_t version=-1) const;
+        virtual RangeStruct all_environments(uint64_t version=-1) const;
+
+
+        //######################################################################
+        /// Get a list of all hosts known to range
+        ///
+        /// @return vector of hostnames
+        virtual RangeStruct all_hosts(uint64_t version=-1) const;
 
         //######################################################################
         /// Expand a range expression
@@ -74,7 +87,7 @@ class RangeAPI_v1
         /// @param[in] expression The range expression to expand
         /// @param[in] version version of primary graph to query
         /// @return vector of strings expanded
-        virtual std::vector<std::string> expand_range_expression(
+        virtual RangeStruct expand_range_expression(
                                                 const std::string &env_name, 
                                                 const std::string &expression,
                                                 uint64_t version=-1) const;
@@ -87,11 +100,11 @@ class RangeAPI_v1
         /// @param[in] version version of primary graph to query
         /// @param[in] type verify node is of specified type, ignored if UNKNOWN
         /// @return vector of strings expanded
-        virtual std::vector<std::string> simple_expand(
-                                                const std::string &env_name,
-                                                const std::string &node_name,
-                                                uint64_t version=-1,
-                                                node_type type=node_type::UNKNOWN) const;
+        virtual RangeStruct simple_expand(
+                                        const std::string &env_name,
+                                        const std::string &node_name,
+                                        uint64_t version=-1,
+                                        node_type type=node_type::UNKNOWN) const;
 
         //######################################################################
         /// Expand a cluster one level; verifies that the node name is a cluster
@@ -100,7 +113,7 @@ class RangeAPI_v1
         /// @param[in] cluster_name name of the node to expand; must be a cluster
         /// @param[in] version version of primary graph to query
         /// @return vector of strings expanded
-        virtual std::vector<std::string> simple_expand_cluster(
+        virtual RangeStruct simple_expand_cluster(
                                                 const std::string &env_name,
                                                 const std::string &cluster_name,
                                                 uint64_t version=-1) const;
@@ -112,7 +125,7 @@ class RangeAPI_v1
         /// @param[in] env_name name of the node to expand; must be a environment
         /// @param[in] version version of primary graph to query
         /// @return vector of strings expanded
-        virtual std::vector<std::string> simple_expand_env(
+        virtual RangeStruct simple_expand_env(
                                                 const std::string &env_name,
                                                 uint64_t version=-1) const;
 

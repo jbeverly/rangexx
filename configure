@@ -18762,7 +18762,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile librange/Makefile librange/tests/Makefile rangexxstored/Makefile rangexxstored/tests/Makefile"
+ac_config_files="$ac_config_files Makefile librange/Makefile librange/tests/Makefile rangexxstored/Makefile rangexxstored/tests/Makefile python/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -19877,6 +19877,7 @@ do
     "librange/tests/Makefile") CONFIG_FILES="$CONFIG_FILES librange/tests/Makefile" ;;
     "rangexxstored/Makefile") CONFIG_FILES="$CONFIG_FILES rangexxstored/Makefile" ;;
     "rangexxstored/tests/Makefile") CONFIG_FILES="$CONFIG_FILES rangexxstored/tests/Makefile" ;;
+    "python/Makefile") CONFIG_FILES="$CONFIG_FILES python/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

@@ -30,6 +30,7 @@ namespace range {
 
 class RangeObject;
 class RangeArray;
+class RangeTuple;
 class RangeNumber;
 class RangeString;
 class RangeTrue;
@@ -41,27 +42,13 @@ class RangeNull;
 typedef boost::variant<
     boost::recursive_wrapper<RangeObject>,          // 0
     boost::recursive_wrapper<RangeArray>,           // 1
+    boost::recursive_wrapper<RangeTuple>,           // 1
     boost::recursive_wrapper<RangeNumber>,          // 2
     boost::recursive_wrapper<RangeString>,          // 3
     boost::recursive_wrapper<RangeTrue>,            // 4
     boost::recursive_wrapper<RangeFalse>,           // 5
     boost::recursive_wrapper<RangeNull>             // 6
 > RangeStruct;
-
-//##############################################################################
-//##############################################################################
-class RangeObject {
-    public:
-        std::unordered_map<std::string, RangeStruct> values;
-};
-
-
-//##############################################################################
-//##############################################################################
-class RangeArray {
-    public:
-        std::list<RangeStruct> values;
-};
 
 //##############################################################################
 //##############################################################################
@@ -85,6 +72,45 @@ class RangeTrue {};
 class RangeFalse {};
 class RangeNull {};
 
+//##############################################################################
+//##############################################################################
+class RangeObject {
+    public:
+        std::unordered_map<std::string, RangeStruct> values;
+        void insert(std::pair<std::string, RangeStruct> v) { values.insert(v); }
+        RangeStruct& operator[](std::string &key) { return values[key]; }
+};
+
+
+//##############################################################################
+//##############################################################################
+class RangeArray {
+    public:
+        RangeArray() { }
+        RangeArray(const std::vector<RangeStruct>& v) : values(v.begin(), v.end()) { }
+        RangeArray(const std::vector<std::string>& v) { std::for_each(v.begin(), v.end(), [this](std::string s) { this->values.push_back(RangeString(s)); }); }
+
+        void push_back(RangeStruct v) { values.push_back(v); }
+
+        std::list<RangeStruct> values;
+};
+
+//##############################################################################
+//##############################################################################
+class RangeTuple {
+    public:
+        RangeTuple() {}
+        RangeTuple(const std::pair<RangeStruct, RangeStruct> &pair)
+            : values(std::make_tuple(pair.first, pair.second) )
+        { }
+
+        template <typename ... T>
+        RangeTuple(const std::tuple<T ...> tuple)
+            : values(tuple)
+        { }
+
+        std::tuple<RangeStruct> values;
+};
 
 } // namespace range
 

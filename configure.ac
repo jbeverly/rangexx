@@ -61,6 +61,7 @@ AC_CONFIG_FILES([Makefile
                  librange/tests/Makefile
 				 rangexxstored/Makefile
 				 rangexxstored/tests/Makefile
+				 python/Makefile
                  ])
 
 AC_OUTPUT

@@ -15,23 +15,20 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _RANGE_CORE_STORED_CONFIG_H
-#define _RANGE_CORE_STORED_CONFIG_H
+#ifndef _RANGE_CORE_READER_CONFIG_H
+#define _RANGE_CORE_READER_CONFIG_H
 
-#include <cstdint>
+#include "client_config.h"
 
 namespace range {
 
-class StoredConfigIface
+class ReaderConfig : public ClientConfig
 {
     public:
-        virtual ~StoredConfigIface() = default;
-        virtual uint32_t reader_ack_timeout() const = 0;
-
+        virtual ~ReaderConfig() = default;
     protected: 
-        StoredConfigIface() = default;
+        ReaderConfig() = default;
 };
-
 
 } // namespace range
 

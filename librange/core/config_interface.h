@@ -21,8 +21,8 @@
 #include "../graph/node_factory.h"
 #include "../graph/graphdb_factory.h"
 #include "../compiler/compiler_types.h"
-#include "stored_config_interface.h"
-#include "reader_config_interface.h"
+#include "stored_config.h"
+#include "reader_config.h"
 
 namespace range {
 
@@ -31,13 +31,8 @@ namespace range {
 class ConfigIface {
     public:
         virtual ~ConfigIface() = default;
-        virtual boost::shared_ptr<db::BackendInterface> db_backend() const = 0;
-        virtual boost::shared_ptr<graph::NodeIfaceAbstractFactory> node_factory() const = 0;
-        virtual boost::shared_ptr<graph::GraphdbAbstractFactory> graph_factory() const = 0;
-        virtual boost::shared_ptr<compiler::functor_map_t> range_symbol_table() const = 0;
-        virtual db::ConfigIface& db() const = 0;
-        virtual StoredConfigIface& stored() const = 0;
-        virtual ReaderConfigIface& reader() const = 0;
+        virtual StoredConfig& stored() const = 0;
+        virtual ReaderConfig& reader() const = 0;
         
     protected:
         ConfigIface() = default;
