@@ -419,10 +419,19 @@ RangeExpandingVisitor::operator()(ast::ASTKeyExpand& key) const
         prefix_child(child);
         auto n = graph_->get_node(child);
         auto tags = n->tags();
-        auto tag_it = tags.find(boost::get<ast::ASTWord>(key.rhs).word);
+        std::string word = boost::get<ast::ASTWord>(key.rhs).word;
 
-        if (tag_it != tags.end()) {
-            key.children = tag_it->second;
+        if (word == "KEYS") {
+            auto tag_it = tags.begin();
+            for(; tag_it != tags.end(); ++tag_it) {
+                key.children.push_back(tag_it->first);
+            }
+        }
+        else {
+            auto tag_it = tags.find(word);
+            if (tag_it != tags.end()) {
+                key.children = tag_it->second;
+            }
         }
     }
 }

@@ -19,33 +19,11 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "config_interface.h"
+#include "config.h"
 
 namespace range {
 
-
-class Config : public ConfigIface
-{
-    public:
-        Config();
-        virtual boost::shared_ptr<db::BackendInterface> db_backend() const override;
-        virtual boost::shared_ptr<graph::NodeIfaceAbstractFactory> node_factory() const override;
-        virtual boost::shared_ptr<graph::GraphdbAbstractFactory> graph_factory() const override;
-        virtual boost::shared_ptr<compiler::functor_map_t> range_symbol_table() const override;
-        virtual db::ConfigIface& db() const override;
-        virtual StoredConfigIface& stored() const override;
-        virtual ReaderConfigIface& reader() const override;
-};
-
-class DbConfig : public db::ConfigIface {
-    public:
-        DbConfig();
-        virtual const std::string& db_home() const override;
-        virtual size_t cache_size() const override;
-};
-
-
-boost::shared_ptr<ConfigIface> config_builder(const std::string& filename); 
+boost::shared_ptr<Config> config_builder(const std::string& filename); 
 
 } /* namespace range */
 

@@ -1,5 +1,4 @@
-/*
- * This file is part of range++.
+/* * This file is part of range++.
  *
  * range++ is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,38 +22,87 @@
 #include "../db/config_interface.h"
 
 namespace range {
-
-//##############################################################################
-//##############################################################################
-class ClientConfig {
+    //##############################################################################
+    //##############################################################################
+struct Config {
     public:
-        virtual ~ClientConfig() = default;
-        virtual boost::shared_ptr<db::BackendInterface> db_backend() const {return db_backend_; }
-        virtual void db_backend(boost::shared_ptr<db::BackendInterface> v) { db_backend_ = v; }
+        virtual ~Config() = default;
 
-        virtual boost::shared_ptr<graph::NodeIfaceAbstractFactory> node_factory() const { return node_factory_; }
-        virtual void node_factory(boost::shared_ptr<graph::NodeIfaceAbstractFactory> v) { node_factory_ = v; }
+        virtual boost::shared_ptr<db::BackendInterface> db_backend() const
+        { return db_backend_; }
 
-        virtual boost::shared_ptr<graph::GraphdbAbstractFactory> graph_factory() const { return graph_factory_; }
-        virtual void graph_factory(boost::shared_ptr<graph::GraphdbAbstractFactory> v) { graph_factory_ = v; }
+        virtual boost::shared_ptr<graph::NodeIfaceAbstractFactory> node_factory() const
+        { return node_factory_; }
 
-        virtual boost::shared_ptr<compiler::functor_map_t> range_symbol_table() const { return range_symbol_table_; }
-        virtual void range_symbol_table(boost::shared_ptr<compiler::functor_map_t> v) { range_symbol_table_ = v; }
+        virtual boost::shared_ptr<graph::GraphdbAbstractFactory> graph_factory() const
+        { return graph_factory_; }
 
-        virtual bool use_stored() const { return use_stored_; }
-        virtual void use_stored(bool v) { use_stored_ = v; }
+        virtual boost::shared_ptr<compiler::functor_map_t> range_symbol_table() const
+        { return range_symbol_table_; }
 
-        virtual std::string stored_mq_name() const { return stored_mq_name_; }
-        virtual void stored_mq_name(std::string v) { stored_mq_name_ = v; }
+        virtual bool use_stored() const
+        { return use_stored_; }
 
-        virtual uint32_t stored_request_timeout() const { return stored_request_timeout_; }
-        virtual void stored_request_timeout(uint32_t v) { stored_request_timeout_ = v; }
+        virtual std::string stored_mq_name() const
+        { return stored_mq_name_; }
 
-        virtual uint32_t reader_ack_timeout() const { return reader_ack_timeout_; }
-        virtual void reader_ack_timeout(uint32_t v) { reader_ack_timeout_ = v; }
+        virtual uint32_t stored_request_timeout() const
+        { return stored_request_timeout_; }
+
+        virtual uint32_t reader_ack_timeout() const
+        { return reader_ack_timeout_; }
+
     protected:
-        ClientConfig() = default;
+        Config() = default;
+
+        Config(
+                boost::shared_ptr<db::BackendInterface> db_backend,
+                boost::shared_ptr<graph::NodeIfaceAbstractFactory> node_factory,
+                boost::shared_ptr<graph::GraphdbAbstractFactory> graph_factory,
+                boost::shared_ptr<compiler::functor_map_t> range_symbol_table,
+                bool use_stored,
+                std::string stored_mq_name,
+                uint32_t stored_request_timeout,
+                uint32_t reader_ack_timeout
+              ) 
+            :   db_backend_(db_backend),
+                node_factory_(node_factory),
+                graph_factory_(graph_factory),
+                range_symbol_table_(range_symbol_table),
+                use_stored_(use_stored),
+                stored_mq_name_(stored_mq_name),
+                stored_request_timeout_(stored_request_timeout),
+                reader_ack_timeout_(reader_ack_timeout)
+        { }
+
+
+        virtual void db_backend(boost::shared_ptr<db::BackendInterface> v)
+        { db_backend_ = v; }
+
+        virtual void node_factory(boost::shared_ptr<graph::NodeIfaceAbstractFactory> v)
+        { node_factory_ = v; }
+
+        virtual void graph_factory(boost::shared_ptr<graph::GraphdbAbstractFactory> v)
+        { graph_factory_ = v; }
+
+        virtual void range_symbol_table(boost::shared_ptr<compiler::functor_map_t> v)
+        { range_symbol_table_ = v; }
+
+        virtual void use_stored(bool v)
+        { use_stored_ = v; }
+
+        virtual void stored_mq_name(std::string v)
+        { stored_mq_name_ = v; }
+
+        virtual void stored_request_timeout(uint32_t v)
+        { stored_request_timeout_ = v; }
+
+        virtual void reader_ack_timeout(uint32_t v)
+        { reader_ack_timeout_ = v; } 
+
     private:
+        friend boost::shared_ptr<Config> config_builder(const std::string&);
+
         boost::shared_ptr<db::BackendInterface> db_backend_;
         boost::shared_ptr<graph::NodeIfaceAbstractFactory> node_factory_;
         boost::shared_ptr<graph::GraphdbAbstractFactory> graph_factory_;

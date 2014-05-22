@@ -20,13 +20,11 @@
 
 #include <unordered_map>
 #include <string>
-#include <list>
 #include <type_traits>
 
 #include <boost/variant.hpp>
 
 namespace range {
-
 
 class RangeObject;
 class RangeArray;
@@ -54,31 +52,52 @@ typedef boost::variant<
 //##############################################################################
 class RangeNumber {
     public:
-       RangeNumber(long double v) : value(v) { }
-       long double value;
+        template <typename T> 
+        bool operator==(const T &other) { return other == value; }
+
+        RangeNumber(long double v) : value(v) { }
+        long double value;
 };
 
 //##############################################################################
 //##############################################################################
 class RangeString {
     public:
+        template <typename T> 
+        bool operator==(const T &other) { return other == value; }
+
         RangeString(std::string s) : value(s) { }
         std::string value;
 };
 
 //##############################################################################
 //##############################################################################
-class RangeTrue {};
-class RangeFalse {};
-class RangeNull {};
+class RangeTrue {
+    bool operator==(bool other) { return other == true; }
+};
+
+//##############################################################################
+//##############################################################################
+class RangeFalse {
+    bool operator==(bool other) { return other == false; }
+};
+
+//##############################################################################
+//##############################################################################
+class RangeNull {
+    bool operator==(const void *other) { return other == nullptr; }
+};
 
 //##############################################################################
 //##############################################################################
 class RangeObject {
     public:
+        template <typename T> 
+        bool operator==(const T &other) { return other == values; }
+
         std::unordered_map<std::string, RangeStruct> values;
         void insert(std::pair<std::string, RangeStruct> v) { values.insert(v); }
-        RangeStruct& operator[](std::string &key) { return values[key]; }
+        RangeStruct& operator[](const std::string &key) { return values[key]; }
 };
 
 
@@ -86,19 +105,26 @@ class RangeObject {
 //##############################################################################
 class RangeArray {
     public:
+        template <typename T> 
+        bool operator==(const T &other) { return other == values; }
+
         RangeArray() { }
         RangeArray(const std::vector<RangeStruct>& v) : values(v.begin(), v.end()) { }
         RangeArray(const std::vector<std::string>& v) { std::for_each(v.begin(), v.end(), [this](std::string s) { this->values.push_back(RangeString(s)); }); }
 
         void push_back(RangeStruct v) { values.push_back(v); }
+        void push_back(std::string v) { values.push_back(RangeString(v)); }
 
-        std::list<RangeStruct> values;
+        std::vector<RangeStruct> values;
 };
 
 //##############################################################################
 //##############################################################################
 class RangeTuple {
     public:
+        template <typename T> 
+        bool operator==(const T &other) { return other == values; }
+
         RangeTuple() {}
         RangeTuple(const std::pair<RangeStruct, RangeStruct> &pair)
             : values(std::make_tuple(pair.first, pair.second) )

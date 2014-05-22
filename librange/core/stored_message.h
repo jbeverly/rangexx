@@ -24,8 +24,7 @@
 
 #include "mq.h"
 #include "store.pb.h"
-#include "reader_config_interface.h"
-#include "stored_config_interface.h"
+#include "config.h"
 
 namespace range { namespace core { namespace stored {
 
@@ -47,7 +46,7 @@ class RequestQueue {
 //##############################################################################
 class RequestQueueClient : private RequestQueue {
     public:
-        RequestQueueClient(boost::shared_ptr<ReaderConfigIface> cfg)
+        RequestQueueClient(boost::shared_ptr<Config> cfg)
             : client_id_(CLIENT_ID),
                 sending_queue(CreateMQ<>(request_queue), cfg->stored_request_timeout(), 100),
                 ack_queue(CreateMQ<>(ack_queue_prefix + client_id_), 100, cfg->stored_request_timeout())
@@ -65,7 +64,7 @@ class RequestQueueClient : private RequestQueue {
 //##############################################################################
 class RequestQueueListener : private RequestQueue {
     public:
-        RequestQueueListener (boost::shared_ptr<StoredConfigIface> cfg)
+        RequestQueueListener (boost::shared_ptr<Config> cfg)
             : cfg_(cfg), receiving_queue(CreateMQ<>(request_queue))
         { }
 
@@ -73,7 +72,7 @@ class RequestQueueListener : private RequestQueue {
         virtual bool send_ack(const std::string& client_id, const Ack& ack);
 
     private:
-        boost::shared_ptr<StoredConfigIface> cfg_;
+        boost::shared_ptr<Config> cfg_;
         std::string client_id_;
         MessageQueue<> receiving_queue;
         std::unordered_map<std::string, MessageQueue<>> client_queues_;

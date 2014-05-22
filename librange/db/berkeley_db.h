@@ -60,7 +60,7 @@ class BerkeleyDB : public BackendInterface {
         typedef BerkeleyDBLock weakptr_type;
 
         BerkeleyDB() = delete;
-        explicit BerkeleyDB(const ConfigIface& config);
+        explicit BerkeleyDB(const ::range::db::ConfigIface& config);
         virtual ~BerkeleyDB() noexcept override;
 
         //######################################################################
@@ -84,7 +84,7 @@ class BerkeleyDB : public BackendInterface {
         friend ::TestDB; // For test introspection
 #endif
 
-        const ConfigIface& conf_;
+        const ::range::db::ConfigIface& conf_;
         DbEnv * env_;
         
         Db * graph_info; 

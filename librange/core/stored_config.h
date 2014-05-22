@@ -14,28 +14,35 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGE_CORE_CONFIG_INTERFACE_H
-#define _RANGE_CORE_CONFIG_INTERFACE_H
 
-#include "../db/config_interface.h"
-#include "../graph/node_factory.h"
-#include "../graph/graphdb_factory.h"
-#include "../compiler/compiler_types.h"
+#ifndef _RANGE_CORE_STORED_CONFIG_H
+#define _RANGE_CORE_STORED_CONFIG_H
 
-namespace range {
+#include "config.h"
+namespace range { namespace stored {
 
-//##############################################################################
-//##############################################################################
-class ConfigIface {
+class StoreDaemonConfig : public Config
+{
     public:
-        virtual ~ConfigIface() = default;
-        
-    protected:
-        ConfigIface() = default;
+        StoreDaemonConfig() { }
 
+        const std::vector<std::string>& initial_peers() const
+        {
+            return initial_peers_;
+        }
+
+        uint32_t heartbeat_timeout() const
+        {
+            return heartbeat_timeout_;
+        }
+
+
+    private:
+        std::vector<std::string> initial_peers_;
+        uint32_t heartbeat_timeout_;
 };
 
-
-} // namespace range
+} /* namespace stored */ } /* namespace range */ 
 
 #endif
+

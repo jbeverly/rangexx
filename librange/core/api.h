@@ -32,7 +32,7 @@
 #include "range_struct.h"
 #include "config_builder.h"
 
-#include "config_interface.h"
+#include "config.h"
 
 namespace range {
 
@@ -43,7 +43,7 @@ class RangeAPI_v1
     public: 
         typedef ::range::graph::NodeIface::node_type node_type;
         //######################################################################
-        RangeAPI_v1(boost::shared_ptr<ConfigIface> cfg)
+        RangeAPI_v1(boost::shared_ptr<Config> cfg)
             : cfg_(cfg)
         {
         }
@@ -136,7 +136,7 @@ class RangeAPI_v1
         /// @param[in] node_name name of the node to get list of keys from
         /// @param[in] version version of primary graph to query
         /// @return vector of keys 
-        virtual std::vector<std::string> get_keys(const std::string &env_name, 
+        virtual RangeStruct get_keys(const std::string &env_name, 
                                                   const std::string &node_name,
                                                   uint64_t version=-1) const;
 
@@ -148,7 +148,7 @@ class RangeAPI_v1
         /// @param[in] key Name of key to retrieve values from
         /// @param[in] version version of primary graph to query
         /// @return vector of values
-        virtual std::vector<std::string> fetch_key(const std::string &env_name,
+        virtual RangeStruct fetch_key(const std::string &env_name,
                                                    const std::string &node_name,
                                                    const std::string &key,
                                                    uint64_t version=-1) const;
@@ -219,7 +219,7 @@ class RangeAPI_v1
         /// @param[in] node_name name of node to query
         /// @param[in] version version of primary graph to query
         /// @return vector of parent node names
-        virtual std::vector<std::string> get_clusters(
+        virtual RangeStruct get_clusters(
                                                 const std::string &env_name,
                                                 const std::string &node_name,
                                                 uint64_t version=-1) const;
@@ -239,7 +239,8 @@ class RangeAPI_v1
         /// @param[in] version version of primary graph to query
         /// @return pair of cluster name in which the key was found, and the list
         ///         of values found 
-        virtual std::pair<std::string, std::vector<std::string>>
+        //virtual std::pair<std::string, std::vector<std::string>>
+        virtual RangeStruct
             bfs_search_parents_for_first_key(const std::string &env_name,
                                              const std::string &node_name,
                                              const std::string &key,
@@ -256,7 +257,8 @@ class RangeAPI_v1
         /// @param[in] version version of primary graph to query
         /// @return pair of cluster name in which the key was found, and the list
         ///         of values found 
-        virtual std::pair<std::string, std::vector<std::string>>
+        //virtual std::pair<std::string, std::vector<std::string>>
+        virtual RangeStruct
             dfs_search_parents_for_first_key(const std::string &env_name,
                                              const std::string &node_name,
                                              const std::string &key,
@@ -272,8 +274,9 @@ class RangeAPI_v1
         /// @param[in] node2_name name of second node
         /// @param[in] version version of primary graph to query
         /// @return true if found, false if no ancestor exists
-        virtual bool nearest_common_ancestor(
-                                    std::string &ancestor,
+        virtual RangeStruct nearest_common_ancestor(
+        //virtual bool nearest_common_ancestor(
+        //                            std::string &ancestor,
                                     const std::string &env_name,
                                     const std::string &node1_name,
                                     const std::string &node2_name,
@@ -286,7 +289,7 @@ class RangeAPI_v1
         /// @param[in] env_name name of environment
         /// @param[in] version version of primary and dependency graph to query
         /// @return list of node names in topological sorted order.
-        virtual std::vector<std::string> environment_topological_sort(
+        virtual RangeStruct environment_topological_sort(
                                                     const std::string &env_name,
                                                     uint64_t version=-1) const;
 
@@ -297,10 +300,9 @@ class RangeAPI_v1
         /// @return list of node-type:node-name tuples that are
         ///         disconnected from the graph (do not connect to an
         ///         environment; will not list environment nodes)
-        virtual std::vector<std::tuple<node_type, std::string>>
+        //virtual std::vector<std::tuple<node_type, std::string>>
+        virtual RangeStruct
             find_orphaned_nodes(uint64_t version=-1) const;
-
-       
 
 
         //######################################################################
@@ -536,7 +538,7 @@ class RangeAPI_v1
 
 
     private:
-        boost::shared_ptr<ConfigIface> cfg_;
+        boost::shared_ptr<Config> cfg_;
         boost::shared_ptr<graph::GraphInterface> graphdb(const std::string &name, uint64_t version) const;
         std::string env_prefix(const std::string &env_name) const;
         std::string prefixed_node_name(const std::string &env_name, const std::string &node_name) const;

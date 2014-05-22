@@ -15,6 +15,16 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+//##############################################################################
+// FIXME: This was thrown together quickly; everything here should be broken
+//        out into graphdb algorithms, and then this API built upon
+//        those functions. This will allow arbitrary graphs within
+//        range to use similar APIs to the specific graphs (primary and 
+//        dependency); I have 6 DFS and 2 BFS implementations here, violating
+//        DRY, etc. ... this definitely needs refactoring
+//##############################################################################
+
 #include <stack>
 #include <queue>
 #include <unordered_map>
@@ -143,7 +153,7 @@ RangeAPI_v1::all_environments(uint64_t version) const
     auto first = graph::makeVersionFilter(cmp_v, primary->begin(), primary->end());
     auto last = graph::makeVersionFilter(cmp_v, primary->end(), primary->end());
 
-    std::vector<std::string> found;
+    RangeArray found;
 
     for(auto it = first; it != last; ++it) {
         if (it->type() == node_type::ENVIRONMENT) {
@@ -151,7 +161,7 @@ RangeAPI_v1::all_environments(uint64_t version) const
         }
     }
 
-    return RangeArray(found);
+    return found;
 }
 
 
@@ -166,7 +176,7 @@ RangeAPI_v1::all_hosts(uint64_t version) const
     auto first = graph::makeVersionFilter(cmp_v, primary->begin(), primary->end());
     auto last = graph::makeVersionFilter(cmp_v, primary->end(), primary->end());
 
-    std::vector<std::string> found;
+    RangeArray found;
 
     for(auto it = first; it != last; ++it) {
         if (it->type() == node_type::HOST) {
@@ -189,7 +199,7 @@ RangeAPI_v1::expand_range_expression(const std::string &env_name,
     ::rangecompiler::RangeParser_v1 parser { sc };
 
     if (parser.parse() == 0) {
-        std::vector<std::string> results;
+        RangeArray results;
         auto top = parser.ast();
         boost::apply_visitor(compiler::RangeExpandingVisitor(primary, env_name), top);
         results = boost::apply_visitor(compiler::FetchChildrenVisitor(), top);
@@ -220,7 +230,7 @@ RangeAPI_v1::simple_expand(const std::string &env_name,
     }
 
     if (n) {
-        std::vector<std::string> found;
+        RangeArray found;
         for (auto v : n->forward_edges()) {
             found.push_back(unprefix_node_name(env_name, v->name()));
         }
@@ -250,7 +260,7 @@ RangeAPI_v1::simple_expand_env(const std::string &env_name,
 
 //##############################################################################
 //##############################################################################
-std::vector<std::string>
+RangeStruct
 RangeAPI_v1::get_keys(const std::string &env_name, const std::string &node_name,
                       uint64_t version) const
 {
@@ -258,7 +268,7 @@ RangeAPI_v1::get_keys(const std::string &env_name, const std::string &node_name,
 
     auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(n) {
-        std::vector<std::string> found;
+        RangeArray found;
         for(auto kv : n->tags()) {
             found.push_back(kv.first);
         }
@@ -269,7 +279,8 @@ RangeAPI_v1::get_keys(const std::string &env_name, const std::string &node_name,
 
 //##############################################################################
 //##############################################################################
-std::vector<std::string>
+//std::vector<std::string>
+RangeStruct
 RangeAPI_v1::fetch_key(const std::string &env_name, const std::string &node_name,
                                    const std::string &key, uint64_t version) const
 {
@@ -301,9 +312,9 @@ RangeAPI_v1::fetch_all_keys(const std::string &env_name,
             RangeArray a;
             for (auto val : t.second) {
                 RangeStruct v = RangeString(val);
-                a.values.push_back(v);
+                a.push_back(v);
             }
-            obj.values[t.first] = a;
+            obj[t.first] = a;
         }
         return obj;
     }
@@ -364,18 +375,18 @@ RangeAPI_v1::expand(const std::string &env_name, const std::string &node_name,
         auto v = vnode.v;
 
         if(onstack.find(v->name()) == onstack.end()) {
-            vnode.ret.values["type"] = graph::NodeIface::node_type_names.find(v->type())->second;
-            vnode.ret.values["name"] = unprefix_node_name(env_name, v->name());
-            vnode.ret.values["tags"] = fetch_all_keys(env_name, node_name, version);
-            vnode.ret.values["children"] = RangeObject();
+            vnode.ret["type"] = graph::NodeIface::node_type_names.find(v->type())->second;
+            vnode.ret["name"] = unprefix_node_name(env_name, v->name());
+            vnode.ret["tags"] = fetch_all_keys(env_name, node_name, version);
+            vnode.ret["children"] = RangeObject();
             auto deps_node = dependency->get_node(v->name());
             RangeArray deps;
             if(deps_node) {
                 for (auto d : deps_node->forward_edges()) {
-                    deps.values.push_back(d->name());
+                    deps.push_back(d->name());
                 }
             }
-            vnode.ret.values["dependencies"] = deps;
+            vnode.ret["dependencies"] = deps;
         }
 
         onstack[v->name()] = true;
@@ -395,7 +406,7 @@ RangeAPI_v1::expand(const std::string &env_name, const std::string &node_name,
             onstack.erase(v->name());
             RangeStruct child = vnode.ret;
             if(st.size() > 0) {
-                boost::get<RangeObject>(st.top().ret.values["children"]).values[v->name()] = child;
+                boost::get<RangeObject>(st.top().ret["children"])[v->name()] = child;
             }
             else {
                 return vnode.ret;
@@ -452,7 +463,7 @@ RangeAPI_v1::expand_env(const std::string &env_name,
 
 //##############################################################################
 //##############################################################################
-std::vector<std::string>
+RangeStruct
 RangeAPI_v1::get_clusters(const std::string &env_name,
                           const std::string &node_name,
                           uint64_t version) const
@@ -467,7 +478,7 @@ RangeAPI_v1::get_clusters(const std::string &env_name,
         }
     }
 
-    std::vector<std::string> found;
+    RangeArray found;
     for (auto e : n->reverse_edges()) {
         found.push_back(unprefix_node_name(env_name, e->name()));
     }
@@ -476,7 +487,8 @@ RangeAPI_v1::get_clusters(const std::string &env_name,
 
 //##############################################################################
 //##############################################################################
-std::pair<std::string, std::vector<std::string>>
+//std::pair<std::string, std::vector<std::string>>
+RangeStruct
 RangeAPI_v1::bfs_search_parents_for_first_key(const std::string &env_name,
                                               const std::string &node_name,
                                               const std::string &key,
@@ -485,7 +497,8 @@ RangeAPI_v1::bfs_search_parents_for_first_key(const std::string &env_name,
     const auto primary = graphdb("primary", version);
     std::string found_in;
     std::unordered_map<std::string, bool> visited;
-    std::vector<std::string> found;
+    RangeArray found;
+    //std::vector<std::string> found;
 
     std::queue<boost::shared_ptr<::range::graph::NodeIface>> q;                 // BFS traveral; want the admin nearest the child node
 
@@ -511,12 +524,14 @@ RangeAPI_v1::bfs_search_parents_for_first_key(const std::string &env_name,
             }
         }
     }
-    return std::make_pair(found_in, found);
+    return RangeTuple(std::make_pair(RangeString(found_in), found));
+    //return std::make_pair(found_in, found);
 }
 
 //##############################################################################
 //##############################################################################
-std::pair<std::string, std::vector<std::string>>
+//std::pair<std::string, std::vector<std::string>>
+RangeStruct
 RangeAPI_v1::dfs_search_parents_for_first_key(const std::string &env_name,
                                               const std::string &node_name,
                                               const std::string &key,
@@ -525,7 +540,8 @@ RangeAPI_v1::dfs_search_parents_for_first_key(const std::string &env_name,
     const auto primary = graphdb("primary", version);
     std::string found_in;
     std::unordered_map<std::string, bool> visited;
-    std::vector<std::string> found;
+    RangeArray found;
+    //std::vector<std::string> found;
 
     std::stack<boost::shared_ptr<::range::graph::NodeIface>> st;                 // DFS traveral; want the admin nearest the child node
 
@@ -552,7 +568,7 @@ RangeAPI_v1::dfs_search_parents_for_first_key(const std::string &env_name,
             }
         }
     }
-    return std::make_pair(found_in, found);
+    return RangeTuple(std::make_pair(RangeString(found_in), found));
 }
 
 //##############################################################################
@@ -569,14 +585,16 @@ struct BFSNodeWrapper
 
 //##############################################################################
 //##############################################################################
-bool
-RangeAPI_v1::nearest_common_ancestor(std::string &ancestor,
+//bool
+RangeStruct
+RangeAPI_v1::nearest_common_ancestor(//std::string &ancestor,
                                      const std::string &env_name,
                                      const std::string &node1_name,
                                      const std::string &node2_name,
                                      uint64_t version) const
 {
     const auto primary = graphdb("primary", version);
+    std::string ancestor;
 
     std::unordered_map<std::string, size_t> visited1;
     std::unordered_map<std::string, size_t> visited2;
@@ -614,7 +632,8 @@ RangeAPI_v1::nearest_common_ancestor(std::string &ancestor,
         }
 
         if (v1.depth + v2.depth > (min_distance * 2) + 1) {
-            return true;
+            return RangeTuple(std::make_pair(RangeTrue(), RangeString(ancestor)));
+            //return true;
         }
 
         if (visited1.find(v1.v->name()) == visited1.end()) {
@@ -637,14 +656,15 @@ RangeAPI_v1::nearest_common_ancestor(std::string &ancestor,
     }
 
     if (min_distance < std::numeric_limits<size_t>::max()) {
-        return true;
+        return RangeTuple(std::make_pair(RangeTrue(), RangeString(ancestor)));
+        //return true;
     }
-    return false;
+    return RangeTuple(std::make_tuple(RangeFalse()));
 }
 
 //##############################################################################
 //##############################################################################
-std::vector<std::string>
+RangeStruct
 RangeAPI_v1::environment_topological_sort(const std::string &env_name,
                                           uint64_t version) const
 {
@@ -713,12 +733,12 @@ RangeAPI_v1::environment_topological_sort(const std::string &env_name,
         }
     }
     std::reverse(sorted.begin(), sorted.end());
-    return sorted;
+    return RangeArray(sorted);
 }
 
 //##############################################################################
 //##############################################################################
-std::vector<std::tuple<graph::NodeIface::node_type, std::string>>
+RangeStruct
 RangeAPI_v1::find_orphaned_nodes(uint64_t version) const
 {
     const auto primary = graphdb("primary", version);
@@ -744,11 +764,11 @@ RangeAPI_v1::find_orphaned_nodes(uint64_t version) const
     auto first = graph::makeVersionFilter(cmp_v, primary->begin(), primary->end());
     auto last = graph::makeVersionFilter(cmp_v, primary->end(), primary->end());
 
-    std::vector<std::tuple<node_type, std::string>> orphans;
+    RangeArray orphans;
 
     for(auto it = first; it != last; ++it) {
         if(visited.find(it->name()) == visited.end()) {
-            orphans.push_back(std::make_tuple(it->type(), it->name()));
+            orphans.push_back(RangeTuple(std::make_tuple(it->type(), it->name())));
         }
     }
     return orphans;

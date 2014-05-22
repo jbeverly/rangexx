@@ -118,7 +118,7 @@ librange_graph_la_LIBADD = $(AM_LIBADD)
 
 librange_core_la_includedir = $(includedir)/rangexx
 nobase_librange_core_la_include_HEADERS = core/exceptions.h \
-										  core/config_interface.h \
+										  core/config.h \
 										  core/api.h \
 										  core/range_struct.h
 
