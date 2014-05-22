@@ -430,7 +430,7 @@ RangeExpandingVisitor::operator()(ast::ASTKeyExpand& key) const
         else {
             auto tag_it = tags.find(word);
             if (tag_it != tags.end()) {
-                key.children = tag_it->second;
+                key.children.insert(key.children.end(), tag_it->second.begin(), tag_it->second.end());
             }
         }
     }
