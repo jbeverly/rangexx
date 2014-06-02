@@ -21,8 +21,9 @@
 //        out into graphdb algorithms, and then this API built upon
 //        those functions. This will allow arbitrary graphs within
 //        range to use similar APIs to the specific graphs (primary and 
-//        dependency); I have 6 DFS and 2 BFS implementations here, violating
-//        DRY, etc. ... this definitely needs refactoring
+//        dependency). I have 6 DFS and 2 BFS implementations here, and 2
+//        DFS's in write violating DRY, etc. ... this definitely needs
+//        refactoring
 //##############################################################################
 
 #include <stack>
@@ -65,11 +66,11 @@ RangeAPI_v1::unprefix_node_name(const std::string &env_name,
             && node_name.substr(0, env_prefix(env_name).size()) == env_prefix(env_name)) {
         return node_name.substr(env_prefix(env_name).size());
     }
-    else if (env_name.size() > 0) {
-        return env_name;
-    }
     else if (node_name.size() > 0) {
         return node_name;
+    }
+    else if (env_name.size() > 0) {
+        return env_name;
     }
     return "";
 }
@@ -129,7 +130,7 @@ RangeAPI_v1::all_clusters(const std::string &env_name, uint64_t version) const
 
     while (st.size() > 0) {
         auto v = st.top(); st.pop();
-        if (visited.find(v->name()) != visited.end()) {
+        if (visited.find(v->name()) == visited.end()) {
             visited[v->name()] = true;
             for (auto e : v->forward_edges()) {
                 st.push(e);
@@ -150,8 +151,8 @@ RangeAPI_v1::all_environments(uint64_t version) const
     const auto primary = graphdb("primary", version);
     uint64_t cmp_v = (version == static_cast<uint64_t>(-1)) ? primary->version() : version;
 
-    auto first = graph::makeVersionFilter(cmp_v, primary->begin(), primary->end());
-    auto last = graph::makeVersionFilter(cmp_v, primary->end(), primary->end());
+    auto first = graph::makeVersionFilter(cmp_v, primary->cbegin(), primary->cend());
+    auto last = graph::makeVersionFilter(cmp_v, primary->cend(), primary->cend());
 
     RangeArray found;
 
@@ -201,8 +202,17 @@ RangeAPI_v1::expand_range_expression(const std::string &env_name,
     if (parser.parse() == 0) {
         RangeArray results;
         auto top = parser.ast();
-        boost::apply_visitor(compiler::RangeExpandingVisitor(primary, env_name), top);
+
+        std::string prefix = (env_name.size() > 0) ? env_name + "#" : "";
+
+        boost::apply_visitor(compiler::RangeExpandingVisitor(primary, prefix), top);
         results = boost::apply_visitor(compiler::FetchChildrenVisitor(), top);
+        std::for_each(results.values.begin(), results.values.end(), 
+                [this,&env_name](RangeStruct &v) { 
+                    auto &s = boost::get<RangeString>(v);
+                    s.value = unprefix_node_name(env_name, s.value); 
+                }
+            );
         return results;
     }
     throw compiler::InvalidRangeExpression(expression);                         // FIXME: get error report from parser
@@ -328,7 +338,7 @@ class PostOrderDFSStackFrame {
         PostOrderDFSStackFrame(graph::NodeIface::node_t vertex)
             : v(vertex)
         {
-            if(v->type() != graph::NodeIface::node_type::CLUSTER 
+            if(v->type() == graph::NodeIface::node_type::CLUSTER 
                     || v->type() == graph::NodeIface::node_type::ENVIRONMENT) {
                 out_edges = v->forward_edges();
                 in_edges = v->reverse_edges();
@@ -363,20 +373,18 @@ RangeAPI_v1::expand(const std::string &env_name, const std::string &node_name,
     const auto dependency = graphdb("dependency", -1);                          // FIXME: I don't have version coherence for graphs; will treat dependency graph as unversioned for now
     auto n = get_node(primary, env_name, node_name);
  
-    std::unordered_map<std::string, bool> visited;
     std::unordered_map<std::string, bool> onstack;
     std::stack<PostOrderDFSStackFrame> st;
 
     st.push(n);
-    visited[n->name()] = true;
 
     while (st.size() > 0) {
-        auto vnode = st.top();
+        auto &vnode = st.top();
         auto v = vnode.v;
 
         if(onstack.find(v->name()) == onstack.end()) {
-            vnode.ret["type"] = graph::NodeIface::node_type_names.find(v->type())->second;
-            vnode.ret["name"] = unprefix_node_name(env_name, v->name());
+            vnode.ret["type"] = RangeString(graph::NodeIface::node_type_names.find(v->type())->second);
+            vnode.ret["name"] = RangeString(unprefix_node_name(env_name, v->name()));
             vnode.ret["tags"] = fetch_all_keys(env_name, node_name, version);
             vnode.ret["children"] = RangeObject();
             auto deps_node = dependency->get_node(v->name());
@@ -396,20 +404,19 @@ RangeAPI_v1::expand(const std::string &env_name, const std::string &node_name,
             if (onstack.find(e->name()) != onstack.end()) {
                 continue; // cycle detected; skipping 
             }
-            if(visited.find(e->name()) == visited.end()) {
-                st.push(e);
-                visited[v->name()] = true;
-            }
+            st.push(e);
         }
         else {
+            PostOrderDFSStackFrame vnode_copy = vnode;
+            v = vnode_copy.v;
             st.pop();
             onstack.erase(v->name());
-            RangeStruct child = vnode.ret;
+            RangeStruct child = vnode_copy.ret;
             if(st.size() > 0) {
                 boost::get<RangeObject>(st.top().ret["children"])[v->name()] = child;
             }
             else {
-                return vnode.ret;
+                return vnode_copy.ret;
             }
         }
     }
@@ -513,7 +520,7 @@ RangeAPI_v1::bfs_search_parents_for_first_key(const std::string &env_name,
             auto tags = v->tags();
             auto t = tags.find(key);  
             if(t != tags.end()) {
-                found_in = v->name();
+                found_in = unprefix_node_name(env_name, v->name());
                 found = t->second;
                 break;  // Break out of BFS
             }
@@ -557,7 +564,7 @@ RangeAPI_v1::dfs_search_parents_for_first_key(const std::string &env_name,
             auto tags = v->tags();
             auto t = tags.find(key);  
             if(t != tags.end()) {
-                found_in = v->name();
+                found_in = unprefix_node_name(env_name, v->name());
                 found = t->second;
                 break;  // Break out of DFS
             }
@@ -617,7 +624,7 @@ RangeAPI_v1::nearest_common_ancestor(//std::string &ancestor,
         if(v2it != visited2.end()) {
             size_t distance = v2it->second + v1.depth;
             if(distance < min_distance) {
-                ancestor = v1.v->name();
+                ancestor = unprefix_node_name(env_name, v1.v->name());
                 min_distance = distance;
             }
         }
@@ -626,7 +633,7 @@ RangeAPI_v1::nearest_common_ancestor(//std::string &ancestor,
         if(v1it != visited1.end()) {
             size_t distance = v1it->second + v2.depth;
             if(distance < min_distance) {
-                ancestor = v2.v->name();
+                ancestor = unprefix_node_name(env_name, v2.v->name());
                 min_distance = distance;
             }
         }
@@ -659,7 +666,7 @@ RangeAPI_v1::nearest_common_ancestor(//std::string &ancestor,
         return RangeTuple(std::make_pair(RangeTrue(), RangeString(ancestor)));
         //return true;
     }
-    return RangeTuple(std::make_tuple(RangeFalse()));
+    return RangeTuple({RangeFalse()});
 }
 
 //##############################################################################
@@ -680,12 +687,13 @@ RangeAPI_v1::environment_topological_sort(const std::string &env_name,
 
     std::stack<graph::NodeIface::node_t> primary_st;
     std::unordered_map<std::string, bool> visited;
+    std::unordered_map<std::string, bool> visiting;
 
     primary_st.push(n);
 
     while(primary_st.size() > 0) {
         auto v = primary_st.top(); primary_st.pop();
-        if (visited.find(v->name()) != visited.end()) {
+        if (visited.find(v->name()) == visited.end()) {
             visited[v->name()] = true;
             if(v->type() != node_type::ENVIRONMENT) {
                 dependency_nodes.push_back(dependency->get_node(v->name()));
@@ -704,31 +712,39 @@ RangeAPI_v1::environment_topological_sort(const std::string &env_name,
         std::stack<PostOrderDFSStackFrame> st;
 
         st.push(node);
-        visited[node->name()] = true;
+        visiting[node->name()] = true;
 
         while (st.size() > 0) {
-            auto vnode = st.top();
+            auto &vnode = st.top();
             auto v = vnode.v;
 
-            // No preorder necessary
-            // if(onstack.find(v->name()) == onstack.end()) { }
-              
-            onstack[v->name()] = true;
+            if(visited.find(node->name()) != visited.end()) {
+                st.pop();
+                continue;
+            }
+
+            if(onstack.find(v->name()) == onstack.end()) { 
+                onstack[v->name()] = true;
+            }
 
             if (vnode.out_edges.size() > 0) {
                 auto e = vnode.pop_out();
                 if (onstack.find(e->name()) != onstack.end()) {
                     throw graph::GraphCycleException("dependency cycle detected");
                 }
-                if(visited.find(e->name()) == visited.end()) {
+                if(visited.find(e->name()) == visited.end() && visiting.find(e->name()) == visiting.end()) {
+                    visiting[v->name()] = true;
                     st.push(e);
-                    visited[v->name()] = true;
                 }
             }
             else {
-                sorted.push_back(v->name());
+                PostOrderDFSStackFrame vnode_copy = vnode;
                 st.pop();
+                visited[v->name()] = true;
+                visiting.erase(v->name());
                 onstack.erase(v->name());
+                
+                sorted.push_back(unprefix_node_name(env_name, v->name()));
             }
         }
     }
@@ -744,14 +760,15 @@ RangeAPI_v1::find_orphaned_nodes(uint64_t version) const
     const auto primary = graphdb("primary", version);
     
     std::unordered_map<std::string, bool> visited;
-    for (auto env_variant : boost::get<RangeArray>(all_environments(version)).values) {
+    auto all_envs = all_environments(version);
+    for (auto env_variant : boost::get<RangeArray>(all_envs).values) {
         std::string env = boost::get<RangeString>(env_variant).value;
         std::stack<graph::NodeIface::node_t> st;
         st.push(primary->get_node(env));
 
         while(st.size() > 0) {
             auto v = st.top(); st.pop();
-            if (visited.find(v->name()) != visited.end()) {
+            if (visited.find(v->name()) == visited.end()) {
                 visited[v->name()] = true;
                 for(auto e : v->forward_edges()) {
                     st.push(e);
@@ -768,7 +785,9 @@ RangeAPI_v1::find_orphaned_nodes(uint64_t version) const
 
     for(auto it = first; it != last; ++it) {
         if(visited.find(it->name()) == visited.end()) {
-            orphans.push_back(RangeTuple(std::make_tuple(it->type(), it->name())));
+            RangeString type { graph::NodeIface::node_type_names.find(it->type())->second };
+            RangeString name { it->name() };
+            orphans.push_back(RangeTuple(std::make_pair(type, name)));
         }
     }
     return orphans;

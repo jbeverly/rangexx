@@ -158,8 +158,9 @@ GraphDB::cbegin() const
 GraphDB::iterator_t
 GraphDB::end()
 {
-    cursor_t c = instance_->get_cursor();
-    return iterator_t(*this, c->next(c->last()));
+    return iterator_t(*this, nullptr);
+    /*cursor_t c = instance_->get_cursor();
+    return iterator_t(*this, c->next(c->last())); */
 }
 
 //##############################################################################
@@ -167,8 +168,9 @@ GraphDB::end()
 GraphDB::const_iterator_t
 GraphDB::cend() const
 {
-    cursor_t c = instance_->get_cursor();
-    return const_iterator_t(*this, c->next(c->last()));
+    return const_iterator_t(*this, nullptr);
+    /* cursor_t c = instance_->get_cursor();
+    return const_iterator_t(*this, c->next(c->last())); */
 }
 
 //##############################################################################

@@ -52,8 +52,9 @@ typedef boost::variant<
 //##############################################################################
 class RangeNumber {
     public:
+        bool operator==(const RangeNumber &other) const { return other.value == value; }
         template <typename T> 
-        bool operator==(const T &other) { return other == value; }
+        bool operator==(const T &other) const { return other == value; }
 
         RangeNumber(long double v) : value(v) { }
         long double value;
@@ -63,8 +64,9 @@ class RangeNumber {
 //##############################################################################
 class RangeString {
     public:
+        bool operator==(const RangeString &other) const { return other.value == value; }
         template <typename T> 
-        bool operator==(const T &other) { return other == value; }
+        bool operator==(const T &other) const { return other == value; }
 
         RangeString(std::string s) : value(s) { }
         std::string value;
@@ -73,27 +75,46 @@ class RangeString {
 //##############################################################################
 //##############################################################################
 class RangeTrue {
-    bool operator==(bool other) { return other == true; }
+    public:
+        bool operator==(const RangeTrue &) const { return true; }
+        bool operator==(const RangeFalse &) const { return false; }
+        bool operator==(const RangeNull &) const { return false; }
+        bool operator==(bool other) const { return other == true; }
+        template <typename T> 
+            bool operator==(const T &other) const { return other == true; }
 };
 
 //##############################################################################
 //##############################################################################
 class RangeFalse {
-    bool operator==(bool other) { return other == false; }
+    public:
+        bool operator==(const RangeTrue &) const { return false; }
+        bool operator==(const RangeFalse &) const { return true; }
+        bool operator==(const RangeNull &) const { return true; }
+        bool operator==(bool other) { return other == false; }
+        template <typename T> 
+        bool operator==(const T &other) const { return other == false; }
 };
 
 //##############################################################################
 //##############################################################################
 class RangeNull {
-    bool operator==(const void *other) { return other == nullptr; }
+    public:
+        bool operator==(const RangeTrue &) const { return false; }
+        bool operator==(const RangeFalse &) const { return true; }
+        bool operator==(const RangeNull &) const { return true; }
+        bool operator==(const void *other) const { return other == nullptr; }
+        template <typename T> 
+        bool operator==(const T &other) const { return other == nullptr; }
 };
 
 //##############################################################################
 //##############################################################################
 class RangeObject {
     public:
+        bool operator==(const RangeObject &other) const { return other.values == values; }
         template <typename T> 
-        bool operator==(const T &other) { return other == values; }
+        bool operator==(const T &other) const { return other == values; }
 
         std::unordered_map<std::string, RangeStruct> values;
         void insert(std::pair<std::string, RangeStruct> v) { values.insert(v); }
@@ -105,8 +126,9 @@ class RangeObject {
 //##############################################################################
 class RangeArray {
     public:
+        bool operator==(const RangeArray &other) const { return other.values == values; }
         template <typename T> 
-        bool operator==(const T &other) { return other == values; }
+        bool operator==(const T &other) const { return other == values; }
 
         RangeArray() { }
         RangeArray(const std::vector<RangeStruct>& v) : values(v.begin(), v.end()) { }
@@ -122,20 +144,22 @@ class RangeArray {
 //##############################################################################
 class RangeTuple {
     public:
+        bool operator==(const RangeTuple &other) const { return other.values == values; }
+
         template <typename T> 
-        bool operator==(const T &other) { return other == values; }
+        bool operator==(const T &other) const { return other == values; }
 
         RangeTuple() {}
         RangeTuple(const std::pair<RangeStruct, RangeStruct> &pair)
-            : values(std::make_tuple(pair.first, pair.second) )
+            : values({pair.first, pair.second})
         { }
 
-        template <typename ... T>
-        RangeTuple(const std::tuple<T ...> tuple)
-            : values(tuple)
-        { }
+        RangeTuple(std::vector<RangeStruct> v) 
+            : values(v)
+        { 
+        }
 
-        std::tuple<RangeStruct> values;
+        std::vector<RangeStruct> values;
 };
 
 } // namespace range

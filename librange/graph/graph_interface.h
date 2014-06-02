@@ -350,6 +350,40 @@ class version_filter {
             return false;                                                       // requested version is older than node
         }
 
+        //######################################################################
+        //######################################################################
+        bool operator()(boost::shared_ptr<const NodeIface> n) {
+            auto g_versions = n->graph_versions();
+
+            for (uint64_t node_version : boost::adaptors::reverse(g_versions)) {
+                if (node_version == wanted) {
+                    return true;
+                }
+                if (node_version < wanted) {                                    // we've gone too far back, bail out
+                    return false;
+                }
+            }
+            return false;                                                       // requested version is older than node
+        }
+
+        //######################################################################
+        //######################################################################
+        bool operator()(const NodeIface& n) {
+            auto g_versions = n.graph_versions();
+
+            for (uint64_t node_version : boost::adaptors::reverse(g_versions)) {
+                if (node_version == wanted) {
+                    return true;
+                }
+                if (node_version < wanted) {                                    // we've gone too far back, bail out
+                    return false;
+                }
+            }
+            return false;                                                       // requested version is older than node
+        }
+
+
+
     private:
         uint64_t wanted;
 };

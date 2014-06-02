@@ -348,18 +348,18 @@ TEST_F(TestGraphDB, test_create) {
         .WillOnce(Return(nullptr))
         .RetiresOnSaturation();
 
-    EXPECT_CALL(*cur, next(MockNodes[9]))
+    /* EXPECT_CALL(*cur, next(MockNodes[9]))
         .Times(AtLeast(1))
-        .WillRepeatedly(Return(nullptr));
+        .WillRepeatedly(Return(nullptr)); */
 
 
     EXPECT_CALL(*cur, fetch("Node0"))
         .Times(1)
         .WillOnce(Return(MockNodes[0]));
 
-    EXPECT_CALL(*cur, last())
+    /*EXPECT_CALL(*cur, last())
         .Times(AtLeast(1))
-        .WillRepeatedly(Return(MockNodes[9]));
+        .WillRepeatedly(Return(MockNodes[9])); */
 
     EXPECT_CALL(*inst, version())
         .Times(AtLeast(1))
@@ -455,17 +455,17 @@ TEST_F(TestGraphDB, test_remove) {
         .WillOnce(Return(nullptr))
         .RetiresOnSaturation();
 
-    EXPECT_CALL(*cur, next(MockNodes[9]))
+    /* EXPECT_CALL(*cur, next(MockNodes[9]))
         .Times(AtLeast(1))
-        .WillRepeatedly(Return(nullptr));
+        .WillRepeatedly(Return(nullptr)); */
 
     EXPECT_CALL(*cur, fetch("Node0"))
         .Times(1)
         .WillOnce(Return(MockNodes[0]));
 
-    EXPECT_CALL(*cur, last())
+    /*EXPECT_CALL(*cur, last())
         .Times(AtLeast(1))
-        .WillRepeatedly(Return(MockNodes[9]));
+        .WillRepeatedly(Return(MockNodes[9])); */
 
     EXPECT_CALL(*inst, version())
         .Times(AtLeast(1))

@@ -43,13 +43,13 @@ class RangeAPI_v1
     public: 
         typedef ::range::graph::NodeIface::node_type node_type;
         //######################################################################
-        RangeAPI_v1(boost::shared_ptr<Config> cfg)
+        explicit RangeAPI_v1(boost::shared_ptr<Config> cfg)
             : cfg_(cfg)
         {
         }
         
         //######################################################################
-        RangeAPI_v1(const std::string &cfg_file) 
+        explicit RangeAPI_v1(const std::string &cfg_file) 
             : cfg_(config_builder(cfg_file))
         {
         }

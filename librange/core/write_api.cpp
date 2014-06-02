@@ -69,6 +69,7 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
     if(!env) {
         return false;
     }
+
     auto n = primary->get_node(prefixed_node_name(env_name, cluster_name));
 
     if(env->type() != node_type::ENVIRONMENT || (n && n->type() != node_type::CLUSTER)) {
@@ -80,12 +81,13 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
         if(n) {
             n->set_type(node_type::CLUSTER);
             n->commit();
-            env->add_forward_edge(n, true);
         }
         else {
             return false;
         }
     }
+
+    env->add_forward_edge(n, true);
 
     n = dependency->get_node(prefixed_node_name(env_name, cluster_name));
     if(!n) {
@@ -149,11 +151,12 @@ RangeAPI_v1::add_cluster_to_cluster(const std::string &env_name,
         if(n) {
             n->set_type(node_type::CLUSTER);
             n->commit();
-            parent->add_forward_edge(n, true);
         } else {
             return false;
         }
     }
+
+    parent->add_forward_edge(n, true);
 
     n = dependency->get_node(prefixed_node_name(env_name, child_cluster));
     if(!n) {
@@ -222,6 +225,7 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
     if(!parent) {
         return false;
     }
+
     auto n = primary->get_node(hostname);
 
     if(parent->type() != node_type::CLUSTER || (n && n->type() != node_type::HOST)) {
@@ -257,11 +261,12 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
         if(n) {
             n->set_type(node_type::HOST);
             n->commit();
-            parent->add_forward_edge(n, true);
         } else {
             return false;
         }
     }
+
+    parent->add_forward_edge(n, true);
 
     n = dependency->get_node(hostname);
     if(!n) {
@@ -303,7 +308,11 @@ bool
 RangeAPI_v1::add_host(const std::string &hostname)
 {
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
-        auto n = g->create(hostname);
+        auto n = g->get_node(hostname);
+        if(n) {
+            return false;
+        }
+        n = g->create(hostname);
         if(n) {
             n->set_type(node_type::HOST);
             n->commit();
@@ -346,13 +355,9 @@ RangeAPI_v1::remove_host(const std::string &env_name, const std::string &hostnam
                     }
                 }
             }
-
-            primary->remove(n);
-            dependency->remove(n);
-        } else {
-            primary->remove(n);
-            dependency->remove(n);
-        }
+        } 
+        primary->remove(n);
+        dependency->remove(n);
     } else {
         return false;
     }

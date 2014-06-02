@@ -81,7 +81,8 @@ check_PROGRAMS = test_graph_iterator$(EXEEXT) test_pbuff_node$(EXEEXT) \
 	test_db$(EXEEXT) test_graphdb$(EXEEXT) \
 	test_compiler_range_scanner_v1$(EXEEXT) \
 	test_compiler_range_parser_v1$(EXEEXT) \
-	test_compiler_expanding_visitor$(EXEEXT) test_mq$(EXEEXT)
+	test_compiler_expanding_visitor$(EXEEXT) test_mq$(EXEEXT) \
+	test_write_api$(EXEEXT) test_read_api$(EXEEXT)
 subdir = librange/tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp $(top_srcdir)/test-driver
@@ -152,6 +153,14 @@ test_pbuff_node_SOURCES = test_pbuff_node.cpp
 test_pbuff_node_OBJECTS = test_pbuff_node.$(OBJEXT)
 test_pbuff_node_LDADD = $(LDADD)
 test_pbuff_node_DEPENDENCIES = $(top_builddir)/librange/librange.la
+test_read_api_SOURCES = test_read_api.cpp
+test_read_api_OBJECTS = test_read_api.$(OBJEXT)
+test_read_api_LDADD = $(LDADD)
+test_read_api_DEPENDENCIES = $(top_builddir)/librange/librange.la
+test_write_api_SOURCES = test_write_api.cpp
+test_write_api_OBJECTS = test_write_api.$(OBJEXT)
+test_write_api_LDADD = $(LDADD)
+test_write_api_DEPENDENCIES = $(top_builddir)/librange/librange.la
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -190,12 +199,12 @@ SOURCES = test_compiler_expanding_visitor.cpp \
 	test_compiler_range_parser_v1.cpp \
 	test_compiler_range_scanner_v1.cpp test_db.cpp \
 	test_graph_iterator.cpp test_graphdb.cpp test_mq.cpp \
-	test_pbuff_node.cpp
+	test_pbuff_node.cpp test_read_api.cpp test_write_api.cpp
 DIST_SOURCES = test_compiler_expanding_visitor.cpp \
 	test_compiler_range_parser_v1.cpp \
 	test_compiler_range_scanner_v1.cpp test_db.cpp \
 	test_graph_iterator.cpp test_graphdb.cpp test_mq.cpp \
-	test_pbuff_node.cpp
+	test_pbuff_node.cpp test_read_api.cpp test_write_api.cpp
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -587,7 +596,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AUTOMAKE_OPTIONS = color-tests
+AUTOMAKE_OPTIONS = parallel-tests color-tests 
 AM_CPPFLAGS = @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ -I$(top_builddir)/librange
 AM_LDFLAGS = @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_LDFLAGS@ @DB_CXX_LDFLAGS@ @DB_STL_LDFLAGS@ 
 LDADD = $(top_builddir)/librange/librange.la @GTEST_LIBS@ @GMOCK_LIBS@ @DB_CXX_LIBS@ @DB_STL_LIBS@ @BOOST_REGEX_LIB@
@@ -670,6 +679,14 @@ test_pbuff_node$(EXEEXT): $(test_pbuff_node_OBJECTS) $(test_pbuff_node_DEPENDENC
 	@rm -f test_pbuff_node$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_pbuff_node_OBJECTS) $(test_pbuff_node_LDADD) $(LIBS)
 
+test_read_api$(EXEEXT): $(test_read_api_OBJECTS) $(test_read_api_DEPENDENCIES) $(EXTRA_test_read_api_DEPENDENCIES) 
+	@rm -f test_read_api$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(test_read_api_OBJECTS) $(test_read_api_LDADD) $(LIBS)
+
+test_write_api$(EXEEXT): $(test_write_api_OBJECTS) $(test_write_api_DEPENDENCIES) $(EXTRA_test_write_api_DEPENDENCIES) 
+	@rm -f test_write_api$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(test_write_api_OBJECTS) $(test_write_api_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -684,6 +701,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_graphdb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_mq.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_pbuff_node.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_read_api.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_write_api.Po@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -957,6 +976,20 @@ test_compiler_expanding_visitor.log: test_compiler_expanding_visitor$(EXEEXT)
 test_mq.log: test_mq$(EXEEXT)
 	@p='test_mq$(EXEEXT)'; \
 	b='test_mq'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_write_api.log: test_write_api$(EXEEXT)
+	@p='test_write_api$(EXEEXT)'; \
+	b='test_write_api'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_read_api.log: test_read_api$(EXEEXT)
+	@p='test_read_api$(EXEEXT)'; \
+	b='test_read_api'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
