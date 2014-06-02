@@ -17,10 +17,10 @@ Makefile
 config.status
 range_config.h
 librange/tests/test_*
-librange/tests/test_*.cpp!
-librange/tests/test_*.h!
+!librange/tests/test_*.cpp
+!librange/tests/test_*.h
 rangexxstored/tests/test_*
-rangexxstored/tests/test_*.cpp!
-rangexxstored/tests/test_*.h!
+!rangexxstored/tests/test_*.cpp
+!rangexxstored/tests/test_*.h
 rangexxstored/stored
 docs
