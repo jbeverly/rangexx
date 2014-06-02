@@ -49,7 +49,7 @@ class GraphDB
         typedef graph::GraphInterface::const_iterator_t const_iterator_t;
 
         //######################################################################
-        GraphDB() : name_(0), instance_(0), wanted_version_(-1), node_factory_()
+        GraphDB() : name_(), instance_(), wanted_version_(-1), node_factory_()
         {
             /* this space intentionally left blank */
         }

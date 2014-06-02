@@ -72,21 +72,21 @@ librange_compiler_la_LIBADD = $(AM_LIBADD)
 ################################################################################
 
 librange_db_la_includedir = $(includedir)/rangexx
-nobase_librange_db_la_include_HEADERS  = db/pbuff_node.h \
-										 db/db_interface.h \
-										 db/db_exceptions.h \
-										 db/berkeley_db.h \
-										 db/berkeley_db_graph.h \
-										 db/berkeley_db_cursor.h \
-										 db/berkeley_db_weak_deleter.h \
-										 db/berkeley_db_txn.h \
-										 db/berkeley_db_lock.h \
+nobase_librange_db_la_include_HEADERS  = db/db_exceptions.h \
+										 db/graph_list.pb.h \
 										 db/berkeley_db_types.h \
-										 db/config_interface.h \
-										 db/changelist.pb.h \
+										 db/db_interface.h \
+										 db/pbuff_node.h \
 										 db/nodeinfo.pb.h \
-										 db/graph_list.pb.h
-
+										 db/berkeley_db_lock.h \
+										 db/berkeley_db_graph.h \
+										 db/changelist.pb.h \
+										 db/berkeley_db_txn.h \
+										 db/berkeley_db.h \
+										 db/berkeley_db_cursor.h \
+										 db/config_interface.h \
+										 db/berkeley_db_weak_deleter.h
+										
 librange_db_la_SOURCES = db/pbuff_node.cpp \
 						 db/nodeinfo.pb.cpp \
 						 db/berkeley_db_cursor.cpp \
@@ -103,10 +103,12 @@ librange_db_la_LIBADD = $(AM_LIBADD)
 ################################################################################
 
 librange_graph_la_includedir = $(includedir)/rangexx
-nobase_librange_graph_la_include_HEADERS = graph/graph_interface.h \
-										   graph/node_interface.h \
+nobase_librange_graph_la_include_HEADERS = graph/graph_exceptions.h \
+										   graph/graphdb_factory.h \
+										   graph/graphdb.h \
+										   graph/graph_interface.h \
 										   graph/node_factory.h \
-										   graph/graphdb.h
+										   graph/node_interface.h
 
 librange_graph_la_SOURCES = graph/graphdb.cpp \
 							graph/graph_iter.cpp \
@@ -117,16 +119,23 @@ librange_graph_la_LIBADD = $(AM_LIBADD)
 ################################################################################
 
 librange_core_la_includedir = $(includedir)/rangexx
-nobase_librange_core_la_include_HEADERS = core/exceptions.h \
-										  core/config.h \
-										  core/api.h \
-										  core/range_struct.h
+nobase_librange_core_la_include_HEADERS = ./core/api.h \
+										  ./core/config_builder.h \
+										  ./core/config.h \
+										  ./core/exceptions.h \
+										  ./core/json_visitor.h \
+										  ./core/mq.h \
+										  ./core/range_struct.h \
+										  ./core/stored_config.h \
+										  ./core/stored_message.h \
+										  ./core/store.pb.h 
 
-librange_core_la_SOURCES = ./core/store.pb.cpp \
-						   ./core/stored_message.cpp \
+librange_core_la_SOURCES = ./core/config_builder.cpp \
+						   ./core/json_visitor.cpp \
 						   ./core/read_api.cpp \
-						   ./core/write_api.cpp \
-						   ./core/config_builder.cpp
+						   ./core/stored_message.cpp \
+						   ./core/store.pb.cpp \
+						   ./core/write_api.cpp 
 	
 librange_core_la_LIBADD = $(AM_LIBADD)
 

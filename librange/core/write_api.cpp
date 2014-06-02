@@ -238,7 +238,7 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
 
         st.push(n);
 
-        while (st.size() > 0) {
+        while (!st.empty()) {
             auto v = st.top(); st.pop();
             if(visited.find(v->name()) == visited.end()) {
                 visited[v->name()] = true;
@@ -333,13 +333,13 @@ RangeAPI_v1::remove_host(const std::string &env_name, const std::string &hostnam
     auto n = primary->get_node(hostname);
 
     if(n) { 
-        if(n->reverse_edges().size() > 0) {
+        if(!n->reverse_edges().empty()) {
             std::stack<graph::NodeIface::node_t> st;
             std::unordered_map<std::string, bool> visited;
 
             st.push(n);
 
-            while (st.size() > 0) {
+            while (!st.empty()) {
                 auto v = st.top(); st.pop();
                 if(visited.find(v->name()) == visited.end()) {
                     visited[v->name()] = true;

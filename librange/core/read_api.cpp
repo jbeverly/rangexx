@@ -128,7 +128,7 @@ RangeAPI_v1::all_clusters(const std::string &env_name, uint64_t version) const
     std::stack<graph::NodeIface::node_t> st;
     st.push(n);
 
-    while (st.size() > 0) {
+    while (!st.empty()) {
         auto v = st.top(); st.pop();
         if (visited.find(v->name()) == visited.end()) {
             visited[v->name()] = true;
@@ -378,7 +378,7 @@ RangeAPI_v1::expand(const std::string &env_name, const std::string &node_name,
 
     st.push(n);
 
-    while (st.size() > 0) {
+    while (!st.empty()) {
         auto &vnode = st.top();
         auto v = vnode.v;
 
@@ -399,7 +399,7 @@ RangeAPI_v1::expand(const std::string &env_name, const std::string &node_name,
 
         onstack[v->name()] = true;
 
-        if (vnode.out_edges.size() > 0 && st.size() <= depth) {
+        if (!vnode.out_edges.empty() && st.size() <= depth) {
             auto e = vnode.pop_out();
             if (onstack.find(e->name()) != onstack.end()) {
                 continue; // cycle detected; skipping 
@@ -412,7 +412,7 @@ RangeAPI_v1::expand(const std::string &env_name, const std::string &node_name,
             st.pop();
             onstack.erase(v->name());
             RangeStruct child = vnode_copy.ret;
-            if(st.size() > 0) {
+            if(!st.empty()) {
                 boost::get<RangeObject>(st.top().ret["children"])[v->name()] = child;
             }
             else {
@@ -512,7 +512,7 @@ RangeAPI_v1::bfs_search_parents_for_first_key(const std::string &env_name,
     auto n = get_node(primary, env_name, node_name);
     q.push(n);
 
-    while(q.size() > 0) {
+    while(!q.empty()) {
         auto v = q.front(); q.pop();
         if (visited.find(v->name()) == visited.end()) {
             visited[v->name()] = true;
@@ -556,7 +556,7 @@ RangeAPI_v1::dfs_search_parents_for_first_key(const std::string &env_name,
 
     st.push(n);
 
-    while(st.size() > 0) {
+    while(!st.empty()) {
         auto v = st.top(); st.pop();
         if (visited.find(v->name()) == visited.end()) {
             visited[v->name()] = true;
@@ -616,7 +616,7 @@ RangeAPI_v1::nearest_common_ancestor(//std::string &ancestor,
     auto n2 = get_node(primary, env_name, node2_name);
     q2.push(n2);
 
-    while(q1.size() > 0 && q2.size() > 0) {
+    while(!q1.empty() && !q2.empty()) {
         auto v1 = q1.front(); q1.pop();
         auto v2 = q2.front(); q2.pop();
 
@@ -691,7 +691,7 @@ RangeAPI_v1::environment_topological_sort(const std::string &env_name,
 
     primary_st.push(n);
 
-    while(primary_st.size() > 0) {
+    while(!primary_st.empty()) {
         auto v = primary_st.top(); primary_st.pop();
         if (visited.find(v->name()) == visited.end()) {
             visited[v->name()] = true;
@@ -714,7 +714,7 @@ RangeAPI_v1::environment_topological_sort(const std::string &env_name,
         st.push(node);
         visiting[node->name()] = true;
 
-        while (st.size() > 0) {
+        while (!st.empty()) {
             auto &vnode = st.top();
             auto v = vnode.v;
 
@@ -727,7 +727,7 @@ RangeAPI_v1::environment_topological_sort(const std::string &env_name,
                 onstack[v->name()] = true;
             }
 
-            if (vnode.out_edges.size() > 0) {
+            if (!vnode.out_edges.empty()) {
                 auto e = vnode.pop_out();
                 if (onstack.find(e->name()) != onstack.end()) {
                     throw graph::GraphCycleException("dependency cycle detected");
@@ -766,7 +766,7 @@ RangeAPI_v1::find_orphaned_nodes(uint64_t version) const
         std::stack<graph::NodeIface::node_t> st;
         st.push(primary->get_node(env));
 
-        while(st.size() > 0) {
+        while(!st.empty()) {
             auto v = st.top(); st.pop();
             if (visited.find(v->name()) == visited.end()) {
                 visited[v->name()] = true;

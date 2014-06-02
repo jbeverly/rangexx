@@ -161,9 +161,10 @@ am_librange_compiler_la_OBJECTS = compiler/RangeParser_v1.lo \
 	compiler/RangeScanner_v1.lo compiler/expanding_visitor.lo
 librange_compiler_la_OBJECTS = $(am_librange_compiler_la_OBJECTS)
 librange_core_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
-am_librange_core_la_OBJECTS = ./core/store.pb.lo \
-	./core/stored_message.lo ./core/read_api.lo \
-	./core/write_api.lo ./core/config_builder.lo
+am_librange_core_la_OBJECTS = ./core/config_builder.lo \
+	./core/json_visitor.lo ./core/read_api.lo \
+	./core/stored_message.lo ./core/store.pb.lo \
+	./core/write_api.lo
 librange_core_la_OBJECTS = $(am_librange_core_la_OBJECTS)
 librange_db_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_db_la_OBJECTS = db/pbuff_node.lo db/nodeinfo.pb.lo \
@@ -517,20 +518,20 @@ librange_compiler_la_LIBADD = $(AM_LIBADD)
 
 ################################################################################
 librange_db_la_includedir = $(includedir)/rangexx
-nobase_librange_db_la_include_HEADERS = db/pbuff_node.h \
-										 db/db_interface.h \
-										 db/db_exceptions.h \
-										 db/berkeley_db.h \
-										 db/berkeley_db_graph.h \
-										 db/berkeley_db_cursor.h \
-										 db/berkeley_db_weak_deleter.h \
-										 db/berkeley_db_txn.h \
-										 db/berkeley_db_lock.h \
+nobase_librange_db_la_include_HEADERS = db/db_exceptions.h \
+										 db/graph_list.pb.h \
 										 db/berkeley_db_types.h \
-										 db/config_interface.h \
-										 db/changelist.pb.h \
+										 db/db_interface.h \
+										 db/pbuff_node.h \
 										 db/nodeinfo.pb.h \
-										 db/graph_list.pb.h
+										 db/berkeley_db_lock.h \
+										 db/berkeley_db_graph.h \
+										 db/changelist.pb.h \
+										 db/berkeley_db_txn.h \
+										 db/berkeley_db.h \
+										 db/berkeley_db_cursor.h \
+										 db/config_interface.h \
+										 db/berkeley_db_weak_deleter.h
 
 librange_db_la_SOURCES = db/pbuff_node.cpp \
 						 db/nodeinfo.pb.cpp \
@@ -547,10 +548,12 @@ librange_db_la_LIBADD = $(AM_LIBADD)
 
 ################################################################################
 librange_graph_la_includedir = $(includedir)/rangexx
-nobase_librange_graph_la_include_HEADERS = graph/graph_interface.h \
-										   graph/node_interface.h \
+nobase_librange_graph_la_include_HEADERS = graph/graph_exceptions.h \
+										   graph/graphdb_factory.h \
+										   graph/graphdb.h \
+										   graph/graph_interface.h \
 										   graph/node_factory.h \
-										   graph/graphdb.h
+										   graph/node_interface.h
 
 librange_graph_la_SOURCES = graph/graphdb.cpp \
 							graph/graph_iter.cpp \
@@ -560,16 +563,23 @@ librange_graph_la_LIBADD = $(AM_LIBADD)
 
 ################################################################################
 librange_core_la_includedir = $(includedir)/rangexx
-nobase_librange_core_la_include_HEADERS = core/exceptions.h \
-										  core/config.h \
-										  core/api.h \
-										  core/range_struct.h
+nobase_librange_core_la_include_HEADERS = ./core/api.h \
+										  ./core/config_builder.h \
+										  ./core/config.h \
+										  ./core/exceptions.h \
+										  ./core/json_visitor.h \
+										  ./core/mq.h \
+										  ./core/range_struct.h \
+										  ./core/stored_config.h \
+										  ./core/stored_message.h \
+										  ./core/store.pb.h 
 
-librange_core_la_SOURCES = ./core/store.pb.cpp \
-						   ./core/stored_message.cpp \
+librange_core_la_SOURCES = ./core/config_builder.cpp \
+						   ./core/json_visitor.cpp \
 						   ./core/read_api.cpp \
-						   ./core/write_api.cpp \
-						   ./core/config_builder.cpp
+						   ./core/stored_message.cpp \
+						   ./core/store.pb.cpp \
+						   ./core/write_api.cpp 
 
 librange_core_la_LIBADD = $(AM_LIBADD)
 librange_la_SOURCES = 
@@ -680,15 +690,17 @@ core/$(am__dirstamp):
 core/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) ./core/$(DEPDIR)
 	@: > core/$(DEPDIR)/$(am__dirstamp)
-./core/store.pb.lo: core/$(am__dirstamp) \
+./core/config_builder.lo: core/$(am__dirstamp) \
 	core/$(DEPDIR)/$(am__dirstamp)
-./core/stored_message.lo: core/$(am__dirstamp) \
+./core/json_visitor.lo: core/$(am__dirstamp) \
 	core/$(DEPDIR)/$(am__dirstamp)
 ./core/read_api.lo: core/$(am__dirstamp) \
 	core/$(DEPDIR)/$(am__dirstamp)
-./core/write_api.lo: core/$(am__dirstamp) \
+./core/stored_message.lo: core/$(am__dirstamp) \
 	core/$(DEPDIR)/$(am__dirstamp)
-./core/config_builder.lo: core/$(am__dirstamp) \
+./core/store.pb.lo: core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
+./core/write_api.lo: core/$(am__dirstamp) \
 	core/$(DEPDIR)/$(am__dirstamp)
 
 librange_core.la: $(librange_core_la_OBJECTS) $(librange_core_la_DEPENDENCIES) $(EXTRA_librange_core_la_DEPENDENCIES) 
@@ -757,6 +769,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/config_builder.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/json_visitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/read_api.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/store.pb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/stored_message.Plo@am__quote@

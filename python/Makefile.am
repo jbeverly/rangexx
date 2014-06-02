@@ -23,7 +23,7 @@ lib_LTLIBRARIES = librange_python.la
 
 librange_python_la_CPPFLAGS = @PYTHON_CPPFLAGS@
 librange_python_la_LDFLAGS = @PYTHON_LDFLAGS@ -l@BOOST_PYTHON_LIB@
-librange_python_la_SOURCES = python.cpp
+librange_python_la_SOURCES = python.cpp python_visitor.cpp
 librange_python_la_LIBADD = $(top_builddir)/librange/librange.la
 
 

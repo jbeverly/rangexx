@@ -33,6 +33,8 @@
 namespace range {
 namespace db {
 
+#define UNUSED(A) (void)(A)
+
 
 //##############################################################################
 //##############################################################################
@@ -232,7 +234,10 @@ BerkeleyDBGraph::read_lock(record_type type, const std::string& key) const
         return lock_it->second.lock();
     }
 
-    std::string lookup = key_name(type, key);                                   // UNUSED, no record-level locking for DB_HASH
+    UNUSED(type);
+    UNUSED(key);
+
+    //std::string lookup = key_name(type, key);                                   // UNUSED, no record-level locking for DB_HASH
 
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
@@ -263,7 +268,9 @@ BerkeleyDBGraph::write_lock(record_type type, const std::string& key)
         return lock_it->second.lock();
     }
 
-    std::string lookup = key_name(type, key);                                   // UNUSED, no record-level locking for DB_HASH
+    UNUSED(type);
+    UNUSED(key);
+    //std::string lookup = key_name(type, key);                                   // UNUSED, no record-level locking for DB_HASH
     auto it = backend_.graph_map_instances.find(name_);
     assert(it != backend_.graph_map_instances.end());
     auto map_instance = it->second;

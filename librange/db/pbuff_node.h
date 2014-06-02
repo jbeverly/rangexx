@@ -38,8 +38,8 @@ class ProtobufNode : public graph::NodeIface, public boost::enable_shared_from_t
     
         //######################################################################
         inline ProtobufNode()
-            : name_(0), instance_(0), wanted_version_(-1), type_(node_type::UNKNOWN), 
-                info_initialized(false), info()
+            : name_(), instance_(), wanted_version_(-1),
+            type_(node_type::UNKNOWN), info_initialized(false), info()
         {
         }
 

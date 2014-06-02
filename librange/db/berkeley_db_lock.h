@@ -46,7 +46,7 @@ class BerkeleyDBLock : public GraphInstanceLock {
         //######################################################################
         BerkeleyDBLock(BerkeleyDBLock&& other)
             : backend_(other.backend_), txn_(std::move(other.txn_)),
-            iter_(std::move(other.iter_))
+            iter_(std::move(other.iter_)), readonly_(true)
         {
         }
         

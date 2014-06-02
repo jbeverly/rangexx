@@ -304,7 +304,7 @@ RangeExpandingVisitor::operator()(ast::ASTAdmin& adm) const
         if(n) {
             q.push(n);
         }
-        while(q.size() > 0) {
+        while(!q.empty()) {
             auto v = q.front(); q.pop();
             if (visited.find(v->name()) == visited.end()) {
                 visited[v->name()] = true;
