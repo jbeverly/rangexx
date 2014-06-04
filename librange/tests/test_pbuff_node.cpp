@@ -225,11 +225,11 @@ TEST_F(TestProtobufNode, TestNodeTypeSetter) {
    
 
     EXPECT_CALL(*inst, get_record(rectype, "test1"))
-        .Times(AtLeast(2))
+        .Times(AtLeast(1))
         .WillRepeatedly(Return(test1.SerializeAsString()));
 
     EXPECT_CALL(*inst, get_record(rectype, "test2"))
-        .Times(AtLeast(2))
+        .Times(AtLeast(1))
         .WillRepeatedly(Return(test2.SerializeAsString()));
 
     test1.set_list_version(2);
@@ -418,22 +418,22 @@ TEST_F(TestProtobufNode, TestNodeVersionEdgeRemoval) {
         .WillOnce(Return(true)); 
 
     EXPECT_CALL(*inst, get_record(rectype, "test1"))
-        .Times(4)
-        .WillOnce(Return(""))
-        .WillOnce(Return(buffer1_type))
-        .WillOnce(Return(buffer1_edge1))
-        .WillOnce(Return(buffer1_edge2));
+        .Times(1)
+        .WillOnce(Return(""));
+    //    .WillOnce(Return(buffer1_type))
+    //    .WillOnce(Return(buffer1_edge1))
+    //    .WillOnce(Return(buffer1_edge2));
 
     EXPECT_CALL(*inst, get_record(rectype, "test2"))
-        .Times(3)
-        .WillOnce(Return(""))
-        .WillOnce(Return(buffer2_type))
-        .WillOnce(Return(buffer2_reverse_edge1));
+        .Times(1)
+        .WillOnce(Return(""));
+    //    .WillOnce(Return(buffer2_type))
+    //    .WillOnce(Return(buffer2_reverse_edge1));
 
     EXPECT_CALL(*inst, get_record(rectype, "test3"))
-        .Times(2)
-        .WillOnce(Return(""))
-        .WillOnce(Return(buffer3_type));
+        .Times(1)
+        .WillOnce(Return(""));
+    //    .WillOnce(Return(buffer3_type));
 
     range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
     range::graph::NodeIface::node_t node2 = boost::make_shared<range::db::ProtobufNode>("test2", inst);
@@ -689,9 +689,9 @@ TEST_F(TestProtobufNode, TestNodeVersionedRemoval) {
 
     std::string buffer2 = test.SerializeAsString();
     EXPECT_CALL(*inst, get_record(rectype, "test1"))
-        .Times(2)
-        .WillOnce(Return(buffer1))
-        .WillOnce(Return(buffer2));
+        .Times(1)
+        .WillOnce(Return(buffer1));
+    //    .WillOnce(Return(buffer2));
 
     range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
 

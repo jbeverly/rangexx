@@ -19,8 +19,8 @@ check_PROGRAMS = test_graph_iterator \
 				 test_write_api \
 				 test_read_api
 
-
 TESTS = $(check_PROGRAMS)
+
 
 .PHONY: valgrind
 

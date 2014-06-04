@@ -40,8 +40,10 @@ BerkeleyDBTxn::BerkeleyDBTxn(std::thread::id id, BerkeleyDBGraph& instance)
 void
 BerkeleyDBTxn::commit() 
 {
+    //flush();
     instance_.inculcate_change(id_);
     changes_.clear();
+    std::cout << "transaction completed" << std::endl;
 }
 
 //##############################################################################
@@ -57,7 +59,9 @@ BerkeleyDBTxn::abort()
 void
 BerkeleyDBTxn::flush()
 {
-    changes_ = instance_.commit_txn(std::this_thread::get_id());
+    std::cout << "flushing transaction" << std::endl;
+    auto filtered_changes = instance_.commit_txn(std::this_thread::get_id());
+    changes_ = filtered_changes;
 }
 
 //##############################################################################

@@ -299,19 +299,26 @@ TEST_F(TestGraphDB, test_create) {
     boost::shared_ptr<MockNode> thisnode = boost::make_shared<MockNode>();
 
     EXPECT_CALL(*txn, flush())
-        .Times(AtLeast(1));
+        .Times(AtLeast(0));
 
     EXPECT_CALL(*thisnode, name())
         .Times(AtLeast(0))
         .WillRepeatedly(Return("foobar"));
 
-    EXPECT_CALL(*thisnode, commit())
+/*    EXPECT_CALL(*thisnode, commit())
         .Times(1)
-        .WillOnce(Return(true));
+        .WillOnce(Return(true)); */
 
     EXPECT_CALL(*thisnode, version())
         .Times(AtLeast(1))
-        .WillRepeatedly(Return(0));
+        .WillRepeatedly(Return(1));
+
+    EXPECT_CALL(*thisnode, add_graph_version(100))
+        .Times(AtLeast(1));
+/*
+    EXPECT_CALL(*cur, fetch("foobar"))
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(thisnode)); */
 
     EXPECT_CALL(*thisnode, graph_versions())
         .Times(AtLeast(1))
@@ -320,8 +327,10 @@ TEST_F(TestGraphDB, test_create) {
     for (int i = 0; i < 10; ++i) {
         boost::shared_ptr<MockNode> node = boost::make_shared<MockNode>();
 
+        /*
         EXPECT_CALL(*node, add_graph_version(100))
             .Times(AtLeast(1));
+        */
 
         EXPECT_CALL(*node, name())
             .Times(AtLeast(0))
@@ -329,7 +338,7 @@ TEST_F(TestGraphDB, test_create) {
 
         MockNodes.push_back(node);
     }
-
+/*
     EXPECT_CALL(*cur, first())
         .Times(AtLeast(1))
         .WillRepeatedly(Return(MockNodes[0]));
@@ -347,16 +356,16 @@ TEST_F(TestGraphDB, test_create) {
         .WillOnce(Return(MockNodes[9]))
         .WillOnce(Return(nullptr))
         .RetiresOnSaturation();
-
+*/
     /* EXPECT_CALL(*cur, next(MockNodes[9]))
         .Times(AtLeast(1))
         .WillRepeatedly(Return(nullptr)); */
 
-
+/*
     EXPECT_CALL(*cur, fetch("Node0"))
         .Times(1)
         .WillOnce(Return(MockNodes[0]));
-
+*/
     /*EXPECT_CALL(*cur, last())
         .Times(AtLeast(1))
         .WillRepeatedly(Return(MockNodes[9])); */
@@ -368,15 +377,18 @@ TEST_F(TestGraphDB, test_create) {
     EXPECT_CALL(*inst, start_txn())
         .Times(1)
         .WillOnce(Return(txn));
-
+/*
     EXPECT_CALL(*inst, get_cursor())
         .Times(AtLeast(1))
         .WillRepeatedly(Return(cur));
-
+*/
     std::stack<boost::shared_ptr<MockNode>> nodestack { {thisnode} };
     range::graph::GraphDB gdb { "primary", inst, range::graph::GraphDB::node_factory_t(new MockNodeFactory(nodestack)) };
-    gdb.create("foobar");
+    auto a = gdb.create("foobar");
+
+    ASSERT_NE(nullptr, a);
 }
+
 
 //##############################################################################
 //##############################################################################
@@ -389,7 +401,7 @@ TEST_F(TestGraphDB, test_remove) {
     std::vector<range::graph::NodeIface::node_t> MockNodes;
 
     EXPECT_CALL(*txn, flush())
-        .Times(AtLeast(1));
+        .Times(AtLeast(0));
 
     EXPECT_CALL(*thisnode, name())
         .Times(AtLeast(0))
@@ -405,8 +417,8 @@ TEST_F(TestGraphDB, test_remove) {
     for (int i = 0; i < 10; ++i) {
         boost::shared_ptr<MockNode> node = boost::make_shared<MockNode>();
 
-        EXPECT_CALL(*node, add_graph_version(100))
-            .Times(AtLeast(1));
+        /* EXPECT_CALL(*node, add_graph_version(100))
+            .Times(AtLeast(1)); */
 
          EXPECT_CALL(*node, name())
             .Times(AtLeast(0))
@@ -436,7 +448,7 @@ TEST_F(TestGraphDB, test_remove) {
     EXPECT_CALL(*thisnode, reverse_edges())
         .Times(1)
         .WillOnce(Return(thisnode_reverseedges));
-
+/*
     EXPECT_CALL(*cur, first())
         .Times(AtLeast(1))
         .WillRepeatedly(Return(MockNodes[0]));
@@ -453,15 +465,15 @@ TEST_F(TestGraphDB, test_remove) {
         .WillOnce(Return(MockNodes[8]))
         .WillOnce(Return(MockNodes[9]))
         .WillOnce(Return(nullptr))
-        .RetiresOnSaturation();
+        .RetiresOnSaturation(); */
 
     /* EXPECT_CALL(*cur, next(MockNodes[9]))
         .Times(AtLeast(1))
         .WillRepeatedly(Return(nullptr)); */
-
+/*
     EXPECT_CALL(*cur, fetch("Node0"))
         .Times(1)
-        .WillOnce(Return(MockNodes[0]));
+        .WillOnce(Return(MockNodes[0])); */
 
     /*EXPECT_CALL(*cur, last())
         .Times(AtLeast(1))
@@ -478,10 +490,10 @@ TEST_F(TestGraphDB, test_remove) {
     EXPECT_CALL(*inst, start_txn())
         .Times(1)
         .WillOnce(Return(txn));
-
+/*
     EXPECT_CALL(*inst, get_cursor())
         .Times(AtLeast(1))
-        .WillRepeatedly(Return(cur));
+        .WillRepeatedly(Return(cur)); */
 
 
     range::graph::GraphDB gdb { "primary", inst, range::graph::GraphDB::node_factory_t(new range::graph::NodeIfaceConcreteFactory<MockNode>()) };

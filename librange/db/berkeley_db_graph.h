@@ -128,6 +128,10 @@ class BerkeleyDBGraph
         static std::string key_prefix(record_type type); 
         static std::string key_name(record_type type, const std::string& name);
         static record_type get_type_from_keyname(const std::string& keyname);
+        
+        //######################################################################
+        bool db_put(std::string key, std::string value);
+        std::string db_get(std::string key) const;
 
 };
 

@@ -106,7 +106,7 @@ class GraphInstanceInterface {
         /// @return cursor (A pointer to an object that knows how to iterate 
         ///                 through vertices in the graph)
         virtual cursor_t get_cursor() const = 0;
-        
+
         //######################################################################
         /// @param[in] type type of the record you're requesting
         /// @param[in] key key of the record you're requesting

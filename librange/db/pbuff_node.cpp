@@ -168,18 +168,21 @@ ProtobufNode::init_info() const
                 std::string buffer { instance_->get_record(rectype, name_) };
 
                 if (buffer.length() > 0) {
+                    std::cout << "reading record for `" << name_ << "' from db successful, length is " << buffer.length() << std::endl;
                     tmp.ParseFromString(buffer);
                 }
             }
 
             if (tmp.IsInitialized())                                                // newer node in db
             {
+                std::cout << "Node `" << name_ << "' is initialized from buffer" << std::endl;
                 info = tmp;
                 type_ = node_type(info.node_type());
                 info_initialized = info.IsInitialized();
             }
             else                                                                    // new node
             {                                            
+                std::cout << "Node `" << name_ << "' is not initialized " << std::endl;
                 init_default_nodeinfo(info); //, instance_->version());
                 info_initialized = info.IsInitialized();
             }
@@ -198,15 +201,20 @@ ProtobufNode::info_lock(bool writable)
 {
     if (instance_) {
         auto lock = (writable) ? instance_->write_lock(rectype, name_) : instance_->read_lock(rectype, name_);
+        if(!info_initialized) { 
+            std::cout << "getting info_lock" << std::endl;
 
-        std::string buffer = instance_->get_record(rectype, name_);
-        if (buffer.length() > 0) {
-            info.ParseFromString(buffer);
-            type_ = node_type(info.node_type());
-        } else {                                                            ///< New node
-            init_default_nodeinfo(info); //, instance_->version());
+            std::string buffer = instance_->get_record(rectype, name_);
+            if (buffer.length() > 0) {
+                std::cout << "buffer loaded" << std::endl;
+                info.ParseFromString(buffer);
+                type_ = node_type(info.node_type());
+            } else {                                                            ///< New node
+                std::cout << "buffer load FAILED, defaulting" << std::endl;
+                init_default_nodeinfo(info); //, instance_->version());
+            }
+            info_initialized = true;
         }
-        info_initialized = true;
         return lock;
     }
     else {
@@ -685,15 +693,21 @@ ProtobufNode::is_valid() const
 void
 ProtobufNode::add_graph_version(uint64_t version)
 {
+    auto txn = instance_->start_txn();
     auto lock = info_lock(true);
     for(int i = info.graph_versions_size() - 1; i >= 0; --i) {
         if (version == info.graph_versions(i)) {
+            std::cout << "version " << version << " already in list of versions" << std::endl;
             return;
         }
-    }
+    } 
 
     info.add_graph_versions(version);
+    std::cout << "adding graph version: " << version << " to " << name_ << std::endl;
     write_record(name_, info, instance_, rectype_t::NODE_META);
+    txn->flush();
+
+    std::cout << "DONE adding graph version: " << version << " to " << name_ << std::endl;
     return;
 }
 

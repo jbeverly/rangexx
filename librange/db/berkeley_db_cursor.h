@@ -28,6 +28,7 @@
 #include <dbstl_map.h>
 
 #include "db_interface.h"
+//#include "berkeley_db_lock.h"
 #include "config_interface.h"
 
 #include "berkeley_db_types.h"
@@ -46,15 +47,7 @@ class BerkeleyDBCursor : public graph::GraphCursorInterface {
         typedef boost::shared_ptr<const BerkeleyDBGraph> const_graph_sptr;
 
         //######################################################################
-        BerkeleyDBCursor(const_graph_sptr graph_instance)
-            : graph_(graph_instance), iter(), iterator_valid(false) 
-        {
-            boost::shared_ptr<BerkeleyDBGraph> mutable_graph
-                = boost::const_pointer_cast<BerkeleyDBGraph>(graph_);
-
-            txn_ = dbstl::begin_txn(DB_TXN_SYNC | DB_TXN_SNAPSHOT,
-                    mutable_graph->env());
-        }
+        BerkeleyDBCursor(const_graph_sptr graph_instance);
 
         //######################################################################
         virtual ~BerkeleyDBCursor() override
@@ -65,13 +58,6 @@ class BerkeleyDBCursor : public graph::GraphCursorInterface {
             try {
                 boost::shared_ptr<BerkeleyDBGraph> mutable_graph 
                     = boost::const_pointer_cast<BerkeleyDBGraph>(graph_);
-
-                if (std::uncaught_exception()) {
-                    dbstl::abort_txn(mutable_graph->env(), txn_);
-                }
-                else {
-                    dbstl::commit_txn(mutable_graph->env(), txn_);
-                }
             } catch(...) { /* pass */ } 
         }
 
@@ -96,13 +82,15 @@ class BerkeleyDBCursor : public graph::GraphCursorInterface {
 
         boost::shared_ptr<const BerkeleyDBGraph> graph_;
 
-        DbTxn * txn_;
+
+        boost::shared_ptr<GraphInstanceLock> lock;
         mutable map_t::const_iterator iter;
         mutable map_t::const_reverse_iterator riter;
         mutable bool iterator_valid;
 
         //######################################################################
         const map_t& get_const_map() const;
+        map_t& get_map() const;
 
         //######################################################################
         static const std::string node_prefix;

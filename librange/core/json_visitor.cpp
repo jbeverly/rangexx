@@ -22,12 +22,22 @@
 
 namespace range {
 
+static void add_indent(std::stringstream &s, bool pretty_, size_t cur_indent_) {
+    if(pretty_) {
+        for(size_t i = 0; i < cur_indent_; ++i) {
+            s << " ";
+        }
+    }
+}
+ 
+
 //##############################################################################
 //##############################################################################
 std::string
 JSONVisitor::make_array(const std::vector<RangeStruct> &values) const
 {
     std::stringstream s;
+    //add_indent(s, pretty_, cur_indent_);
     s << "[";
 
     uint32_t level = 0;
@@ -37,12 +47,14 @@ JSONVisitor::make_array(const std::vector<RangeStruct> &values) const
     }
 
     for(auto v : values) {
+        add_indent(s, pretty_, cur_indent_);
         s << boost::apply_visitor(JSONVisitor(pretty_, indent_, level), v);
         if(pretty_) {
             s << std::endl;
         }
     }
 
+    add_indent(s, pretty_, cur_indent_);
     s << "]";
 
     return s.str();
@@ -54,6 +66,7 @@ std::string
 JSONVisitor::operator()(const RangeObject &obj) const
 {
     std::stringstream s;
+    //add_indent(s, pretty_, cur_indent_);
     s << "{";
     std::string pad = "";
 
@@ -67,12 +80,13 @@ JSONVisitor::operator()(const RangeObject &obj) const
     for(auto v : obj.values) {
         auto key = v.first;
         auto value = boost::apply_visitor(JSONVisitor(pretty_, indent_, level), v.second);
+
+        add_indent(s, pretty_, cur_indent_ + indent_);
         s << "\"" << key << "\":" << pad << value;
-        if(pretty_) {
-            s << std::endl;
-        }
+        if(pretty_) { s << std::endl; }
     }
 
+    add_indent(s, pretty_, cur_indent_);
     s << "}";
 
     return s.str();

@@ -31,6 +31,16 @@ namespace range {
 namespace graph {
 
 //##############################################################################
+//##############################################################################
+class GraphTxnIface {
+    public:
+        virtual ~GraphTxnIface() = default;
+        virtual void abort() = 0;
+    protected:
+        GraphTxnIface() = default;
+};
+
+//##############################################################################
 /// Graph Cursors enale us to iterate over the keys within a graph and find 
 /// nodes within a graph. 
 /// You are required to implement a cursor for any graph type, so that it can 
@@ -174,6 +184,13 @@ class GraphInterface
         //#####################################################################
         // Mutating interfaces
         
+        
+        //######################################################################
+        /// export transactions up to API so we can group changes together
+        /// as one logical change
+        /// @return returns a RAII transaction object for the graphdb
+        virtual boost::shared_ptr<GraphTxnIface> start_txn() = 0;
+        
         ///#####################################################################
         /// @param node node to remove
         virtual node_t remove(node_t node) = 0;
@@ -183,6 +200,10 @@ class GraphInterface
         /// @return the newly created node 
         virtual node_t create(const std::string& name) = 0;
 
+        //######################################################################
+        //######################################################################
+        virtual void update_versions(uint64_t prior_version) = 0;
+
         //#####################################################################
         /// @return iterator begin
         virtual GraphIterator begin() = 0;
@@ -190,6 +211,7 @@ class GraphInterface
         //#####################################################################
         /// @return iterator end
         virtual GraphIterator end() = 0;
+        
 
         //######################################################################
         /// Note that for backends not supporting versioning, this should 

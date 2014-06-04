@@ -372,7 +372,11 @@ RangeAPI_v1::expand(const std::string &env_name, const std::string &node_name,
     const auto primary = graphdb("primary", version);
     const auto dependency = graphdb("dependency", -1);                          // FIXME: I don't have version coherence for graphs; will treat dependency graph as unversioned for now
     auto n = get_node(primary, env_name, node_name);
- 
+
+    if(!n) {
+        throw graph::NodeNotFoundException(env_name);
+    }
+    
     std::unordered_map<std::string, bool> onstack;
     std::stack<PostOrderDFSStackFrame> st;
 
@@ -510,6 +514,10 @@ RangeAPI_v1::bfs_search_parents_for_first_key(const std::string &env_name,
     std::queue<boost::shared_ptr<::range::graph::NodeIface>> q;                 // BFS traveral; want the admin nearest the child node
 
     auto n = get_node(primary, env_name, node_name);
+    if(!n) {
+        throw graph::NodeNotFoundException(prefixed_node_name(env_name, node_name));
+    }
+
     q.push(n);
 
     while(!q.empty()) {
@@ -554,6 +562,9 @@ RangeAPI_v1::dfs_search_parents_for_first_key(const std::string &env_name,
 
     auto n = get_node(primary, env_name, node_name);
 
+    if(!n) {
+        throw graph::NodeNotFoundException(prefixed_node_name(env_name, node_name));
+    }
     st.push(n);
 
     while(!st.empty()) {
@@ -611,9 +622,16 @@ RangeAPI_v1::nearest_common_ancestor(//std::string &ancestor,
     size_t min_distance = std::numeric_limits<size_t>::max();
 
     auto n1 = get_node(primary, env_name, node1_name);
+
+    if(!n1) {
+        throw graph::NodeNotFoundException(prefixed_node_name(env_name, node1_name));
+    }
     q1.push(n1);
 
     auto n2 = get_node(primary, env_name, node2_name);
+    if(!n2) {
+        throw graph::NodeNotFoundException(prefixed_node_name(env_name, node2_name));
+    }
     q2.push(n2);
 
     while(!q1.empty() && !q2.empty()) {

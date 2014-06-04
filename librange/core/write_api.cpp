@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#include <iostream>
 #include <stack>
 #include <unordered_map>
 #include "api.h"
@@ -27,10 +27,10 @@ bool
 RangeAPI_v1::create_env(const std::string &env_name)
 {
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
+        auto txn = g->start_txn();
         auto n = g->create(env_name);
         if(n) {
             n->set_type(node_type::ENVIRONMENT);
-            n->commit();
         } else {
             return false;
         }
@@ -44,6 +44,7 @@ bool
 RangeAPI_v1::remove_env(const std::string &env_name)
 {
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
+        auto txn = g->start_txn();
         auto n = g->get_node(env_name);
         if(n) {
             if(n->type() != node_type::ENVIRONMENT) { 
@@ -63,10 +64,13 @@ bool
 RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &cluster_name)
 {
     auto primary = graphdb("primary", -1);
+    auto ptxn = primary->start_txn();
     auto dependency = graphdb("dependency", -1);
+    auto dtxn = dependency->start_txn();
 
     auto env = primary->get_node(env_name);
     if(!env) {
+        std::cout << "env " << env_name << " doesn't exist" << std::endl;
         return false;
     }
 
@@ -76,11 +80,12 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
         return false;
     }
 
+
     if (!n) {
+        std::cout << "node " << prefixed_node_name(env_name, cluster_name) << " doesn't exist, creating" << std::endl;
         n = primary->create(prefixed_node_name(env_name, cluster_name));
         if(n) {
             n->set_type(node_type::CLUSTER);
-            n->commit();
         }
         else {
             return false;
@@ -94,7 +99,6 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
         n = dependency->create(prefixed_node_name(env_name, cluster_name));
         if(n) {
             n->set_type(node_type::CLUSTER);
-            n->commit();
         } 
     }
     return true;
@@ -107,6 +111,7 @@ RangeAPI_v1::remove_cluster_from_env(const std::string &env_name,
                                      const std::string &cluster_name)
 {
     auto primary = graphdb("primary", -1);
+    auto ptxn = primary->start_txn();
 
     auto env = primary->get_node(env_name);
     auto n = primary->get_node(prefixed_node_name(env_name, cluster_name));
@@ -134,7 +139,9 @@ RangeAPI_v1::add_cluster_to_cluster(const std::string &env_name,
                                     const std::string &child_cluster)
 {
     auto primary = graphdb("primary", -1);
+    auto ptxn = primary->start_txn();
     auto dependency = graphdb("dependency", -1);
+    auto dtxn = dependency->start_txn();
 
     auto parent = primary->get_node(prefixed_node_name(env_name, parent_cluster));
     if(!parent) {
@@ -150,7 +157,6 @@ RangeAPI_v1::add_cluster_to_cluster(const std::string &env_name,
         n = primary->create(prefixed_node_name(env_name, child_cluster));
         if(n) {
             n->set_type(node_type::CLUSTER);
-            n->commit();
         } else {
             return false;
         }
@@ -163,7 +169,6 @@ RangeAPI_v1::add_cluster_to_cluster(const std::string &env_name,
         n = dependency->create(prefixed_node_name(env_name, child_cluster));
         if(n) {
             n->set_type(node_type::CLUSTER);
-            n->commit();
         } 
     }
     return true;
@@ -177,6 +182,7 @@ RangeAPI_v1::remove_cluster_from_cluster(const std::string &env_name,
                                          const std::string &child_cluster)
 {
     auto primary = graphdb("primary", -1);
+    auto ptxn = primary->start_txn();
 
     auto parent = primary->get_node(prefixed_node_name(env_name, parent_cluster));
     auto n = primary->get_node(prefixed_node_name(env_name, child_cluster));
@@ -198,7 +204,9 @@ bool
 RangeAPI_v1::remove_cluster(const std::string &env_name, const std::string &cluster_name)
 {
     auto primary = graphdb("primary", -1);
+    auto ptxn = primary->start_txn();
     auto dependency = graphdb("dependency", -1);
+    auto dtxn = dependency->start_txn();
     auto n = primary->get_node(prefixed_node_name(env_name, cluster_name));
     if(!n) {
         return false;
@@ -219,7 +227,9 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
                                  const std::string &hostname)
 {
     auto primary = graphdb("primary", -1);
+    auto ptxn = primary->start_txn();
     auto dependency = graphdb("dependency", -1);
+    auto dtxn = dependency->start_txn();
 
     auto parent = primary->get_node(prefixed_node_name(env_name, parent_cluster));
     if(!parent) {
@@ -260,7 +270,6 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
         n = primary->create(hostname);
         if(n) {
             n->set_type(node_type::HOST);
-            n->commit();
         } else {
             return false;
         }
@@ -273,7 +282,6 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
         n = dependency->create(hostname);
         if(n) {
             n->set_type(node_type::HOST);
-            n->commit();
         } 
     }
     return true;
@@ -287,6 +295,7 @@ RangeAPI_v1::remove_host_from_cluster(const std::string &env_name,
                                       const std::string &hostname)
 {
     auto primary = graphdb("primary", -1);
+    auto ptxn = primary->start_txn();
     auto parent = primary->get_node(prefixed_node_name(env_name, parent_cluster));
     auto n = primary->get_node(hostname);
 
@@ -308,6 +317,7 @@ bool
 RangeAPI_v1::add_host(const std::string &hostname)
 {
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
+        auto gtxn = g->start_txn();
         auto n = g->get_node(hostname);
         if(n) {
             return false;
@@ -315,7 +325,6 @@ RangeAPI_v1::add_host(const std::string &hostname)
         n = g->create(hostname);
         if(n) {
             n->set_type(node_type::HOST);
-            n->commit();
         } else {
             return false;
         }
@@ -329,7 +338,9 @@ bool
 RangeAPI_v1::remove_host(const std::string &env_name, const std::string &hostname)
 {
     auto primary = graphdb("primary", -1);
+    auto ptxn = primary->start_txn();
     auto dependency = graphdb("dependency", -1);
+    auto dtxn = dependency->start_txn();
     auto n = primary->get_node(hostname);
 
     if(n) { 
@@ -372,6 +383,7 @@ RangeAPI_v1::add_node_key_value(const std::string &env_name, const std::string &
                                 const std::string &key, const std::string &value)
 {
     auto primary = graphdb("primary", -1);
+    auto ptxn = primary->start_txn();
 
     auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(!n) {
@@ -404,6 +416,7 @@ RangeAPI_v1::remove_node_key_value(const std::string &env_name, const std::strin
                                    const std::string &key, const std::string &value)
 {
     auto primary = graphdb("primary", -1);
+    auto ptxn = primary->start_txn();
 
     auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(!n) {
@@ -440,12 +453,14 @@ RangeAPI_v1::remove_key_from_node(const std::string &env_name, const std::string
                                   const std::string &key)
 {
     auto primary = graphdb("primary", -1);
+    auto ptxn = primary->start_txn();
 
     auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(!n) {
         return false;
     }
-    return n->delete_tag(key);
+    bool ret = n->delete_tag(key);
+    return ret;
 }
 
 //##############################################################################
@@ -457,6 +472,7 @@ RangeAPI_v1::add_node_ext_dependency(const std::string &env_name,
                                      const std::string &dependency_name)
 {
     auto dep = graphdb("dependency", -1);
+    auto dtxn = dep->start_txn();
     auto n = dep->get_node(prefixed_node_name(env_name, node_name));
     auto d = dep->get_node(prefixed_node_name(dependency_env, dependency_name));
 
@@ -493,6 +509,7 @@ RangeAPI_v1::remove_node_ext_dependency(const std::string &env_name,
                                         const std::string &dependency_name)
 {
     auto dep = graphdb("dependency", -1);
+    auto dtxn = dep->start_txn();
     auto n = dep->get_node(prefixed_node_name(env_name, node_name));
     auto d = dep->get_node(prefixed_node_name(dependency_env, dependency_name));
 

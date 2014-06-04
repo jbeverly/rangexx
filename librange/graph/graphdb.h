@@ -18,6 +18,7 @@
 #ifndef _RANGE_DB_GRAPHDB_H
 #define _RANGE_DB_GRAPHDB_H
 
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <boost/shared_ptr.hpp>
@@ -31,6 +32,46 @@
 
 namespace range {
 namespace graph {
+
+//##############################################################################
+//##############################################################################
+class GraphTxn : public GraphTxnIface
+{
+    public:
+        //######################################################################
+        //######################################################################
+        GraphTxn(boost::shared_ptr<GraphInterface> graphdb, boost::shared_ptr<db::GraphInstanceInterface> inst) 
+            :   graphdb_(graphdb),
+                s_version(graphdb->version()),
+                lock(inst->write_lock(db::GraphInstanceInterface::record_type::UNKNOWN,"")),
+                txn(inst->start_txn())
+        {
+        }
+
+        //######################################################################
+        //######################################################################
+        ~GraphTxn() {
+            try {
+                std::cout << "Updating all node versions in GraphTxn dtor" << std::endl;
+                graphdb_->update_versions(s_version);
+                std::cout << "DONE Updating all node versions in GraphTxn dtor" << std::endl;
+            } catch(...) { 
+                std::cout << "The world blew up..." << std::endl;
+            }
+        }
+
+        //######################################################################
+        //######################################################################
+        virtual void abort() override {
+            txn->abort();
+        }
+
+    private:
+        boost::shared_ptr<GraphInterface> graphdb_;
+        uint64_t s_version;
+        boost::shared_ptr<db::GraphInstanceLock> lock;
+        boost::shared_ptr<db::GraphTransaction> txn;
+};
 
 //##############################################################################
 //##############################################################################
@@ -96,11 +137,18 @@ class GraphDB
 
         //######################################################################
         // mutators
+        
+        //######################################################################
+        virtual boost::shared_ptr<GraphTxnIface> start_txn() override;
+
         //######################################################################
         virtual node_t remove(node_t node) override;
         
         //######################################################################
         virtual node_t create(const std::string& name) override;
+        
+        //######################################################################
+        virtual void update_versions(uint64_t prior_version) override;
 
         virtual bool set_wanted_version(uint64_t version) override;
         virtual uint64_t get_wanted_version() const override;
@@ -118,6 +166,8 @@ class GraphDB
         uint64_t wanted_version_;
         node_factory_t node_factory_;
         std::unordered_map<std::string, uint64_t> node_version_map;
+        bool has_version_or_higher(uint64_t wanted_version, node_t node);
+        std::vector<boost::shared_ptr<graph::NodeIface>> removed_nodes;
 
         //######################################################################
         virtual graph::GraphInterface::cursor_t get_cursor() const override;

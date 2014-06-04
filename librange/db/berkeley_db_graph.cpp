@@ -35,6 +35,46 @@ namespace db {
 
 #define UNUSED(A) (void)(A)
 
+//##############################################################################
+//##############################################################################
+bool
+BerkeleyDBGraph::db_put(std::string key, std::string value)
+{
+    auto it = backend_.graph_map_instances.find(name_);
+    if (it == backend_.graph_map_instances.end()) {
+        throw InstanceUnitializedException("Map instance not found");
+    }
+    auto map_instance = it->second;
+
+    auto txn_it = backend_.lock_table.find(std::this_thread::get_id());
+    if(txn_it == backend_.lock_table.end()) {
+        throw UnknownTransactionException("No transaction");
+    }
+
+    DbTxn * dbtxn = txn_it->second.lock()->txn();
+    return backend_.db_put(dbtxn, map_instance, key, value);
+}
+
+//##############################################################################
+//##############################################################################
+std::string
+BerkeleyDBGraph::db_get(std::string key) const
+{
+    auto it = backend_.graph_map_instances.find(name_);
+    if (it == backend_.graph_map_instances.end()) {
+        throw InstanceUnitializedException("Map instance not found");
+    }
+    auto map_instance = it->second;
+
+    auto txn_it = backend_.lock_table.find(std::this_thread::get_id());
+    if(txn_it == backend_.lock_table.end()) {
+        throw UnknownTransactionException("No transaction");
+    }
+
+    DbTxn * dbtxn = txn_it->second.lock()->txn();
+    return backend_.db_get(dbtxn, map_instance, key);
+}
+
 
 //##############################################################################
 //##############################################################################
@@ -68,19 +108,19 @@ BerkeleyDBGraph::commit_txn(std::thread::id id)
         std::string data;
         std::tie(type, object_name, object_version, data) = change;
 
+        if (data.size() > 0) { 
+            std::string lookup = key_name(type, object_name);
+            std::cout << "Writing data for " << object_name << " with of size: " << data.size() << std::endl;
+            db_put(lookup, data);
+            //assert(db_get(lookup).size() == data.size());
+        }
+
         switch (type) {
             case record_type::NODE: {
                     filtered_changes.push_back(std::make_tuple(type, object_name, object_version, std::string()));
                     break;
                 }
-            default: {
-                    break;
-                }
-        }
-
-        if (data.size() > 0) { 
-            std::string lookup = key_name(type, object_name);
-            (*map_instance)[lookup] = data;
+            default: { break; }
         }
     }
 
@@ -97,19 +137,21 @@ BerkeleyDBGraph::inculcate_change(std::thread::id id)
         throw InstanceUnitializedException("Map instance not found");
     }
     auto map_instance = it->second;
-    auto lock = write_lock(record_type::GRAPH_META, "changelist");
 
+    auto lock = write_lock(record_type::GRAPH_META, "changelist");
     auto key = key_name(record_type::GRAPH_META, "changelist");
+
     ChangeList changes;
-    if (map_instance->find(key) != map_instance->end()) {
-        changes.ParseFromString((*map_instance)[key]);
+    auto data_it = map_instance->find(key);
+    if (data_it != map_instance->end()) {
+        changes.ParseFromString(db_get(key)); //data_it->second);
     } 
 
     auto filtered_changes = commit_txn(id);
-    auto c = changes.add_change();
-
     if (filtered_changes.size() > 0) { 
-        for (auto change : commit_txn(id)) {
+        auto c = changes.add_change();
+
+        for (auto change : filtered_changes) {
             record_type type;
             std::string object_name;
             uint64_t object_version;
@@ -120,18 +162,18 @@ BerkeleyDBGraph::inculcate_change(std::thread::id id)
             item->set_key( key_name(type, object_name) );
             item->set_version( object_version );
         }
+
+        struct timeval cur_time;
+        gettimeofday(&cur_time, NULL);
+
+        auto ts = c->mutable_timestamp();
+        ts->set_seconds(cur_time.tv_sec);
+        ts->set_msec(cur_time.tv_usec / 1000);
+
+        changes.set_current_version( changes.current_version() + 1 );
+
+        db_put(key, changes.SerializeAsString());
     }
-
-    struct timeval cur_time;
-    gettimeofday(&cur_time, NULL);
-
-    auto ts = c->mutable_timestamp();
-    ts->set_seconds(cur_time.tv_sec);
-    ts->set_msec(cur_time.tv_usec / 1000);
-
-    changes.set_current_version( changes.current_version() + 1 );
-
-    (*map_instance)[key] = changes.SerializeAsString();
 }
 
 //##############################################################################
@@ -148,6 +190,7 @@ BerkeleyDBGraph::n_vertices() const
     size_t n = boost::lexical_cast<size_t>((*map_instance)[key_name(record_type::GRAPH_META, "n_vertices")]);
     return n;
 }
+
 //##############################################################################
 //##############################################################################
 size_t
@@ -195,7 +238,10 @@ BerkeleyDBGraph::version() const
     auto key = key_name(record_type::GRAPH_META, "changelist");
     if (map_instance->find(key) != map_instance->end()) {
         changes.ParseFromString((*map_instance)[key]);
-    } 
+    }
+/*    if(changes.current_version() == 0) {
+        return 1;
+    } */
 
     return changes.current_version();
 }
@@ -218,9 +264,20 @@ BerkeleyDBGraph::get_record(record_type type, const std::string& key) const
         throw InstanceUnitializedException("Map instance not found");
     }
     auto map_instance = it->second;
-
     auto lock = read_lock(type, key);
-    return (*map_instance)[key_name(type, key)];
+
+    std::string lookup { key_name(type, key) };
+    auto dit = map_instance->find(lookup);
+
+    std::string data;
+    if(dit != map_instance->end()) {
+        data = db_get(lookup);
+        std::cout << "Reading data for " << key << " with of size: " << data.size() << std::endl;
+    } else {
+        std::cout << "data not in db" << std::endl;
+    }
+
+    return data;
 }
 
 //##############################################################################
@@ -270,6 +327,7 @@ BerkeleyDBGraph::write_lock(record_type type, const std::string& key)
 
     UNUSED(type);
     UNUSED(key);
+
     //std::string lookup = key_name(type, key);                                   // UNUSED, no record-level locking for DB_HASH
     auto it = backend_.graph_map_instances.find(name_);
     assert(it != backend_.graph_map_instances.end());
@@ -293,8 +351,10 @@ BerkeleyDBGraph::start_txn()
 
     auto txn = transaction_table.find(id);
     if (txn != transaction_table.end()) {
+        std::cout << "existing txn" << std::endl;
         return txn->second.lock();
     }
+    std::cout << "starting new txn" << std::endl;
 
     boost::shared_ptr<BerkeleyDBTxn> txn_ptr {
                 new BerkeleyDBTxn(id, *this),
@@ -311,16 +371,16 @@ bool
 BerkeleyDBGraph::write_record(record_type type, const std::string& key,
         uint64_t object_version, const std::string& data)
 {
-    std::thread::id id = std::this_thread::get_id(); 
+    /* std::thread::id id = std::this_thread::get_id(); 
     auto txnit = transaction_table.find(id);
     if (txnit != transaction_table.end()) {
         txnit->second.lock()->add_change(std::make_tuple(type, key, object_version, data));
     }
-    else {
-        auto txn = start_txn();
-        boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->add_change(
-                std::make_tuple(type, key, object_version, data));
-    }
+    else { */
+    auto txn = start_txn();
+    boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->add_change(
+            std::make_tuple(type, key, object_version, data));
+    //}
     return true;
 }
 

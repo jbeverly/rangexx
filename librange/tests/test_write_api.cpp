@@ -63,6 +63,16 @@ class TestRangeWriteAPI : public ::testing::Test {
             EXPECT_CALL(*cfg, db_backend())
                 .Times(AtLeast(0))
                 .WillRepeatedly(Return(nullptr));
+
+            EXPECT_CALL(*primary, start_txn())
+                .Times(AnyNumber())
+                .WillOnce(Return(nullptr));
+
+            EXPECT_CALL(*dependency, start_txn())
+                .Times(AnyNumber())
+                .WillOnce(Return(nullptr));
+
+
         }
 
         void TearDown() override {
@@ -89,8 +99,8 @@ TEST_F(TestRangeWriteAPI, test_create_env) {
         .Times(2)
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::UNKNOWN));
 
-    EXPECT_CALL(*foobar, commit())
-        .Times(2);
+    //EXPECT_CALL(*foobar, commit())
+    //    .Times(2);
 
     EXPECT_CALL(*primary, create("foobar"))
         .Times(1)
@@ -150,10 +160,10 @@ TEST_F(TestRangeWriteAPI, test_add_cluster_to_env) {
     EXPECT_CALL(*foobarcluster, set_type(range::graph::NodeIface::node_type::CLUSTER))
         .Times(2)
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::ENVIRONMENT));
-
-    EXPECT_CALL(*foobarcluster, commit())
-        .Times(2)
-        .WillRepeatedly(Return(true));
+//
+//    EXPECT_CALL(*foobarcluster, commit())
+//        .Times(2)
+//        .WillRepeatedly(Return(true));
 
     EXPECT_CALL(*foobar, add_forward_edge(SmartPtrEquals(foobarcluster), true))
         .Times(1)
@@ -268,9 +278,9 @@ TEST_F(TestRangeWriteAPI, test_add_cluster_to_cluster) {
         .Times(2)
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::ENVIRONMENT));
 
-    EXPECT_CALL(*foobarcluster, commit())
-        .Times(2)
-        .WillRepeatedly(Return(true));
+//    EXPECT_CALL(*foobarcluster, commit())
+//        .Times(2)
+//        .WillRepeatedly(Return(true));
 
     EXPECT_CALL(*bazcluster, add_forward_edge(SmartPtrEquals(foobarcluster), true))
         .Times(1)
@@ -411,10 +421,10 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster) {
     EXPECT_CALL(*host, set_type(range::graph::NodeIface::node_type::HOST))
         .Times(2)
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::HOST));
-
-    EXPECT_CALL(*host, commit())
-        .Times(2)
-        .WillRepeatedly(Return(true));
+//
+//    EXPECT_CALL(*host, commit())
+//        .Times(2)
+//        .WillRepeatedly(Return(true));
 
     EXPECT_CALL(*bazcluster, add_forward_edge(SmartPtrEquals(host), true))
         .Times(1)
@@ -657,9 +667,9 @@ TEST_F(TestRangeWriteAPI, test_add_host)
         .Times(2)
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::UNKNOWN));
 
-    EXPECT_CALL(*host, commit())
-        .Times(2)
-        .WillRepeatedly(Return(true));
+//    EXPECT_CALL(*host, commit())
+//        .Times(2)
+//        .WillRepeatedly(Return(true));
 
     ::range::RangeAPI_v1 api { cfg };
 

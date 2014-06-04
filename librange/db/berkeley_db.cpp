@@ -16,6 +16,7 @@
  */
 
 #include <string.h>
+#include <sstream>
 
 #include <boost/make_shared.hpp>
 
@@ -117,6 +118,55 @@ BerkeleyDB::~BerkeleyDB() noexcept
     }
 }
 
+
+//##############################################################################
+//##############################################################################
+bool
+BerkeleyDB::db_put(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string &key, const std::string &value)
+{
+    Db * hdl = map->get_db_handle();
+
+    char keybuf[key.size() + 1];
+    std::memset(keybuf, 0, sizeof(keybuf));
+    std::memcpy(keybuf, key.c_str(), key.size());
+
+    char databuf[value.size()];
+    std::memcpy(databuf, value.c_str(), value.size());
+
+    Dbt dbkey { keybuf, static_cast<uint32_t>(sizeof(keybuf)) };
+    Dbt dbdata { databuf, static_cast<uint32_t>(sizeof(databuf)) };
+
+    int ret = hdl->put(dbtxn, &dbkey, &dbdata, 0);
+    if(ret != 0) {
+        throw DatabaseEnvironmentException("Unable to write data for " + key);
+    }
+    return true;
+}
+
+//##############################################################################
+//##############################################################################
+std::string
+BerkeleyDB::db_get(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string &key) const
+{
+    Db * hdl = map->get_db_handle();
+
+    char keybuf[key.size() + 1];
+    std::memset(keybuf, 0, sizeof(keybuf));
+    std::memcpy(keybuf, key.c_str(), key.size());
+
+    Dbt dbkey { keybuf, static_cast<uint32_t>(sizeof(keybuf)) };
+    Dbt dbdata;
+
+    int ret = hdl->get(dbtxn, &dbkey, &dbdata, 0);
+    if(ret != 0 && ret != DB_NOTFOUND) {
+        std::stringstream s;
+        s << "Unable to read data for " << key << " : " << ret;
+        throw DatabaseEnvironmentException(s.str());
+    }
+
+    return std::string(static_cast<char*>(dbdata.get_data()), dbdata.get_size());
+}
+
 //##############################################################################
 //##############################################################################
 void
@@ -133,7 +183,7 @@ BerkeleyDB::init_graph_info()
 {
     if (!graph_info_map) {
         map_t * map = new map_t(graph_info, env_);
-        graph_info_map = std::move(std::unique_ptr<map_t>(map));
+        graph_info_map = boost::shared_ptr<map_t>(map);
     }
 
     for(auto name : listGraphInstances()) {
@@ -161,7 +211,7 @@ BerkeleyDB::listGraphInstances() const
     BerkeleyDBLock lock { const_cast<BerkeleyDB&>(*this), *graph_info_map,
                             false };
     GraphList listbuf;
-    std::string graph_list = (*graph_info_map)["graph_list"];
+    std::string graph_list = db_get(lock.txn(), graph_info_map, "graph_list"); //(*graph_info_map)["graph_list"];
     std::vector<std::string> list;
     if (graph_list.size() > 0) { 
         listbuf.ParseFromString(graph_list);
@@ -182,6 +232,9 @@ void
 BerkeleyDB::add_graph_instance(const std::string& name) {
     BerkeleyDBLock lock { *this, *graph_info_map, true };
 
+    auto g = getGraphInstance(name);
+    if(g) { return; }
+
     try {    
         graph_db_instances[name] = dbstl::open_db(env_, name.c_str(), DB_HASH,
                 DB_CREATE | DB_MULTIVERSION, DB_CHKSUM, 0664, lock.txn(), 0,
@@ -195,14 +248,14 @@ BerkeleyDB::add_graph_instance(const std::string& name) {
     }
 
     GraphList listbuf;
-    std::string graph_list = (*graph_info_map)["graph_list"];
+    std::string graph_list = db_get(lock.txn(), graph_info_map, "graph_list"); //(*graph_info_map)["graph_list"];
     if (graph_list.size() > 0) {
         listbuf.ParseFromString(graph_list);
     } 
 
     listbuf.add_name()->assign(name);
 
-    (*graph_info_map)["graph_list"] = listbuf.SerializeAsString();
+    db_put(lock.txn(), graph_info_map, "graph_list", listbuf.SerializeAsString());
 }
 
 //##############################################################################
@@ -224,6 +277,12 @@ BerkeleyDB::getGraphInstance(const std::string& name)
         return boost::make_shared<BerkeleyDBGraph>(name, *this);
     }
     return nullptr;
+}
+
+//##############################################################################
+//##############################################################################
+void shutdown() {
+    BerkeleyDB::s_shutdown();
 }
 
 

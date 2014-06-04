@@ -44,6 +44,8 @@ class MockGraph : public range::graph::GraphInterface {
         MOCK_METHOD1(create, node_t(const std::string&));
         MOCK_METHOD1(set_wanted_version, bool(uint64_t));
         MOCK_METHOD3(record_change, bool(record_type, const std::string&, uint64_t));
+        MOCK_METHOD1(update_versions, void(uint64_t));
+        MOCK_METHOD0(start_txn, boost::shared_ptr<range::graph::GraphTxnIface>(void));
 };
 
 #endif

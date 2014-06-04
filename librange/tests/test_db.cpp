@@ -69,8 +69,8 @@ class TestDB : public ::testing::Test {
                 std::string p { path + '/' + dentry->d_name };
                 unlink(p.c_str());
             }
-            rmdir(path.c_str());
-            closedir(d);
+            rmdir(path.c_str()); 
+            closedir(d); 
         }
 
         virtual void SetUp() override {
@@ -281,6 +281,33 @@ TEST_F(TestGraphDB, test_db_readwrite) {
     auto dataz = instance->get_record(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
     EXPECT_EQ(test_data, dataz);
 }
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_db_readwrite_with_null)
+{
+    std::cout << "path: " << path << std::endl;
+    std::string test_data { "hello\0\aFoobar\0\aThingy", 21 };
+    std::string test_key { "foobar\apad", 10 };
+
+    ASSERT_EQ(21, test_data.size());
+    ASSERT_EQ(10, test_key.size());
+
+    auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, test_key);
+
+    EXPECT_EQ(0, instance->version());
+    instance->write_record(range::db::GraphInstanceInterface::record_type::NODE, test_key, 5, test_data);
+    EXPECT_EQ(1, instance->version());
+
+    auto dataz = instance->get_record(range::db::GraphInstanceInterface::record_type::NODE, test_key);
+    EXPECT_EQ(test_data, dataz);
+/*
+    instance.reset();
+    backendp.reset();
+    range::db::BerkeleyDB::s_shutdown();
+    std::exit(1); */
+}
+
 
 //##############################################################################
 //##############################################################################
@@ -601,6 +628,28 @@ TEST_F(TestDBCursor, test_ten_after_first) {
 
     EXPECT_EQ(10, i);
 }
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDBCursor, test_fetch_existing) {
+    std::map<std::string, bool> found;
+    auto c = instance->get_cursor();
+    auto n = c->fetch("foo3");
+
+    EXPECT_NE(nullptr, n);
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestDBCursor, test_fetch_nonexisting) {
+    std::map<std::string, bool> found;
+    auto c = instance->get_cursor();
+    auto n = c->fetch("doesntexist");
+
+    EXPECT_EQ(nullptr, n);
+}
+
+
 
 
 

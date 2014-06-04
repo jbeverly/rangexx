@@ -30,7 +30,9 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
     : backend_(backend), txn_(0), iter_(0), readonly_(!read_write)
 {
     auto rmw = dbstl::ReadModifyWriteOption::no_read_modify_write();
-    int flags = DB_TXN_SYNC | DB_TXN_SNAPSHOT;
+    int flags = DB_TXN_SYNC; //| DB_TXN_SNAPSHOT;
+
+    std::cout << "locking " << ((readonly_) ? "readonly" : "read/write") << std::endl;
 
     if (read_write) {
         rmw = dbstl::ReadModifyWriteOption::read_modify_write();
@@ -81,8 +83,12 @@ BerkeleyDBLock::cleanup()
 void
 BerkeleyDBLock::unlock()
 {
-    iter_.close_cursor();
+    std::cout << "unlocking " << std::endl;
     dbstl::commit_txn(backend_.env_, txn_, 0);
+    iter_.close_cursor();
+    if(!readonly_) {
+        std::cout << "committed to database" << std::endl;
+    }
     //cleanup();
 }
 

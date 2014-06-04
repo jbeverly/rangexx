@@ -91,7 +91,7 @@ class BerkeleyDB : public BackendInterface {
 
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBLock>> lock_table; 
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBLock>>& weak_table; 
-        std::unique_ptr<map_t> graph_info_map;
+        boost::shared_ptr<map_t> graph_info_map;
         std::unordered_map<std::string, Db*> graph_db_instances;
         std::unordered_map<std::string, boost::shared_ptr<map_t>> graph_map_instances;
 
@@ -102,6 +102,8 @@ class BerkeleyDB : public BackendInterface {
 
         void init_graph_info();
         void add_graph_instance(const std::string& name);
+        bool db_put(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string &key, const std::string &value);
+        std::string db_get(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string &key) const;
 };
 
 } // namespace db

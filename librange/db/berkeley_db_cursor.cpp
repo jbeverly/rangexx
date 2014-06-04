@@ -19,6 +19,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 #include "berkeley_db.h"
+#include "berkeley_db_lock.h"
 #include "berkeley_db_cursor.h"
 #include "pbuff_node.h"
 
@@ -28,9 +29,27 @@ namespace db {
 
 const std::string BerkeleyDBCursor::node_prefix = BerkeleyDBGraph::key_prefix(BerkeleyDBGraph::record_type::NODE);
 
+//##############################################################################
+//##############################################################################
 static inline std::string
 unprefix(std::string prefix, std::string name) {
     return name.substr(prefix.length(), std::string::npos);
+}
+
+//##############################################################################
+//##############################################################################
+BerkeleyDBCursor::BerkeleyDBCursor(const_graph_sptr graph_instance)
+    : graph_(graph_instance), iter(), iterator_valid(false)
+{
+    boost::shared_ptr<BerkeleyDBGraph> mutable_graph
+        = boost::const_pointer_cast<BerkeleyDBGraph>(graph_);
+
+    auto lit = graph_->backend_.lock_table.find(std::this_thread::get_id());
+    if(lit == graph_->backend_.lock_table.end()) {
+        lock = graph_->read_lock(decltype(graph_)::element_type::record_type::UNKNOWN, "");
+    } else {
+        lock = boost::dynamic_pointer_cast<GraphInstanceLock>(lit->second.lock());
+    }
 }
 
 //##############################################################################
@@ -49,10 +68,12 @@ BerkeleyDBCursor::get_const_map() const
 BerkeleyDBCursor::node_t
 BerkeleyDBCursor::fetch(const std::string& name) const 
 {
+    std::cout << "fetching node " << name << std::endl;
     const map_t& map = get_const_map();
 
     auto found = map.rbegin(dbstl::BulkRetrievalOption::bulk_retrieval(4096), false);
     if (found.move_to(node_prefix + name) != 0) {
+        std::cout << "node " << name << " NOT found in const" << std::endl;
         return nullptr;
     }
 
@@ -66,7 +87,11 @@ BerkeleyDBCursor::fetch(const std::string& name) const
         // They do their own locking and protection. This iterator is invalidated if you perform any
         // mutations on an iterated node
         boost::shared_ptr<BerkeleyDBGraph> mutable_graph = boost::const_pointer_cast<BerkeleyDBGraph>(graph_);
-        return boost::make_shared<ProtobufNode>(unprefix(node_prefix, name), mutable_graph);
+        std::cout << "fetched " << name << std::endl;
+        auto n = boost::make_shared<ProtobufNode>(name, mutable_graph);
+        std::cout << "node thinks its name is " << n->name() << std::endl;
+        std::cout << "node's version" << n->version() << std::endl;
+        return n;
     }
     iterator_valid = false;
     iter = map.end();

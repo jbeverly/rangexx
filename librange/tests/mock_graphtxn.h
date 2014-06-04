@@ -15,35 +15,19 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _RANGE_DB_CONFIG_INTERFACE_H
-#define _RANGE_DB_CONFIG_INTERFACE_H
+#ifndef _RANGE_TESTS_MOCK_GRAPH_TXN_H
+#define _RANGE_TESTS_MOCK_GRAPH_TXN_H
 
-#include <string>
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-namespace range {
-namespace db {
+#include "../graph/graph_interface.h"
 
-class ConfigIface {
+//##############################################################################
+//##############################################################################
+class MockGraphTxn : public range::graph::GraphTxnIface {
     public:
-        ConfigIface() : db_home_("/var/lib/rangexx"), cache_size_(67108864) { }
-        ConfigIface(std::string db_home, size_t cache_size) 
-            : db_home_(db_home), cache_size_(cache_size)
-        {
-        }
-        virtual ~ConfigIface() = default;
-
-        virtual const std::string& db_home() const { return db_home_; }
-        virtual size_t cache_size() const { return cache_size_; }
-
-    private:
-        std::string db_home_;
-        size_t cache_size_;
-
+        MOCK_METHOD0(abort, void(void));
 };
 
-
-} // namespace db
-} // namespace range
-
 #endif
-

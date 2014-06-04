@@ -103,36 +103,39 @@ GraphDB::node_t
 GraphDB::get_node(const std::string& name) const
 {
     auto n = get_cursor()->fetch(name);
-    if (n) {
-        uint64_t this_version = this->version();
+    if(!n) {
+        return nullptr;
+    }
 
-        uint64_t cmp_version = (static_cast<int64_t>(wanted_version_) == -1)
-                                    ? this_version : wanted_version_;
+    uint64_t this_version = this->version();
+    uint64_t cmp_version = (static_cast<int64_t>(wanted_version_) == -1)
+        ? this_version : wanted_version_;
 
-        uint64_t last_version = -1;
-        auto g_versions = n->graph_versions();
+    uint64_t last_version = -1;
+    auto g_versions = n->graph_versions();
 
-        for (uint64_t node_version : boost::adaptors::reverse(g_versions)) {
-            if (node_version == cmp_version) {
-                if (cmp_version != this_version) {
-                    auto it = node_version_map.find(name);
-                    if (it != node_version_map.end()) {
-                        n->set_wanted_version(it->second);
-                    }
+    std::cout << "node has " << g_versions.size() << " versions known to it" << std::endl;
+    std::cout << "wanted version: " << cmp_version << std::endl;
+    for (uint64_t node_version : boost::adaptors::reverse(g_versions)) {
+        std::cout << "node `" << name << "' has version: " << node_version << std::endl;
+        if (node_version == cmp_version) {
+            if (cmp_version != this_version) {
+                auto it = node_version_map.find(name);
+                if (it != node_version_map.end()) {
+                    n->set_wanted_version(it->second);
                 }
-                return n;
             }
-            if (node_version < cmp_version) {                                   // we've gone too far back, bail out
-                return nullptr;
-            }
-            last_version = node_version;
+            return n;
         }
-        if (last_version > cmp_version) {
+        if (node_version < cmp_version) {                                   // we've gone too far back, bail out
             return nullptr;
         }
-        return n;
+        last_version = node_version;
     }
-    return nullptr;
+    if (last_version > cmp_version) {
+        return nullptr;
+    }
+    return n;
 }
 
 //##############################################################################
@@ -159,8 +162,6 @@ GraphDB::iterator_t
 GraphDB::end()
 {
     return iterator_t(*this, nullptr);
-    /*cursor_t c = instance_->get_cursor();
-    return iterator_t(*this, c->next(c->last())); */
 }
 
 //##############################################################################
@@ -169,8 +170,6 @@ GraphDB::const_iterator_t
 GraphDB::cend() const
 {
     return const_iterator_t(*this, nullptr);
-    /* cursor_t c = instance_->get_cursor();
-    return const_iterator_t(*this, c->next(c->last())); */
 }
 
 //##############################################################################
@@ -179,22 +178,82 @@ GraphDB::node_t
 GraphDB::create(const std::string& name)
 {
     auto lock = instance_->write_lock(db::GraphInstanceInterface::record_type::NODE, name);
-    auto txn = instance_->start_txn();
+    auto node = this->node_factory_->createNode(name, instance_);
 
-    node_t node =  this->node_factory_->createNode(name, instance_);
-    for (uint64_t node_version : boost::adaptors::reverse(node->graph_versions())) {
+    if(has_version_or_higher(this->version(), node)) {
+        return nullptr;
+    }
+    /*
+    auto vers = node->graph_versions();
+    std::cout << "graph version is " << this->version() << std::endl;
+    std::cout << "node has " << vers.size() << " versions known to it" << std::endl;
+    for (uint64_t node_version : boost::adaptors::reverse(vers)) {
+        std::cout << "node has version: " << node_version << std::endl;
         if (node_version < this->version())
             break;
         if (this->version() == node_version) {
             return nullptr;
         }
-    }
+    } */
+    auto txn = instance_->start_txn();
+
     if (node->version() == 0) {
         node->commit();
     }
+    node->add_graph_version(this->version() + 1);
+    /*
     std::for_each(std::begin(*this), std::end(*this), 
             [this, txn](graph::NodeIface& v) { v.add_graph_version(this->version() + 1); txn->flush(); });
+    */
     return node;
+}
+
+//##############################################################################
+//##############################################################################
+bool
+GraphDB::has_version_or_higher(uint64_t wanted_version, node_t node)
+{
+    auto vers = node->graph_versions();
+    std::cout << "graph version is " << this->version() << std::endl;
+    std::cout << "node has " << vers.size() << " versions known to it" << std::endl;
+    for (uint64_t node_version : boost::adaptors::reverse(vers)) {
+        std::cout << "node has version: " << node_version << std::endl;
+        if(node_version > wanted_version) {
+            return true;
+        }
+        if (node_version < wanted_version) {
+            //return false;
+        }
+        if (this->version() == node_version) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+//##############################################################################
+//##############################################################################
+void
+GraphDB::update_versions(uint64_t prior_version)
+{
+    auto lock = instance_->write_lock(db::GraphInstanceInterface::record_type::NODE_META, "");
+    auto txn = instance_->start_txn();
+    for (auto &n : *this) {
+        if(has_version_or_higher(prior_version, boost::shared_ptr<NodeIface>(&n, [](void *) { return nullptr; }))) {
+            bool removed_node = false;
+            for(auto rn : removed_nodes) {
+                if (rn->name() == n.name()) {
+                    removed_node = true;
+                    break;
+                }
+            }
+            if(!removed_node) {
+                n.add_graph_version(this->version() + 1);
+            }
+        }
+    }
+    removed_nodes.clear();
 }
 
 //##############################################################################
@@ -252,6 +311,14 @@ GraphDB::set_wanted_version(uint64_t ver)
 
 //##############################################################################
 //##############################################################################
+boost::shared_ptr<GraphTxnIface>
+GraphDB::start_txn()
+{
+    return boost::make_shared<GraphTxn>(shared_from_this(), instance_);
+}
+
+//##############################################################################
+//##############################################################################
 GraphDB::node_t
 GraphDB::remove(node_t node)
 {
@@ -276,7 +343,9 @@ GraphDB::remove(node_t node)
         affected->remove_reverse_edge(node, false);
     }
 
-    std::for_each(std::begin(*this), std::end(*this),
+    removed_nodes.push_back(node);
+
+    /* std::for_each(std::begin(*this), std::end(*this),
             [this, txn, node](range::graph::NodeIface& v) { 
                 if (node->name() != v.name()) { 
                     v.add_graph_version(this->version() + 1);
@@ -284,6 +353,7 @@ GraphDB::remove(node_t node)
                 }
             }
         );
+    */
 
     return node;
 }
