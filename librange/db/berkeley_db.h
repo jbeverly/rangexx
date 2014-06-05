@@ -94,6 +94,7 @@ class BerkeleyDB : public BackendInterface {
         boost::shared_ptr<map_t> graph_info_map;
         std::unordered_map<std::string, Db*> graph_db_instances;
         std::unordered_map<std::string, boost::shared_ptr<map_t>> graph_map_instances;
+        std::unordered_map<std::string, boost::shared_ptr<BerkeleyDBGraph>> graph_bdbgraph_instances;
 
         static const uint32_t env_open_flags = DB_CREATE | DB_INIT_MPOOL 
                     | DB_INIT_LOCK | DB_INIT_TXN | DB_RECOVER | DB_REGISTER |

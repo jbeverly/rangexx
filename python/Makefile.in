@@ -133,17 +133,12 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 librange_python_la_DEPENDENCIES =  \
 	$(top_builddir)/librange/librange.la
-am_librange_python_la_OBJECTS = librange_python_la-python.lo \
-	librange_python_la-python_visitor.lo
+am_librange_python_la_OBJECTS = python.lo python_visitor.lo
 librange_python_la_OBJECTS = $(am_librange_python_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-librange_python_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(AM_CXXFLAGS) $(CXXFLAGS) $(librange_python_la_LDFLAGS) \
-	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -371,13 +366,12 @@ AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 #SUBDIRS = tests
 AM_DEFAULT_SOURCE_EXT = .cpp
+AM_CPPFLAGS_G = $(CPPFLAGS)
+AM_LDFLAGS_G = $(LDFLAGS)
+AM_LIBADD_G = $(LIBADD)
+AM_CPPFLAGS = @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ @PYTHON_CPPFLAGS@ @BOOST_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ $(AM_CPPFLAGS_G)
+AM_LDFLAGS = @DB_CXX_LDFLAGS@  @DB_STL_LDFLAGS@ @PYTHON_LDFLAGS@ -l@BOOST_PYTHON_LIB@ @BOOST_LDFLAGS@ @PROTOBUF_LDFLAGS@  $(AM_LDFLAGS_G)
 
-#AM_CPPFLAGS = @PYTHON_CPPFLAGS@
-#AM_LDFLAGS = @PYTHON_LDFLAGS@ -l@BOOST_PYTHON_LIB@
-
-#AM_CPPFLAGS_G = $(CPPFLAGS)
-#AM_LDFLAGS_G = $(LDFLAGS)
-#AM_LIBADD_G = $(LIBADD)
 #
 #AM_CPPFLAGS = $(AM_CPPFLAGS_G)
 #AM_LDFLAGS  = $(AM_LDFLAGS_G)
@@ -385,8 +379,9 @@ AM_DEFAULT_SOURCE_EXT = .cpp
 LDADD = $(top_builddir)/librange/librange.la @BOOST_PYTHON_LIB@
 LIBADD = $(top_builddir)/librange/librange.la @BOOST_PYTHON_LIB@
 lib_LTLIBRARIES = librange_python.la
-librange_python_la_CPPFLAGS = @PYTHON_CPPFLAGS@
-librange_python_la_LDFLAGS = @PYTHON_LDFLAGS@ -l@BOOST_PYTHON_LIB@
+
+#librange_python_la_CPPFLAGS = @PYTHON_CPPFLAGS@ @DB_STL_CPPFLAGS@
+#librange_python_la_LDFLAGS = @PYTHON_LDFLAGS@ -l@BOOST_PYTHON_LIB@
 librange_python_la_SOURCES = python.cpp python_visitor.cpp
 librange_python_la_LIBADD = $(top_builddir)/librange/librange.la
 all: all-am
@@ -460,7 +455,7 @@ clean-libLTLIBRARIES:
 	}
 
 librange_python.la: $(librange_python_la_OBJECTS) $(librange_python_la_DEPENDENCIES) $(EXTRA_librange_python_la_DEPENDENCIES) 
-	$(AM_V_CXXLD)$(librange_python_la_LINK) -rpath $(libdir) $(librange_python_la_OBJECTS) $(librange_python_la_LIBADD) $(LIBS)
+	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(librange_python_la_OBJECTS) $(librange_python_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -468,8 +463,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librange_python_la-python.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librange_python_la-python_visitor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/python.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/python_visitor.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -494,20 +489,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
-
-librange_python_la-python.lo: python.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librange_python_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT librange_python_la-python.lo -MD -MP -MF $(DEPDIR)/librange_python_la-python.Tpo -c -o librange_python_la-python.lo `test -f 'python.cpp' || echo '$(srcdir)/'`python.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librange_python_la-python.Tpo $(DEPDIR)/librange_python_la-python.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='python.cpp' object='librange_python_la-python.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librange_python_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o librange_python_la-python.lo `test -f 'python.cpp' || echo '$(srcdir)/'`python.cpp
-
-librange_python_la-python_visitor.lo: python_visitor.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librange_python_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT librange_python_la-python_visitor.lo -MD -MP -MF $(DEPDIR)/librange_python_la-python_visitor.Tpo -c -o librange_python_la-python_visitor.lo `test -f 'python_visitor.cpp' || echo '$(srcdir)/'`python_visitor.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/librange_python_la-python_visitor.Tpo $(DEPDIR)/librange_python_la-python_visitor.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='python_visitor.cpp' object='librange_python_la-python_visitor.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librange_python_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o librange_python_la-python_visitor.lo `test -f 'python_visitor.cpp' || echo '$(srcdir)/'`python_visitor.cpp
 
 mostlyclean-libtool:
 	-rm -f *.lo

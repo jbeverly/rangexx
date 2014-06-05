@@ -72,7 +72,7 @@ PythonVisitor::operator()(const RangeNumber &num) const
 boost::python::object
 PythonVisitor::operator()(const RangeString &str) const
 {
-    return boost::python::object(boost::python::str("\"" + str.value + "\""));
+    return boost::python::object(boost::python::str(str.value));
 }
 
 //##############################################################################

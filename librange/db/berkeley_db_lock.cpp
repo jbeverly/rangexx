@@ -86,6 +86,7 @@ BerkeleyDBLock::unlock()
     std::cout << "unlocking " << std::endl;
     dbstl::commit_txn(backend_.env_, txn_, 0);
     iter_.close_cursor();
+    backend_.graph_bdbgraph_instances.clear();
     if(!readonly_) {
         std::cout << "committed to database" << std::endl;
     }
@@ -115,6 +116,9 @@ BerkeleyDBLock::~BerkeleyDBLock()
             unlock();
         } catch(...) { }
     }
+    try {
+        backend_.graph_bdbgraph_instances.clear();
+    } catch(...) { }
 }
 
 

@@ -41,12 +41,12 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
         weak_table(lock_table), graph_info_map(nullptr),  
         graph_db_instances(), graph_map_instances()
 { 
-    try { 
+    /* try { 
         dbstl::dbstl_startup();
     } catch(dbstl::DbstlException& e) {
         throw DatabaseEnvironmentException(
                 std::string("Unable to start dbstl: ") + e.what());
-    }
+    } */
 
     try {
         env_ = dbstl::open_env(conf_.db_home().c_str(), env_set_flags,
@@ -274,7 +274,11 @@ BerkeleyDB::getGraphInstance(const std::string& name)
 {
     auto iter = graph_db_instances.find(name);
     if (iter != graph_db_instances.end()) {
-        return boost::make_shared<BerkeleyDBGraph>(name, *this);
+        auto g_it = graph_bdbgraph_instances.find(name);
+        if(g_it == graph_bdbgraph_instances.end()) {
+            graph_bdbgraph_instances[name] = boost::make_shared<BerkeleyDBGraph>(name, *this);
+        } 
+        return graph_bdbgraph_instances[name];
     }
     return nullptr;
 }

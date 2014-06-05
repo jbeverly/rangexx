@@ -114,7 +114,8 @@ class BerkeleyDBGraph
 
         std::string name_;
         BerkeleyDB& backend_;
-        //uint64_t wanted_version_;
+        mutable uint64_t current_version_;
+        mutable bool version_pending_;
 
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBTxn>> transaction_table; 
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBTxn>>& weak_table; 
@@ -122,7 +123,7 @@ class BerkeleyDBGraph
         //######################################################################
         DbEnv * env(void); 
         void inculcate_change(std::thread::id id);
-        changelist_t commit_txn(std::thread::id);
+        changelist_t commit_txn(std::thread::id = std::this_thread::get_id());
 
         //######################################################################
         static std::string key_prefix(record_type type); 

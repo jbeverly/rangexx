@@ -15,7 +15,11 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <mutex>
+
 #include <boost/python.hpp>
+
+#include <dbstl_exception.h>
 
 #include "../librange/core/api.h"
 #include "python_visitor.h"
@@ -30,26 +34,26 @@ class APIWrap
 {
     public:
         //######################################################################
-        APIWrap(std::string configfile) : api_(configfile) { }
+        APIWrap(std::string configfile) : api_(new RangeAPI_v1(configfile)) { }
 
         //######################################################################
         object all_clusters(const std::string &env_name, uint64_t version=-1) const
         {
-            RangeStruct top = api_.all_clusters(env_name, version);
+            RangeStruct top = api_->all_clusters(env_name, version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
         //######################################################################
         object all_environments(uint64_t version=-1) const
         {
-            RangeStruct top = api_.all_environments(version);
+            RangeStruct top = api_->all_environments(version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
         //######################################################################
         object all_hosts(uint64_t version=-1) const
         {
-            RangeStruct top = api_.all_hosts(version);
+            RangeStruct top = api_->all_hosts(version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
@@ -57,7 +61,7 @@ class APIWrap
         object expand_range_expression(const std::string &env_name,
                 const std::string &expression, uint64_t version=-1) const
         {
-            RangeStruct top = api_.expand_range_expression(env_name, expression, version);
+            RangeStruct top = api_->expand_range_expression(env_name, expression, version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
@@ -65,7 +69,7 @@ class APIWrap
         object simple_expand(const std::string &env_name, const std::string &node_name,
                 uint64_t version=-1, node_type type=node_type::UNKNOWN) const
         {
-            RangeStruct top = api_.simple_expand(env_name, node_name, version, type);
+            RangeStruct top = api_->simple_expand(env_name, node_name, version, type);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
@@ -73,14 +77,14 @@ class APIWrap
         object simple_expand_cluster(const std::string &env_name, const std::string &cluster_name,
                 uint64_t version=-1) const
         {
-            RangeStruct top = api_.simple_expand_cluster(env_name, cluster_name, version);
+            RangeStruct top = api_->simple_expand_cluster(env_name, cluster_name, version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
         
         //######################################################################
         object simple_expand_env(const std::string &env_name, uint64_t version=-1) const
         {
-            RangeStruct top = api_.simple_expand_env(env_name, version);
+            RangeStruct top = api_->simple_expand_env(env_name, version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
         
@@ -88,7 +92,7 @@ class APIWrap
         object get_keys(const std::string &env_name, const std::string &node_name,
                 uint64_t version=-1) const
         {
-            RangeStruct top = api_.get_keys(env_name, node_name, version);
+            RangeStruct top = api_->get_keys(env_name, node_name, version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
         
@@ -96,7 +100,7 @@ class APIWrap
         object fetch_key(const std::string &env_name, const std::string &node_name,
                 const std::string &key, uint64_t version=-1) const
         {
-            RangeStruct top = api_.fetch_key(env_name, node_name, key, version);
+            RangeStruct top = api_->fetch_key(env_name, node_name, key, version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
@@ -104,7 +108,7 @@ class APIWrap
         object fetch_all_keys(const std::string &env_name,
                 const std::string &node_name, uint64_t version=-1) const
         {
-            RangeStruct top = api_.fetch_all_keys(env_name, node_name, version);
+            RangeStruct top = api_->fetch_all_keys(env_name, node_name, version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
@@ -114,7 +118,7 @@ class APIWrap
                 uint64_t version=-1,
                 size_t depth=std::numeric_limits<size_t>::max()) const 
         {
-            RangeStruct top = api_.expand(env_name, node_name, version, depth);
+            RangeStruct top = api_->expand(env_name, node_name, version, depth);
             return boost::apply_visitor(PythonVisitor(), top);
         }
         
@@ -124,7 +128,7 @@ class APIWrap
                 uint64_t version=-1,
                 size_t depth=std::numeric_limits<size_t>::max()) const 
         {
-            RangeStruct top = api_.expand_cluster(env_name, cluster_name, version, depth);
+            RangeStruct top = api_->expand_cluster(env_name, cluster_name, version, depth);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
@@ -132,7 +136,7 @@ class APIWrap
         object expand_env( const std::string &env_name, uint64_t version=-1,
                 size_t depth=std::numeric_limits<size_t>::max()) const
         {
-            RangeStruct top = api_.expand_env(env_name, version, depth);
+            RangeStruct top = api_->expand_env(env_name, version, depth);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
@@ -141,7 +145,7 @@ class APIWrap
                             const std::string &node_name,
                             uint64_t version=-1) const
         {
-            RangeStruct top = api_.get_clusters(env_name, node_name, version);
+            RangeStruct top = api_->get_clusters(env_name, node_name, version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
@@ -151,7 +155,7 @@ class APIWrap
                                              const std::string &key,
                                              uint64_t version=-1) const
         {
-            RangeStruct top = api_.bfs_search_parents_for_first_key(env_name, node_name, key, version);
+            RangeStruct top = api_->bfs_search_parents_for_first_key(env_name, node_name, key, version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
@@ -161,7 +165,7 @@ class APIWrap
                                              const std::string &key,
                                              uint64_t version=-1) const
         {
-            RangeStruct top = api_.dfs_search_parents_for_first_key(env_name, node_name, key, version);
+            RangeStruct top = api_->dfs_search_parents_for_first_key(env_name, node_name, key, version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
@@ -171,7 +175,7 @@ class APIWrap
                                     const std::string &node2_name,
                                     uint64_t version=-1) const
         {
-            RangeStruct top = api_.nearest_common_ancestor(env_name, node1_name, node2_name, version);
+            RangeStruct top = api_->nearest_common_ancestor(env_name, node1_name, node2_name, version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
@@ -179,14 +183,14 @@ class APIWrap
         object environment_topological_sort(const std::string &env_name,
                                             uint64_t version=-1) const
         {
-            RangeStruct top = api_.environment_topological_sort(env_name, version);
+            RangeStruct top = api_->environment_topological_sort(env_name, version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
         //######################################################################
         object find_orphaned_nodes(uint64_t version=-1) const
         {
-            RangeStruct top = api_.find_orphaned_nodes(version);
+            RangeStruct top = api_->find_orphaned_nodes(version);
             return boost::apply_visitor(PythonVisitor(), top);
         }
 
@@ -197,27 +201,27 @@ class APIWrap
         //######################################################################
         bool create_env(const std::string &env_name) 
         {
-            return api_.create_env(env_name);
+            return api_->create_env(env_name);
         }
 
         //######################################################################
         bool remove_env(const std::string &env_name)
         {
-            return api_.remove_env(env_name);
+            return api_->remove_env(env_name);
         }
 
         //######################################################################
         bool add_cluster_to_env(const std::string &env_name,
                                         const std::string &cluster_name)
         {
-            return api_.add_cluster_to_env(env_name, cluster_name);
+            return api_->add_cluster_to_env(env_name, cluster_name);
         }
 
         //######################################################################
         bool remove_cluster_from_env(const std::string &env_name,
                                         const std::string &cluster_name)
         {
-            return api_.remove_cluster_from_env(env_name, cluster_name);
+            return api_->remove_cluster_from_env(env_name, cluster_name);
         }
 
 
@@ -226,7 +230,7 @@ class APIWrap
                                             const std::string &parent_cluster,
                                             const std::string &child_cluster)
         {
-            return api_.add_cluster_to_cluster(env_name, parent_cluster, child_cluster);
+            return api_->add_cluster_to_cluster(env_name, parent_cluster, child_cluster);
         }
 
 
@@ -235,14 +239,14 @@ class APIWrap
                                                  const std::string &parent_cluster,
                                                  const std::string &child_cluster)
         {
-            return api_.remove_cluster_from_cluster(env_name, parent_cluster, child_cluster);
+            return api_->remove_cluster_from_cluster(env_name, parent_cluster, child_cluster);
         }
 
         //######################################################################
         bool remove_cluster(const std::string &env_name,
                                     const std::string &cluster_name)
         {
-            return api_.remove_cluster(env_name, cluster_name);
+            return api_->remove_cluster(env_name, cluster_name);
         }
 
 
@@ -251,7 +255,7 @@ class APIWrap
                                          const std::string &parent_cluster,
                                          const std::string &hostname)
         {
-            return api_.add_host_to_cluster(env_name, parent_cluster, hostname);
+            return api_->add_host_to_cluster(env_name, parent_cluster, hostname);
         }
 
 
@@ -260,20 +264,20 @@ class APIWrap
                                               const std::string &parent_cluster,
                                               const std::string &hostname)
         {
-            return api_.remove_host_from_cluster(env_name, parent_cluster, hostname);
+            return api_->remove_host_from_cluster(env_name, parent_cluster, hostname);
         }
 
         //######################################################################
         bool add_host(const std::string &hostname)
         {
-            return api_.add_host(hostname);
+            return api_->add_host(hostname);
         }
 
         //######################################################################
         bool remove_host(const std::string &env_name,
                                  const std::string &hostname)
         {
-            return api_.remove_host(env_name, hostname);
+            return api_->remove_host(env_name, hostname);
         }
 
 
@@ -283,7 +287,7 @@ class APIWrap
                                         const std::string &key,
                                         const std::string &value)
         {
-            return api_.add_node_key_value(env_name, node_name, key, value);
+            return api_->add_node_key_value(env_name, node_name, key, value);
         }
 
         //######################################################################
@@ -292,7 +296,7 @@ class APIWrap
                                         const std::string &key,
                                         const std::string &value)
         {
-            return api_.remove_node_key_value(env_name, node_name, key, value);
+            return api_->remove_node_key_value(env_name, node_name, key, value);
         }
 
         //######################################################################
@@ -300,7 +304,7 @@ class APIWrap
                                           const std::string &node_name,
                                           const std::string &key)
         {
-            return api_.remove_key_from_node(env_name, node_name, key);
+            return api_->remove_key_from_node(env_name, node_name, key);
         }
 
         //######################################################################
@@ -308,7 +312,7 @@ class APIWrap
                                              const std::string &node_name,
                                              const std::string &dependency_name)
         {
-            return api_.add_node_env_dependency(env_name, node_name, dependency_name);
+            return api_->add_node_env_dependency(env_name, node_name, dependency_name);
         }
 
         //######################################################################
@@ -316,7 +320,7 @@ class APIWrap
                                                 const std::string &node_name,
                                                 const std::string &dependency_name)
         {
-            return api_.remove_node_env_dependency(env_name, node_name, dependency_name);
+            return api_->remove_node_env_dependency(env_name, node_name, dependency_name);
         }
 
         //######################################################################
@@ -325,7 +329,7 @@ class APIWrap
                                              const std::string &dependency_env,
                                              const std::string &dependency_name)
         {
-            return api_.add_node_ext_dependency(env_name, node_name, dependency_env, dependency_name);
+            return api_->add_node_ext_dependency(env_name, node_name, dependency_env, dependency_name);
         }
 
         //######################################################################
@@ -334,11 +338,11 @@ class APIWrap
                                                 const std::string &dependency_env,
                                                 const std::string &dependency_name)
         {
-            return api_.remove_node_ext_dependency(env_name, node_name, dependency_env, dependency_name);
+            return api_->remove_node_ext_dependency(env_name, node_name, dependency_env, dependency_name);
         }
 
     private:
-        RangeAPI_v1 api_;
+        boost::shared_ptr<RangeAPI_v1> api_;
 
 };
 
@@ -366,8 +370,8 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(overloads_nearest_common_ancestor, neares
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(overloads_environment_topological_sort, environment_topological_sort, 1, 2);
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(overloads_find_orphaned_nodes, find_orphaned_nodes, 0, 1);
 
-
 BOOST_PYTHON_MODULE(librange_python) {
+
     class_<APIWrap>("Range", init<std::string>())
         .def("all_clusters", &APIWrap::all_clusters, overloads_all_clusters())
         .def("all_environments", &APIWrap::all_environments, overloads_all_environments())

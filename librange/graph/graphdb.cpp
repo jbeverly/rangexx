@@ -183,28 +183,12 @@ GraphDB::create(const std::string& name)
     if(has_version_or_higher(this->version(), node)) {
         return nullptr;
     }
-    /*
-    auto vers = node->graph_versions();
-    std::cout << "graph version is " << this->version() << std::endl;
-    std::cout << "node has " << vers.size() << " versions known to it" << std::endl;
-    for (uint64_t node_version : boost::adaptors::reverse(vers)) {
-        std::cout << "node has version: " << node_version << std::endl;
-        if (node_version < this->version())
-            break;
-        if (this->version() == node_version) {
-            return nullptr;
-        }
-    } */
     auto txn = instance_->start_txn();
 
     if (node->version() == 0) {
         node->commit();
     }
-    node->add_graph_version(this->version() + 1);
-    /*
-    std::for_each(std::begin(*this), std::end(*this), 
-            [this, txn](graph::NodeIface& v) { v.add_graph_version(this->version() + 1); txn->flush(); });
-    */
+    node->add_graph_version(this->version());
     return node;
 }
 
@@ -214,6 +198,7 @@ bool
 GraphDB::has_version_or_higher(uint64_t wanted_version, node_t node)
 {
     auto vers = node->graph_versions();
+    std::cout << "wanted version is " << wanted_version << std::endl;
     std::cout << "graph version is " << this->version() << std::endl;
     std::cout << "node has " << vers.size() << " versions known to it" << std::endl;
     for (uint64_t node_version : boost::adaptors::reverse(vers)) {
@@ -221,11 +206,11 @@ GraphDB::has_version_or_higher(uint64_t wanted_version, node_t node)
         if(node_version > wanted_version) {
             return true;
         }
-        if (node_version < wanted_version) {
-            //return false;
-        }
-        if (this->version() == node_version) {
+        if (node_version == wanted_version) {
             return true;
+        }
+        if (node_version < wanted_version) {
+            return false;
         }
     }
     return false;
@@ -244,13 +229,34 @@ GraphDB::update_versions(uint64_t prior_version)
             bool removed_node = false;
             for(auto rn : removed_nodes) {
                 if (rn->name() == n.name()) {
+                    std::cout << "node " << n.name() << " is marked for removal" << std::endl;
                     removed_node = true;
                     break;
                 }
             }
             if(!removed_node) {
-                n.add_graph_version(this->version() + 1);
+                std::cout << "while adding graph version to " << n.name() << std::endl;
+                std::cout << n.name() << " has the following forward edges:" << std::endl;
+                for ( auto e : n.forward_edges() ) {
+                    std::cout << "    " << e->name() << std::endl;
+                }
+                std::cout << n.name() << " has the following reverse edges:" << std::endl;
+                for ( auto e : n.forward_edges() ) {
+                    std::cout << "    " << e->name() << std::endl;
+                }
+                std::cout << n.name() << " has the following graph versions before:" << std::endl;
+                for ( auto e : n.graph_versions() ) {
+                    std::cout << "    " << e << std::endl;
+                }
+                n.add_graph_version(this->version()); // + 1);
+                n.commit();
+                std::cout << n.name() << " has the following graph versions after:" << std::endl;
+                for ( auto e : n.graph_versions() ) {
+                    std::cout << "    " << e << std::endl;
+                }
             }
+        } else {
+            std::cout << "node " << n.name() << " failed has_version_or_higher(" << prior_version << ",...)" << std::endl;
         }
     }
     removed_nodes.clear();

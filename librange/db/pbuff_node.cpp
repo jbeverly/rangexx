@@ -371,6 +371,8 @@ ProtobufNode::add_forward_edge(node_t other, bool update_other_reverse_edge)
             }
         }
 
+        std::cout << "Adding forward edge from " << name_ << " to " << other->name() << std::endl;
+
         uint64_t cmp_version = info.list_version();
         uint64_t new_version = cmp_version + 1;
 
@@ -381,12 +383,12 @@ ProtobufNode::add_forward_edge(node_t other, bool update_other_reverse_edge)
         edge->add_versions(new_version);
 
         update_all_edge_versions(info, cmp_version, new_version);
+        update_tag_versions(info, cmp_version, new_version);
 
         if(!write_record(name_, info, instance_)) {
+            std::cout << "Unable to add forward edge from " << name_ << " to " << other->name() << std::endl;
             return false;
         }
-
-        update_tag_versions(info, cmp_version, new_version);
     }
 
     if (update_other_reverse_edge) {
@@ -412,6 +414,8 @@ ProtobufNode::add_reverse_edge(node_t other, bool update_other_forward_edge)
         }
 
 
+        std::cout << "Adding reverse edge from " << name_ << " to " << other->name() << std::endl;
+
         uint64_t cmp_version = info.list_version();
         uint64_t new_version = cmp_version + 1;
 
@@ -422,12 +426,12 @@ ProtobufNode::add_reverse_edge(node_t other, bool update_other_forward_edge)
         edge->add_versions(new_version);
 
         update_all_edge_versions(info, cmp_version, new_version);
+        update_tag_versions(info, cmp_version, new_version);
 
         if(!write_record(name_, info, instance_)) {
+            std::cout << "Unable to add reverse edge from " << name_ << " to " << other->name() << std::endl;
             return false;
         }
-
-        update_tag_versions(info, cmp_version, new_version);
     }
 
     if (update_other_forward_edge) { 
@@ -698,6 +702,10 @@ ProtobufNode::add_graph_version(uint64_t version)
     for(int i = info.graph_versions_size() - 1; i >= 0; --i) {
         if (version == info.graph_versions(i)) {
             std::cout << "version " << version << " already in list of versions" << std::endl;
+            return;
+        }
+        if(version < info.graph_versions(i)) {
+            std::cout << "version " << version << " is lower than the node's version " << std::endl;
             return;
         }
     } 

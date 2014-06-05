@@ -57,6 +57,7 @@ class BerkeleyDBTxn : public range::db::GraphTransaction
         virtual void flush(void) override;
 
         changelist_t changelist() const;
+        const std::unordered_map<std::string, std::string>& inflight() const;
 
     private:
         friend BerkeleyDBGraph;
@@ -64,6 +65,7 @@ class BerkeleyDBTxn : public range::db::GraphTransaction
         void add_change(change_t change);
 
         changelist_t changes_; 
+        std::unordered_map<std::string, std::string> inflight_;
         std::thread::id id_;
         BerkeleyDBGraph& instance_;
 };

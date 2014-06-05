@@ -79,8 +79,10 @@ BerkeleyDBGraph::db_get(std::string key) const
 //##############################################################################
 //##############################################################################
 BerkeleyDBGraph::BerkeleyDBGraph(const std::string& name, BerkeleyDB& backend)
-    : name_(name), backend_(backend), weak_table(transaction_table)
-{ 
+    : name_(name), backend_(backend), current_version_(0), version_pending_(false), transaction_table(), weak_table(transaction_table)
+{
+    version(); // set current version and establish bdb rmw lock on changelist
+               // as early as possible if we're in a rmw transaction.
 }
 
 //##############################################################################
@@ -112,7 +114,6 @@ BerkeleyDBGraph::commit_txn(std::thread::id id)
             std::string lookup = key_name(type, object_name);
             std::cout << "Writing data for " << object_name << " with of size: " << data.size() << std::endl;
             db_put(lookup, data);
-            //assert(db_get(lookup).size() == data.size());
         }
 
         switch (type) {
@@ -122,6 +123,9 @@ BerkeleyDBGraph::commit_txn(std::thread::id id)
                 }
             default: { break; }
         }
+    }
+    if(!filtered_changes.empty()) {
+        version_pending_ = true;
     }
 
     return filtered_changes;
@@ -148,7 +152,7 @@ BerkeleyDBGraph::inculcate_change(std::thread::id id)
     } 
 
     auto filtered_changes = commit_txn(id);
-    if (filtered_changes.size() > 0) { 
+    if (!filtered_changes.empty()) { 
         auto c = changes.add_change();
 
         for (auto change : filtered_changes) {
@@ -170,8 +174,8 @@ BerkeleyDBGraph::inculcate_change(std::thread::id id)
         ts->set_seconds(cur_time.tv_sec);
         ts->set_msec(cur_time.tv_usec / 1000);
 
-        changes.set_current_version( changes.current_version() + 1 );
-
+        version_pending_ = false;
+        changes.set_current_version( ++current_version_ ); //changes.current_version() + 1 );
         db_put(key, changes.SerializeAsString());
     }
 }
@@ -185,9 +189,26 @@ BerkeleyDBGraph::n_vertices() const
     if (it == backend_.graph_map_instances.end()) {
         throw InstanceUnitializedException("Map instance not found");
     }
+
+    auto key = key_name(record_type::GRAPH_META, "n_vertices");
+    std::thread::id id = std::this_thread::get_id();
+    auto txn_it = transaction_table.find(id);
+
+    if (txn_it != transaction_table.end()) {
+        auto txn = txn_it->second.lock();
+        auto inflight = boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->inflight();
+
+        auto inflight_it = inflight.find(key);
+        if(inflight_it != inflight.end()) {
+            size_t n = boost::lexical_cast<size_t>(inflight_it->second);
+            return n;
+        } 
+    }
+
+
     auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "n_vertices");
-    size_t n = boost::lexical_cast<size_t>((*map_instance)[key_name(record_type::GRAPH_META, "n_vertices")]);
+    size_t n = boost::lexical_cast<size_t>((*map_instance)[key]);
     return n;
 }
 
@@ -200,9 +221,26 @@ BerkeleyDBGraph::n_edges() const
     if (it == backend_.graph_map_instances.end()) {
         throw InstanceUnitializedException("Map instance not found");
     }
+
+    auto key = key_name(record_type::GRAPH_META, "n_edges");
+    std::thread::id id = std::this_thread::get_id();
+    auto txn_it = transaction_table.find(id);
+
+    if (txn_it != transaction_table.end()) {
+        auto txn = txn_it->second.lock();
+        auto inflight = boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->inflight();
+
+        auto inflight_it = inflight.find(key);
+        if(inflight_it != inflight.end()) {
+            size_t n = boost::lexical_cast<size_t>(inflight_it->second);
+            return n;
+        } 
+    }
+
+
     auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "n_edges");
-    size_t n = boost::lexical_cast<size_t>((*map_instance)[key_name(record_type::GRAPH_META, "n_edges")]);
+    size_t n = boost::lexical_cast<size_t>((*map_instance)[key]);
     return n;
 }
 
@@ -215,10 +253,25 @@ BerkeleyDBGraph::n_redges() const
     if (it == backend_.graph_map_instances.end()) {
         throw InstanceUnitializedException("Map instance not found");
     }
-    auto map_instance = it->second;
 
+    auto key = key_name(record_type::GRAPH_META, "n_redges");
+    std::thread::id id = std::this_thread::get_id();
+    auto txn_it = transaction_table.find(id);
+
+    if (txn_it != transaction_table.end()) {
+        auto txn = txn_it->second.lock();
+        auto inflight = boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->inflight();
+
+        auto inflight_it = inflight.find(key);
+        if(inflight_it != inflight.end()) {
+            size_t n = boost::lexical_cast<size_t>(inflight_it->second);
+            return n;
+        } 
+    }
+
+    auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "n_redges");
-    size_t n = boost::lexical_cast<size_t>((*map_instance)[key_name(record_type::GRAPH_META, "n_redges")]);
+    size_t n = boost::lexical_cast<size_t>((*map_instance)[key]);
     return n;
 }
 
@@ -227,23 +280,48 @@ BerkeleyDBGraph::n_redges() const
 uint64_t
 BerkeleyDBGraph::version() const
 {
+    std::thread::id id = std::this_thread::get_id();
+    auto txn_it = transaction_table.find(id);
+    if(txn_it != transaction_table.end()) {
+        if(!txn_it->second.lock()->changelist().empty()) {
+            version_pending_ = true;
+        }
+    }
+
+    if(current_version_ > 0 || version_pending_) {
+        return (version_pending_) ? current_version_ + 1 : current_version_;
+    }
+
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
         throw InstanceUnitializedException("Map instance not found");
     }
+
+    ChangeList changes;
+    auto key = key_name(record_type::GRAPH_META, "changelist");
+
+    if (txn_it != transaction_table.end()) {
+        auto txn = txn_it->second.lock();
+        auto inflight = boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->inflight();
+
+        auto inflight_it = inflight.find(key);
+        if(inflight_it != inflight.end()) {
+            changes.ParseFromString(inflight_it->second);
+            return changes.current_version();
+        } 
+    }
+
     auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "changelist");
-    ChangeList changes;
 
-    auto key = key_name(record_type::GRAPH_META, "changelist");
     if (map_instance->find(key) != map_instance->end()) {
         changes.ParseFromString((*map_instance)[key]);
     }
 /*    if(changes.current_version() == 0) {
         return 1;
     } */
-
-    return changes.current_version();
+    current_version_ = changes.current_version();
+    return current_version_;
 }
 
 //##############################################################################
@@ -263,6 +341,19 @@ BerkeleyDBGraph::get_record(record_type type, const std::string& key) const
     if (it == backend_.graph_map_instances.end()) {
         throw InstanceUnitializedException("Map instance not found");
     }
+
+    std::thread::id id = std::this_thread::get_id();
+    auto txn_it = transaction_table.find(id);
+    if (txn_it != transaction_table.end()) {
+        auto txn = txn_it->second.lock();
+        auto inflight = boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->inflight();
+
+        auto inflight_it = inflight.find(key);
+        if(inflight_it != inflight.end()) {
+            return inflight_it->second;
+        }
+    }
+
     auto map_instance = it->second;
     auto lock = read_lock(type, key);
 

@@ -372,7 +372,8 @@ TEST_F(TestGraphDB, test_create) {
 
     EXPECT_CALL(*inst, version())
         .Times(AtLeast(1))
-        .WillRepeatedly(Return(99));
+        .WillOnce(Return(99))
+        .WillRepeatedly(Return(100));
 
     EXPECT_CALL(*inst, start_txn())
         .Times(1)

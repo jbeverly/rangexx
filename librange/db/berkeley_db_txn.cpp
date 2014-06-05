@@ -43,6 +43,7 @@ BerkeleyDBTxn::commit()
     //flush();
     instance_.inculcate_change(id_);
     changes_.clear();
+    inflight_.clear();
     std::cout << "transaction completed" << std::endl;
 }
 
@@ -52,6 +53,7 @@ void
 BerkeleyDBTxn::abort()
 {
     changes_.clear();
+    inflight_.clear();
 }
 
 //##############################################################################
@@ -62,6 +64,7 @@ BerkeleyDBTxn::flush()
     std::cout << "flushing transaction" << std::endl;
     auto filtered_changes = instance_.commit_txn(std::this_thread::get_id());
     changes_ = filtered_changes;
+    inflight_.clear();
 }
 
 //##############################################################################
@@ -88,12 +91,24 @@ BerkeleyDBTxn::changelist() const
     return changes_;
 }
 
+const std::unordered_map<std::string, std::string>&
+BerkeleyDBTxn::inflight() const
+{
+    return inflight_;
+}
+
 //##############################################################################
 //##############################################################################
 void
 BerkeleyDBTxn::add_change(change_t change)
 {
     changes_.push_back(change);
+    record_type type;
+    std::string object_name;
+    uint64_t object_version;
+    std::string data;
+    std::tie(type, object_name, object_version, data) = change;
+    inflight_[object_name] = data;
 }
 
 

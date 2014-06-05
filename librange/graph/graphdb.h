@@ -52,9 +52,13 @@ class GraphTxn : public GraphTxnIface
         //######################################################################
         ~GraphTxn() {
             try {
-                std::cout << "Updating all node versions in GraphTxn dtor" << std::endl;
-                graphdb_->update_versions(s_version);
-                std::cout << "DONE Updating all node versions in GraphTxn dtor" << std::endl;
+                if(graphdb_->version() > s_version) {
+                    std::cout << "Updating all node versions in GraphTxn dtor" << std::endl;
+                    std::cout << "s_version: " << s_version << std::endl;
+                    std::cout << "graph version: " << graphdb_->version() << std::endl;
+                    graphdb_->update_versions(s_version);
+                    std::cout << "DONE Updating all node versions in GraphTxn dtor" << std::endl;
+                }
             } catch(...) { 
                 std::cout << "The world blew up..." << std::endl;
             }
