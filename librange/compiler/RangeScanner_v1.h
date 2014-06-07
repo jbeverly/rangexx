@@ -25,6 +25,7 @@
 
 #include <boost/make_shared.hpp>
 
+#include "../core/log.h"
 #include "compiler_types.h"
 #include "RangeScanner_v1base.h"
 #include "RangeParser_v1base.h"
@@ -63,7 +64,9 @@ class RangeScanner_v1: public RangeScanner_v1Base
 #endif
         //######################################################################
         //######################################################################
-        c::range_function_sp_t function(const std::string& name) const {
+        c::range_function_sp_t function(const std::string& name) const 
+        {
+            BOOST_LOG_FUNCTION();
             auto it = function_st_->find(name);
             if (it != function_st_->end()) {
                 return it->second;
@@ -131,6 +134,7 @@ inline void RangeScanner_v1::print()
 }
 
 inline boost::shared_ptr<RangeScanner_v1> make_string_scanner_v1(const std::string& s, RangeScanner_v1::functor_map_sp_t symtable) {
+    BOOST_LOG_FUNCTION();
     auto null = boost::make_shared<std::ofstream>("/dev/null");
     auto stringstream = boost::make_shared<std::istringstream>(s);
 

@@ -21,20 +21,40 @@
 
 namespace range { namespace graph {
 
+//##############################################################################
+//##############################################################################
 struct NodeNotFoundException : public ::range::Exception {
-    NodeNotFoundException(const std::string &what) : ::range::Exception(what) { }
+    NodeNotFoundException(const std::string &what,
+        const std::string &event="graph.NodeNotFoundException") 
+        : ::range::Exception(what, event)
+    { }
 };
 
+//##############################################################################
+//##############################################################################
 struct KeyNotFoundException : public ::range::Exception {
-    KeyNotFoundException(const std::string &what) : ::range::Exception(what) { }
+    KeyNotFoundException(const std::string &what,
+        const std::string &event="graph.KeyNotFoundException")
+        : ::range::Exception(what, event)
+    { }
 };
 
+//##############################################################################
+//##############################################################################
 struct IncorrectNodeTypeException : public ::range::Exception {
-    IncorrectNodeTypeException(const std::string &what) : ::range::Exception(what) { }
+    IncorrectNodeTypeException(const std::string &what,
+        const std::string &event="graph.IncorrectNodeTypeException")
+        : ::range::Exception(what, event)
+    { }
 };
 
+//##############################################################################
+//##############################################################################
 struct GraphCycleException : public ::range::Exception {
-    GraphCycleException(const std::string &what) : ::range::Exception(what) { }
+    GraphCycleException(const std::string &what,
+        const std::string &event="graph.GraphCycleException")
+        : ::range::Exception(what, event)
+    { }
 };
 
 } /* namespace graph */ } /* namespace range */ 

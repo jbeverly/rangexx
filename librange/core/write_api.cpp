@@ -17,6 +17,7 @@
 #include <iostream>
 #include <stack>
 #include <unordered_map>
+
 #include "api.h"
 
 namespace range {
@@ -26,12 +27,15 @@ namespace range {
 bool
 RangeAPI_v1::create_env(const std::string &env_name)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name;
+
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
         auto txn = g->start_txn();
         auto n = g->create(env_name);
         if(n) {
             n->set_type(node_type::ENVIRONMENT);
         } else {
+            LOG(notice, "create_env.failed") << "already exists, or error";
             return false;
         }
     }
@@ -43,11 +47,14 @@ RangeAPI_v1::create_env(const std::string &env_name)
 bool
 RangeAPI_v1::remove_env(const std::string &env_name)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name;
+
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
         auto txn = g->start_txn();
         auto n = g->get_node(env_name);
         if(n) {
-            if(n->type() != node_type::ENVIRONMENT) { 
+            if(n->type() != node_type::ENVIRONMENT) {
+                LOG(debug9, "remove_env.incorrect_type") << graph::NodeIface::node_type_names.find(n->type())->second;
                 return false;
             }
             g->remove(n);
@@ -63,6 +70,9 @@ RangeAPI_v1::remove_env(const std::string &env_name)
 bool
 RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &cluster_name)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " cluster_name: "
+        << cluster_name;
+
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
     auto dependency = graphdb("dependency", -1);
@@ -70,7 +80,7 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
 
     auto env = primary->get_node(env_name);
     if(!env) {
-        std::cout << "env " << env_name << " doesn't exist" << std::endl;
+        LOG(notice, "nonexistent_environment") <<  "env " << env_name << " doesn't exist";
         return false;
     }
 
@@ -82,7 +92,8 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
 
 
     if (!n) {
-        std::cout << "node " << prefixed_node_name(env_name, cluster_name) << " doesn't exist, creating" << std::endl;
+        LOG(notice, "nonexistent_cluster") << "node "
+            << prefixed_node_name(env_name, cluster_name) << " doesn't exist, creating";
         n = primary->create(prefixed_node_name(env_name, cluster_name));
         if(n) {
             n->set_type(node_type::CLUSTER);
@@ -110,6 +121,9 @@ bool
 RangeAPI_v1::remove_cluster_from_env(const std::string &env_name,
                                      const std::string &cluster_name)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " cluster_name: "
+        << cluster_name;
+
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
 
@@ -138,6 +152,9 @@ RangeAPI_v1::add_cluster_to_cluster(const std::string &env_name,
                                     const std::string &parent_cluster,
                                     const std::string &child_cluster)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " parent_cluster: "
+        << parent_cluster << " child_cluster: " << child_cluster;
+
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
     auto dependency = graphdb("dependency", -1);
@@ -181,6 +198,9 @@ RangeAPI_v1::remove_cluster_from_cluster(const std::string &env_name,
                                          const std::string &parent_cluster,
                                          const std::string &child_cluster)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " parent_cluster: "
+        << parent_cluster << " child_cluster: " << child_cluster;
+
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
 
@@ -203,6 +223,9 @@ RangeAPI_v1::remove_cluster_from_cluster(const std::string &env_name,
 bool
 RangeAPI_v1::remove_cluster(const std::string &env_name, const std::string &cluster_name)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " cluster_name: " 
+        << cluster_name;
+
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
     auto dependency = graphdb("dependency", -1);
@@ -226,6 +249,9 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
                                  const std::string &parent_cluster,
                                  const std::string &hostname)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " parent_cluster: "
+        << parent_cluster << " hostname " << hostname;
+
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
     auto dependency = graphdb("dependency", -1);
@@ -294,6 +320,9 @@ RangeAPI_v1::remove_host_from_cluster(const std::string &env_name,
                                       const std::string &parent_cluster,
                                       const std::string &hostname)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " parent_cluster "
+        << parent_cluster << " hostname: " << hostname;
+
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
     auto parent = primary->get_node(prefixed_node_name(env_name, parent_cluster));
@@ -316,6 +345,8 @@ RangeAPI_v1::remove_host_from_cluster(const std::string &env_name,
 bool
 RangeAPI_v1::add_host(const std::string &hostname)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "hostname: " << hostname;
+
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
         auto gtxn = g->start_txn();
         auto n = g->get_node(hostname);
@@ -337,6 +368,9 @@ RangeAPI_v1::add_host(const std::string &hostname)
 bool
 RangeAPI_v1::remove_host(const std::string &env_name, const std::string &hostname)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " hostname: " 
+        << hostname;
+
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
     auto dependency = graphdb("dependency", -1);
@@ -382,6 +416,9 @@ bool
 RangeAPI_v1::add_node_key_value(const std::string &env_name, const std::string &node_name,
                                 const std::string &key, const std::string &value)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
+        << node_name << " key: " << key << " value " << value;
+
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
 
@@ -415,6 +452,9 @@ bool
 RangeAPI_v1::remove_node_key_value(const std::string &env_name, const std::string &node_name,
                                    const std::string &key, const std::string &value)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
+        << node_name << " key: " << key << " value " << value;
+
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
 
@@ -452,6 +492,9 @@ bool
 RangeAPI_v1::remove_key_from_node(const std::string &env_name, const std::string &node_name,
                                   const std::string &key)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
+        << node_name << " key: " << key;
+
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
 
@@ -471,6 +514,10 @@ RangeAPI_v1::add_node_ext_dependency(const std::string &env_name,
                                      const std::string &dependency_env,
                                      const std::string &dependency_name)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
+        << node_name << " dependency_env: " << dependency_env
+        << " dependency_name: " << dependency_name;
+
     auto dep = graphdb("dependency", -1);
     auto dtxn = dep->start_txn();
     auto n = dep->get_node(prefixed_node_name(env_name, node_name));
@@ -497,6 +544,7 @@ RangeAPI_v1::add_node_env_dependency(const std::string &env_name,
                                      const std::string &node_name,
                                      const std::string &dependency_name)
 {
+    BOOST_LOG_FUNCTION();
     return add_node_ext_dependency(env_name, node_name, env_name, dependency_name);
 }
 
@@ -508,6 +556,10 @@ RangeAPI_v1::remove_node_ext_dependency(const std::string &env_name,
                                         const std::string &dependency_env,
                                         const std::string &dependency_name)
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
+        << node_name << " dependency_env: " << dependency_env
+        << " dependency_name: " << dependency_name;
+
     auto dep = graphdb("dependency", -1);
     auto dtxn = dep->start_txn();
     auto n = dep->get_node(prefixed_node_name(env_name, node_name));
@@ -529,6 +581,7 @@ RangeAPI_v1::remove_node_env_dependency(const std::string &env_name,
                                         const std::string &node_name,
                                         const std::string &dependency_name)
 {
+    BOOST_LOG_FUNCTION();
     return remove_node_ext_dependency(env_name, node_name, env_name, dependency_name);
 }
 

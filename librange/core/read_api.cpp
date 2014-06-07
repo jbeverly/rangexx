@@ -29,8 +29,11 @@
 #include <stack>
 #include <queue>
 #include <unordered_map>
+#include <thread>
 
 #include "api.h"
+#include "log.h"
+
 #include "../compiler/expanding_visitor.h"
 #include "../compiler/RangeParser_v1.h"
 
@@ -41,6 +44,7 @@ namespace range {
 inline boost::shared_ptr<graph::GraphInterface>
 RangeAPI_v1::graphdb(const std::string &name, uint64_t version) const
 {
+    BOOST_LOG_FUNCTION();
     auto graphdb = cfg_->graph_factory()->createGraphdb(name,
                     cfg_->db_backend(), cfg_->node_factory(), version);
     return graphdb;
@@ -51,6 +55,7 @@ RangeAPI_v1::graphdb(const std::string &name, uint64_t version) const
 inline std::string
 RangeAPI_v1::env_prefix(const std::string &env_name) const
 {
+    BOOST_LOG_FUNCTION();
     if (env_name.size() > 0)
         return env_name + "#";
     return "";
@@ -62,6 +67,7 @@ inline std::string
 RangeAPI_v1::unprefix_node_name(const std::string &env_name, 
                                 const std::string &node_name) const
 {
+    BOOST_LOG_FUNCTION();
     if(env_name.size() > 0 && node_name.size() > 0 
             && node_name.substr(0, env_prefix(env_name).size()) == env_prefix(env_name)) {
         return node_name.substr(env_prefix(env_name).size());
@@ -81,6 +87,7 @@ inline std::string
 RangeAPI_v1::prefixed_node_name(const std::string &env_name, 
                                 const std::string &node_name) const
 {
+    BOOST_LOG_FUNCTION();
     if(env_name.size() > 0 && node_name.size() > 0) {
         return env_prefix(env_name) + node_name;
     }
@@ -99,11 +106,13 @@ graph::NodeIface::node_t
 RangeAPI_v1::get_node(boost::shared_ptr<graph::GraphInterface> graph,
                       const std::string &env_name, const std::string &node_name) const
 {
+    BOOST_LOG_FUNCTION();
     auto n = graph->get_node(prefixed_node_name(env_name, node_name));
     if(!n) { 
         n = graph->get_node(node_name);
         if(n && n->type() != node_type::ENVIRONMENT && n->type() != node_type::HOST) {
-            throw graph::NodeNotFoundException(prefixed_node_name(env_name, node_name));
+            THROW_STACK(graph::NodeNotFoundException(
+                        prefixed_node_name(env_name, node_name)));
         }
     }
     return n;
@@ -115,11 +124,12 @@ RangeAPI_v1::get_node(boost::shared_ptr<graph::GraphInterface> graph,
 RangeStruct
 RangeAPI_v1::all_clusters(const std::string &env_name, uint64_t version) const
 {
-    const auto primary = graphdb("primary", version);
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " version: " << version;
 
+    const auto primary = graphdb("primary", version);
     auto n = primary->get_node(env_name);
     if(!n) {
-        throw graph::NodeNotFoundException(env_name);
+        THROW_STACK(graph::NodeNotFoundException(env_name));
     }
 
     std::unordered_map<std::string, bool> visited;
@@ -148,6 +158,8 @@ RangeAPI_v1::all_clusters(const std::string &env_name, uint64_t version) const
 RangeStruct
 RangeAPI_v1::all_environments(uint64_t version) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << "version: " << version;
+
     const auto primary = graphdb("primary", version);
     uint64_t cmp_v = (version == static_cast<uint64_t>(-1)) ? primary->version() : version;
 
@@ -171,6 +183,8 @@ RangeAPI_v1::all_environments(uint64_t version) const
 RangeStruct
 RangeAPI_v1::all_hosts(uint64_t version) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << "version: " << version;
+
     const auto primary = graphdb("primary", version);
     uint64_t cmp_v = (version == static_cast<uint64_t>(-1)) ? primary->version() : version;
 
@@ -195,27 +209,40 @@ RangeStruct
 RangeAPI_v1::expand_range_expression(const std::string &env_name,
         const std::string &expression, uint64_t version) const
 {
-    const auto primary = graphdb("primary", version);
-    auto sc = ::rangecompiler::make_string_scanner_v1(expression, cfg_->range_symbol_table());
-    ::rangecompiler::RangeParser_v1 parser { sc };
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " expr: `" 
+        << expression << "` version: " << version;
 
-    if (parser.parse() == 0) {
-        RangeArray results;
-        auto top = parser.ast();
+    try {
+        const auto primary = graphdb("primary", version);
+        auto sc = ::rangecompiler::make_string_scanner_v1(expression, cfg_->range_symbol_table());
+        ::rangecompiler::RangeParser_v1 parser { sc };
 
-        std::string prefix = (env_name.size() > 0) ? env_name + "#" : "";
+        if (parser.parse() == 0) {
+            RangeArray results;
+            auto top = parser.ast();
 
-        boost::apply_visitor(compiler::RangeExpandingVisitor(primary, prefix), top);
-        results = boost::apply_visitor(compiler::FetchChildrenVisitor(), top);
-        std::for_each(results.values.begin(), results.values.end(), 
-                [this,&env_name](RangeStruct &v) { 
-                    auto &s = boost::get<RangeString>(v);
-                    s.value = unprefix_node_name(env_name, s.value); 
-                }
-            );
-        return results;
+            std::string prefix = (env_name.size() > 0) ? env_name + "#" : "";
+
+            boost::apply_visitor(compiler::RangeExpandingVisitor(primary, prefix), top);
+            results = boost::apply_visitor(compiler::FetchChildrenVisitor(), top);
+            std::for_each(results.values.begin(), results.values.end(), 
+                    [this,&env_name](RangeStruct &v) { 
+                        auto &s = boost::get<RangeString>(v);
+                        s.value = unprefix_node_name(env_name, s.value); 
+                    }
+                );
+            return results;
+        }
+
+        THROW_STACK(compiler::InvalidRangeExpression(expression));                         // FIXME: get error report from parser
     }
-    throw compiler::InvalidRangeExpression(expression);                         // FIXME: get error report from parser
+    catch (range::Exception &e) {
+        LOGBACKTRACE(e);
+        try {
+            LOG(error, "invalid_range_expression") << env_name << ':' << expression;
+        } catch(...) {}
+        throw;
+    }
 }
 
 //##############################################################################
@@ -226,16 +253,22 @@ RangeAPI_v1::simple_expand(const std::string &env_name,
                            uint64_t version,
                            node_type type) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: "
+        << node_name << " version: " << version << " type: " 
+        << graph::NodeIface::node_type_names.find(type)->second;
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
     const auto primary = graphdb("primary", version);
     auto n = primary->get_node(prefixed_node_name(env_name, node_name));
 
     if (type != node_type::UNKNOWN) {
         if (n->type() != type) {
-            throw graph::IncorrectNodeTypeException(
+            THROW_STACK(graph::IncorrectNodeTypeException(
                     graph::NodeIface::node_type_names.find(n->type())->second 
                     + " != "
                     + graph::NodeIface::node_type_names.find(type)->second
-                );
+                ));
         }
     }
 
@@ -246,7 +279,7 @@ RangeAPI_v1::simple_expand(const std::string &env_name,
         }
         return found;
     }
-    throw graph::NodeNotFoundException(prefixed_node_name(env_name, node_name));
+    THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node_name)));
 }
 
 //##############################################################################
@@ -256,6 +289,7 @@ RangeAPI_v1::simple_expand_cluster(const std::string &env_name,
                                    const std::string &cluster_name,
                                    uint64_t version) const
 {
+    BOOST_LOG_FUNCTION();
     return simple_expand(env_name, cluster_name, version, node_type::CLUSTER);
 }
 
@@ -265,6 +299,7 @@ RangeStruct
 RangeAPI_v1::simple_expand_env(const std::string &env_name,
                                      uint64_t version) const
 {
+    BOOST_LOG_FUNCTION();
     return simple_expand(env_name, "", version, node_type::ENVIRONMENT);
 }
 
@@ -274,6 +309,9 @@ RangeStruct
 RangeAPI_v1::get_keys(const std::string &env_name, const std::string &node_name,
                       uint64_t version) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: "
+        << node_name << " version: " << version;
+
     const auto primary = graphdb("primary", version);
 
     auto n = primary->get_node(prefixed_node_name(env_name, node_name));
@@ -284,7 +322,7 @@ RangeAPI_v1::get_keys(const std::string &env_name, const std::string &node_name,
         }
         return found;
     }
-    throw graph::NodeNotFoundException(prefixed_node_name(env_name, node_name));
+    THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node_name)));
 }
 
 //##############################################################################
@@ -294,6 +332,9 @@ RangeStruct
 RangeAPI_v1::fetch_key(const std::string &env_name, const std::string &node_name,
                                    const std::string &key, uint64_t version) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: "
+        << node_name << " key: " << key << " version: " << version;
+
     const auto primary = graphdb("primary", version);
     auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(n) {
@@ -302,9 +343,9 @@ RangeAPI_v1::fetch_key(const std::string &env_name, const std::string &node_name
         if (it != tags.end()) {
             return it->second;
         }
-        throw graph::KeyNotFoundException(key);
+        THROW_STACK(graph::KeyNotFoundException(key));
     }
-    throw graph::NodeNotFoundException(prefixed_node_name(env_name, node_name));
+    THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node_name)));
 }
 
 //##############################################################################
@@ -314,6 +355,9 @@ RangeAPI_v1::fetch_all_keys(const std::string &env_name,
                             const std::string &node_name,
                             uint64_t version) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: "
+        << node_name << " version: " << version;
+
     const auto primary = graphdb("primary", version);
     auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(n) {
@@ -328,7 +372,7 @@ RangeAPI_v1::fetch_all_keys(const std::string &env_name,
         }
         return obj;
     }
-    throw graph::NodeNotFoundException(prefixed_node_name(env_name, node_name));
+    THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node_name)));
 }
 
 //##############################################################################
@@ -338,6 +382,7 @@ class PostOrderDFSStackFrame {
         PostOrderDFSStackFrame(graph::NodeIface::node_t vertex)
             : v(vertex)
         {
+            BOOST_LOG_FUNCTION();
             if(v->type() == graph::NodeIface::node_type::CLUSTER 
                     || v->type() == graph::NodeIface::node_type::ENVIRONMENT) {
                 out_edges = v->forward_edges();
@@ -346,12 +391,14 @@ class PostOrderDFSStackFrame {
         }
 
         graph::NodeIface::node_t pop_out() {
+            BOOST_LOG_FUNCTION();
             auto e = out_edges.back();
             out_edges.pop_back();
             return e;
         }
 
         graph::NodeIface::node_t pop_in() {
+            BOOST_LOG_FUNCTION();
             auto e = in_edges.back();
             in_edges.pop_back();
             return e;
@@ -369,12 +416,15 @@ RangeStruct
 RangeAPI_v1::expand(const std::string &env_name, const std::string &node_name,
                     uint64_t version, size_t depth) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: "
+        << node_name << " version: " << version << " depth: " << depth;
+
     const auto primary = graphdb("primary", version);
     const auto dependency = graphdb("dependency", -1);                          // FIXME: I don't have version coherence for graphs; will treat dependency graph as unversioned for now
     auto n = get_node(primary, env_name, node_name);
 
     if(!n) {
-        throw graph::NodeNotFoundException(env_name);
+        THROW_STACK(graph::NodeNotFoundException(env_name));
     }
     
     std::unordered_map<std::string, bool> onstack;
@@ -435,16 +485,17 @@ RangeAPI_v1::expand_cluster(const std::string &env_name,
                             uint64_t version,
                             size_t depth) const
 {
+    BOOST_LOG_FUNCTION();
     {
         const auto primary = graphdb("primary", version);
         auto n = primary->get_node(prefixed_node_name(env_name, cluster_name));
         if(!n) {
-            throw graph::NodeNotFoundException(prefixed_node_name(env_name, cluster_name));
+            THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, cluster_name)));
         }
         if (n->type() != node_type::CLUSTER) {
-            throw graph::IncorrectNodeTypeException(
-                    graph::NodeIface::node_type_names.find(n->type())->second 
-                    + " != CLUSTER");
+           THROW_STACK(graph::IncorrectNodeTypeException(
+                        graph::NodeIface::node_type_names.find(n->type())->second 
+                        + " != CLUSTER"));
         }
     }
     return expand(env_name, cluster_name, version, depth);
@@ -457,16 +508,17 @@ RangeAPI_v1::expand_env(const std::string &env_name,
                         uint64_t version,
                         size_t depth) const
 {
+    BOOST_LOG_FUNCTION();
     {
         const auto primary = graphdb("primary", version);
         auto n = primary->get_node(env_name);
         if(!n) {
-            throw graph::NodeNotFoundException(env_name);
+            THROW_STACK(graph::NodeNotFoundException(env_name));
         }
         if (n->type() != node_type::ENVIRONMENT) {
-            throw graph::IncorrectNodeTypeException(
+            THROW_STACK(graph::IncorrectNodeTypeException(
                     graph::NodeIface::node_type_names.find(n->type())->second 
-                    + " != ENVIRONMENT");
+                    + " != ENVIRONMENT"));
         }
     }
     return expand(env_name, "", version, depth);
@@ -479,13 +531,18 @@ RangeAPI_v1::get_clusters(const std::string &env_name,
                           const std::string &node_name,
                           uint64_t version) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
+        << node_name << " version: " << version;
+
     const auto primary = graphdb("primary", version);
     auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(!n) { 
         n = primary->get_node(node_name);
-        if(n && n->type() != node_type::ENVIRONMENT
-                && n->type() != node_type::HOST) {
-            throw graph::NodeNotFoundException(prefixed_node_name(env_name, node_name));
+        if(!n) {
+            THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node_name)));
+        }
+        if(n->type() != node_type::ENVIRONMENT && n->type() != node_type::HOST) {
+            THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node_name)));
         }
     }
 
@@ -505,6 +562,9 @@ RangeAPI_v1::bfs_search_parents_for_first_key(const std::string &env_name,
                                               const std::string &key,
                                               uint64_t version) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: "
+        << node_name << " key: " << key << " version: " << version;
+
     const auto primary = graphdb("primary", version);
     std::string found_in;
     std::unordered_map<std::string, bool> visited;
@@ -515,7 +575,7 @@ RangeAPI_v1::bfs_search_parents_for_first_key(const std::string &env_name,
 
     auto n = get_node(primary, env_name, node_name);
     if(!n) {
-        throw graph::NodeNotFoundException(prefixed_node_name(env_name, node_name));
+        THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node_name)));
     }
 
     q.push(n);
@@ -552,6 +612,9 @@ RangeAPI_v1::dfs_search_parents_for_first_key(const std::string &env_name,
                                               const std::string &key,
                                               uint64_t version) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: "
+        << node_name << " key: " << key << " version: " << version;
+
     const auto primary = graphdb("primary", version);
     std::string found_in;
     std::unordered_map<std::string, bool> visited;
@@ -563,7 +626,7 @@ RangeAPI_v1::dfs_search_parents_for_first_key(const std::string &env_name,
     auto n = get_node(primary, env_name, node_name);
 
     if(!n) {
-        throw graph::NodeNotFoundException(prefixed_node_name(env_name, node_name));
+        THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node_name)));
     }
     st.push(n);
 
@@ -611,6 +674,9 @@ RangeAPI_v1::nearest_common_ancestor(//std::string &ancestor,
                                      const std::string &node2_name,
                                      uint64_t version) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name1: "
+        << node1_name << " node2_name: " << node2_name<< " version: " << version;
+
     const auto primary = graphdb("primary", version);
     std::string ancestor;
 
@@ -624,13 +690,13 @@ RangeAPI_v1::nearest_common_ancestor(//std::string &ancestor,
     auto n1 = get_node(primary, env_name, node1_name);
 
     if(!n1) {
-        throw graph::NodeNotFoundException(prefixed_node_name(env_name, node1_name));
+        THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node1_name)));
     }
     q1.push(n1);
 
     auto n2 = get_node(primary, env_name, node2_name);
     if(!n2) {
-        throw graph::NodeNotFoundException(prefixed_node_name(env_name, node2_name));
+        THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node2_name)));
     }
     q2.push(n2);
 
@@ -693,6 +759,9 @@ RangeStruct
 RangeAPI_v1::environment_topological_sort(const std::string &env_name,
                                           uint64_t version) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " version: "
+        << version;
+
     const auto primary = graphdb("primary", version);
     const auto dependency = graphdb("dependency", -1);                          // FIXME: I don't have version coherence for graphs; will treat dependency graph as unversioned for now
 
@@ -700,7 +769,7 @@ RangeAPI_v1::environment_topological_sort(const std::string &env_name,
     auto n = primary->get_node(env_name);
 
     if(!n) {
-        throw graph::NodeNotFoundException(env_name);
+        THROW_STACK(graph::NodeNotFoundException(env_name));
     }
 
     std::stack<graph::NodeIface::node_t> primary_st;
@@ -748,7 +817,7 @@ RangeAPI_v1::environment_topological_sort(const std::string &env_name,
             if (!vnode.out_edges.empty()) {
                 auto e = vnode.pop_out();
                 if (onstack.find(e->name()) != onstack.end()) {
-                    throw graph::GraphCycleException("dependency cycle detected");
+                    THROW_STACK(graph::GraphCycleException("dependency cycle detected"));
                 }
                 if(visited.find(e->name()) == visited.end() && visiting.find(e->name()) == visiting.end()) {
                     visiting[v->name()] = true;
@@ -775,6 +844,8 @@ RangeAPI_v1::environment_topological_sort(const std::string &env_name,
 RangeStruct
 RangeAPI_v1::find_orphaned_nodes(uint64_t version) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << " version: " << version;
+
     const auto primary = graphdb("primary", version);
     
     std::unordered_map<std::string, bool> visited;

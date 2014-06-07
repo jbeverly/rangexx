@@ -14,21 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGE_COMPILER_EXCEPTIONS_H
-#define _RANGE_COMPILER_EXCEPTIONS_H
 
-#include "../core/exceptions.h"
+#include <iostream>
+#include <string>
+#include <memory>
+#include <cxxabi.h>
 
-namespace range { namespace compiler {
-
-class InvalidRangeExpression : public ::range::Exception
+namespace range { namespace util {
+//##############################################################################
+//##############################################################################
+std::string demangle(const char * typeid_name)
 {
-    public:
-        InvalidRangeExpression(const std::string& s, const std::string &event="compiler.InvalidRangeExpression") : ::range::Exception(s, event) { }
-};
+    int s = 0;
+    std::unique_ptr<char, void(*)(void*)> buf { abi::__cxa_demangle(typeid_name, NULL, NULL, &s), std::free };
+    return (s == 0) ? buf.get() : typeid_name;
+}
 
-
-
-} /* namespace compiler */ } /* namespace range */
-
-#endif
+} /* namespace util */ } /* namespace range */

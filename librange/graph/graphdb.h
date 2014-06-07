@@ -25,6 +25,8 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
+#include "../core/log.h"
+
 #include "node_interface.h"
 #include "graph_interface.h"
 #include "node_factory.h"
@@ -44,7 +46,9 @@ class GraphTxn : public GraphTxnIface
             :   graphdb_(graphdb),
                 s_version(graphdb->version()),
                 lock(inst->write_lock(db::GraphInstanceInterface::record_type::UNKNOWN,"")),
-                txn(inst->start_txn())
+                txn(inst->start_txn()),
+                log("GraphTxn"),
+                timer(log.start_timer("graphdb_transaction"))
         {
         }
 
@@ -53,14 +57,15 @@ class GraphTxn : public GraphTxnIface
         ~GraphTxn() {
             try {
                 if(graphdb_->version() > s_version) {
-                    std::cout << "Updating all node versions in GraphTxn dtor" << std::endl;
-                    std::cout << "s_version: " << s_version << std::endl;
-                    std::cout << "graph version: " << graphdb_->version() << std::endl;
+                    LOG(debug1, "graph_transaction_pushing_update") 
+                        << "graphdb version: " << graphdb_->version()
+                        << " start_version: " << s_version;
                     graphdb_->update_versions(s_version);
-                    std::cout << "DONE Updating all node versions in GraphTxn dtor" << std::endl;
                 }
             } catch(...) { 
-                std::cout << "The world blew up..." << std::endl;
+                try { 
+                    LOG(fatal, "update_versions_failure");
+                } catch(...) { }
             }
         }
 
@@ -75,6 +80,8 @@ class GraphTxn : public GraphTxnIface
         uint64_t s_version;
         boost::shared_ptr<db::GraphInstanceLock> lock;
         boost::shared_ptr<db::GraphTransaction> txn;
+        range::Emitter log;
+        range::Emitter::Timer timer;
 };
 
 //##############################################################################
@@ -94,7 +101,10 @@ class GraphDB
         typedef graph::GraphInterface::const_iterator_t const_iterator_t;
 
         //######################################################################
-        GraphDB() : name_(), instance_(), wanted_version_(-1), node_factory_()
+        GraphDB()
+            : name_(), instance_(), wanted_version_(-1), node_factory_(),
+                log("GraphDB")
+                
         {
             /* this space intentionally left blank */
         }
@@ -111,7 +121,7 @@ class GraphDB
         inline GraphDB(const std::string& name, instance_t instance, 
                 node_factory_t node_factory)
             : name_(name), instance_(instance), wanted_version_(-1),
-                node_factory_(node_factory)
+                node_factory_(node_factory), log("GraphDB")
         {
             /* this space intentionally left blank */
         }
@@ -172,6 +182,7 @@ class GraphDB
         std::unordered_map<std::string, uint64_t> node_version_map;
         bool has_version_or_higher(uint64_t wanted_version, node_t node);
         std::vector<boost::shared_ptr<graph::NodeIface>> removed_nodes;
+        range::Emitter log;
 
         //######################################################################
         virtual graph::GraphInterface::cursor_t get_cursor() const override;

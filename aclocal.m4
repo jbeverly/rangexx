@@ -1097,10 +1097,13 @@ AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
 m4_include([m4/ax_boost_base.m4])
+m4_include([m4/ax_boost_date_time.m4])
+m4_include([m4/ax_boost_filesystem.m4])
 m4_include([m4/ax_boost_log.m4])
 m4_include([m4/ax_boost_log_setup.m4])
 m4_include([m4/ax_boost_python.m4])
 m4_include([m4/ax_boost_regex.m4])
+m4_include([m4/ax_boost_system.m4])
 m4_include([m4/ax_boost_thread.m4])
 m4_include([m4/ax_check_protoc.m4])
 m4_include([m4/ax_cxx_compile_stdcxx_11.m4])

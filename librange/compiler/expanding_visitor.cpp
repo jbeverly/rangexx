@@ -29,6 +29,7 @@
 #include "expanding_visitor.h"
 #include "ast.h"
 #include "compiler_exceptions.h"
+#include "../core/log.h"
 
 namespace range { namespace compiler {
 
@@ -37,6 +38,7 @@ namespace range { namespace compiler {
 void
 RangeExpandingVisitor::operator()(ast::ASTWord& word) const
 {
+    BOOST_LOG_FUNCTION();
     word.children.push_back(word.word);
 }
 
@@ -45,6 +47,7 @@ RangeExpandingVisitor::operator()(ast::ASTWord& word) const
 void
 RangeExpandingVisitor::operator()(ast::ASTLiteral & lit) const
 {
+    BOOST_LOG_FUNCTION();
     lit.children.push_back(lit.word);
 }
 
@@ -53,6 +56,7 @@ RangeExpandingVisitor::operator()(ast::ASTLiteral & lit) const
 void
 RangeExpandingVisitor::operator()(ast::ASTRegex& re) const
 {
+    BOOST_LOG_FUNCTION();
     re.children.push_back(re.word);
 }
 
@@ -61,6 +65,7 @@ RangeExpandingVisitor::operator()(ast::ASTRegex& re) const
 void
 RangeExpandingVisitor::operator()(ast::ASTNull&) const
 {
+    BOOST_LOG_FUNCTION();
     return;
 }
 
@@ -69,6 +74,7 @@ RangeExpandingVisitor::operator()(ast::ASTNull&) const
 void
 RangeExpandingVisitor::operator()(ast::ASTUnion& u) const
 {
+    BOOST_LOG_FUNCTION();
     boost::apply_visitor(RangeExpandingVisitor(graph_), u.lhs);
     boost::apply_visitor(RangeExpandingVisitor(graph_), u.rhs);
 
@@ -93,13 +99,15 @@ template <typename T, typename L>
 static inline void 
 regex_filter(T& elem, L& lchildren)
 {
+    BOOST_LOG_FUNCTION();
     std::string re_word = boost::get<ast::ASTRegex>(elem.rhs).word;
     bool positive = ! boost::get<ast::ASTRegex>(elem.rhs).positive;
     boost::regex re;
     try {
         re = boost::regex( re_word );
     } catch(boost::regex_error& e) {
-        throw InvalidRangeExpression(e.what());
+        throw boost::enable_error_info(InvalidRangeExpression(e.what())) <<
+            boost::log::current_scope();
     }
     auto pred = [&re, positive](typename L::value_type w)
         {
@@ -118,6 +126,7 @@ regex_filter(T& elem, L& lchildren)
 void
 RangeExpandingVisitor::operator()(ast::ASTDifference& diff) const
 {
+    BOOST_LOG_FUNCTION();
     boost::apply_visitor(RangeExpandingVisitor(graph_), diff.lhs);
     auto lchildren = boost::apply_visitor(FetchChildrenVisitor(), diff.lhs);
     std::sort(lchildren.begin(), lchildren.end());
@@ -147,6 +156,7 @@ RangeExpandingVisitor::operator()(ast::ASTDifference& diff) const
 void
 RangeExpandingVisitor::operator()(ast::ASTIntersection& inter) const
 {
+    BOOST_LOG_FUNCTION();
     boost::apply_visitor(RangeExpandingVisitor(graph_), inter.lhs);
     auto lchildren = boost::apply_visitor(FetchChildrenVisitor(), inter.lhs);
     std::sort(lchildren.begin(), lchildren.end());
@@ -175,6 +185,7 @@ RangeExpandingVisitor::operator()(ast::ASTIntersection& inter) const
 void
 RangeExpandingVisitor::operator()(ast::ASTSequence& seq) const
 {
+    BOOST_LOG_FUNCTION();
     std::string lword = boost::get<ast::ASTWord>(seq.lhs).word;
     std::string rword = boost::get<ast::ASTWord>(seq.rhs).word;
 
@@ -195,7 +206,21 @@ RangeExpandingVisitor::operator()(ast::ASTSequence& seq) const
     }
 
     auto it = std::find_if(rword.begin(), rword.end(), [](char c) { return isalpha(c); });
-    rnum = boost::lexical_cast<uint32_t>(std::string(rword.begin(), it));
+    try {
+        rnum = boost::lexical_cast<uint32_t>(std::string(rword.begin(), it));
+    } catch(boost::bad_lexical_cast &e) {
+        std::string er;
+        if (!p1ok) er += "left ";
+        if (!p2ok) {
+            if (er.size() > 0)
+                er += "and ";
+            er += "right ";
+        }
+        throw boost::enable_error_info(InvalidRangeExpression(
+                    "invalid " + er + "portion of sequence: " + lword + ".." + rword))
+            << boost::log::current_scope();
+    }
+
     std::string rsuffix { it, rword.end() };
 
     if (rsuffix.size() != rword.size())
@@ -209,8 +234,9 @@ RangeExpandingVisitor::operator()(ast::ASTSequence& seq) const
                 er += "and ";
             er += "right ";
         }
-        throw InvalidRangeExpression("invalid " + er + "portion of sequence: "
-                                         + lword + ".." + rword);
+        throw boost::enable_error_info(InvalidRangeExpression(
+                    "invalid " + er + "portion of sequence: " + lword + ".." + rword))
+            << boost::log::current_scope();
     }
 
     if (rnum < lnum) rnum += lnum;
@@ -233,6 +259,7 @@ RangeExpandingVisitor::operator()(ast::ASTSequence& seq) const
 void
 RangeExpandingVisitor::operator()(ast::ASTExpand& expand) const
 {
+    BOOST_LOG_FUNCTION();
     boost::apply_visitor(RangeExpandingVisitor(graph_), expand.child);
     auto children = boost::apply_visitor(FetchChildrenVisitor(), expand.child);
 
@@ -265,6 +292,7 @@ RangeExpandingVisitor::operator()(ast::ASTExpand& expand) const
 void
 RangeExpandingVisitor::operator()(ast::ASTGetCluster& getcl) const
 {
+    BOOST_LOG_FUNCTION();
     boost::apply_visitor(RangeExpandingVisitor(graph_), getcl.child);
     auto children = boost::apply_visitor(FetchChildrenVisitor(), getcl.child);
 
@@ -288,6 +316,7 @@ RangeExpandingVisitor::operator()(ast::ASTGetCluster& getcl) const
 void
 RangeExpandingVisitor::operator()(ast::ASTAdmin& adm) const
 {
+    BOOST_LOG_FUNCTION();
     boost::apply_visitor(RangeExpandingVisitor(graph_), adm.child);
     auto children = boost::apply_visitor(FetchChildrenVisitor(), adm.child);
 
@@ -336,6 +365,7 @@ RangeExpandingVisitor::operator()(ast::ASTAdmin& adm) const
 void
 RangeExpandingVisitor::operator()(ast::ASTGroup& grp) const
 {
+    BOOST_LOG_FUNCTION();
     boost::apply_visitor(RangeExpandingVisitor(graph_), grp.child);
     auto children = boost::apply_visitor(FetchChildrenVisitor(), grp.child);
 
@@ -347,6 +377,7 @@ RangeExpandingVisitor::operator()(ast::ASTGroup& grp) const
 void
 RangeExpandingVisitor::operator()(ast::ASTBraceExpand& brace) const
 {
+    BOOST_LOG_FUNCTION();
     boost::apply_visitor(RangeExpandingVisitor(graph_), brace.left);
     boost::apply_visitor(RangeExpandingVisitor(graph_), brace.center);
     boost::apply_visitor(RangeExpandingVisitor(graph_), brace.right);
@@ -391,6 +422,7 @@ RangeExpandingVisitor::operator()(ast::ASTBraceExpand& brace) const
 void
 RangeExpandingVisitor::operator()(ast::ASTFunctionArguments& args) const
 {
+    BOOST_LOG_FUNCTION();
     for (auto arg_node : args.args) {
         boost::apply_visitor(RangeExpandingVisitor(graph_), arg_node);
         auto children = boost::apply_visitor(FetchChildrenVisitor(), arg_node);
@@ -403,6 +435,7 @@ RangeExpandingVisitor::operator()(ast::ASTFunctionArguments& args) const
 void
 RangeExpandingVisitor::operator()(ast::ASTFunction& fn) const
 {
+    BOOST_LOG_FUNCTION();
     (*this)(fn.args_node);
     fn.children = (*fn.fn)(fn.args_node.argument_vecs );
 }
@@ -412,6 +445,7 @@ RangeExpandingVisitor::operator()(ast::ASTFunction& fn) const
 void
 RangeExpandingVisitor::operator()(ast::ASTKeyExpand& key) const
 {
+    BOOST_LOG_FUNCTION();
     boost::apply_visitor(RangeExpandingVisitor(graph_), key.lhs);
     auto children = boost::apply_visitor(FetchChildrenVisitor(), key.lhs);
 
@@ -441,6 +475,7 @@ RangeExpandingVisitor::operator()(ast::ASTKeyExpand& key) const
 void
 RangeExpandingVisitor::prefix_child(std::string& child) const
 {
+    BOOST_LOG_FUNCTION();
     if (prefix_.size() == 0) {
         return;
     }

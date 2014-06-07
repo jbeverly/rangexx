@@ -22,6 +22,7 @@
 #include <dbstl_exception.h>
 
 #include "../librange/core/api.h"
+#include "../librange/core/log.h"
 #include "python_visitor.h"
 
 using namespace boost::python;
@@ -371,6 +372,8 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(overloads_environment_topological_sort, e
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(overloads_find_orphaned_nodes, find_orphaned_nodes, 0, 1);
 
 BOOST_PYTHON_MODULE(librange_python) {
+
+    range::initialize_logger("/tmp/testlog",99);
 
     class_<APIWrap>("Range", init<std::string>())
         .def("all_clusters", &APIWrap::all_clusters, overloads_all_clusters())

@@ -21,9 +21,11 @@
 #include <boost/enable_shared_from_this.hpp>
 
 #include "../graph/node_interface.h"
+#include "../core/log.h"
 
 #include "nodeinfo.pb.h"
 #include "db_interface.h"
+
 
 namespace range {
 namespace db { 
@@ -39,14 +41,16 @@ class ProtobufNode : public graph::NodeIface, public boost::enable_shared_from_t
         //######################################################################
         inline ProtobufNode()
             : name_(), instance_(), wanted_version_(-1),
-            type_(node_type::UNKNOWN), info_initialized(false), info()
+            type_(node_type::UNKNOWN), info_initialized(false), info(),
+            log("ProtobufNode")
         {
         }
 
         inline ProtobufNode(const std::string& name, instance_t instance, 
                             uint64_t version = -1)
             : name_(name), instance_(instance), wanted_version_(version),
-                type_(node_type::UNKNOWN), info_initialized(false)
+                type_(node_type::UNKNOWN), info_initialized(false),
+                log("ProtobufNode")
         {
         }
 
@@ -119,6 +123,7 @@ class ProtobufNode : public graph::NodeIface, public boost::enable_shared_from_t
         mutable node_type type_;
         mutable bool info_initialized;
         mutable NodeInfo info;
+        range::Emitter log;
 
         //######################################################################
         inline void init_info() const;

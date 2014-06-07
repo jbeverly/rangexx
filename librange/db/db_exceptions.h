@@ -26,37 +26,55 @@ namespace db {
 //##############################################################################
 //##############################################################################
 struct Exception : public ::range::Exception {
-        explicit Exception(const std::string& what) : ::range::Exception(what) { }
+    explicit Exception(const std::string &what,
+            const std::string &event="db.Exception")
+        : ::range::Exception(what, event) 
+        { }
 };
 
 //##############################################################################
 //##############################################################################
 struct InstanceUnitializedException : public Exception { 
-        explicit InstanceUnitializedException(const std::string& what) : Exception(what) { }
+    explicit InstanceUnitializedException(const std::string& what, 
+            const std::string &event="db.InstanceUnitializedException") 
+        : Exception(what, event)
+        { }
 };
 
 //##############################################################################
 //##############################################################################
 struct DatabaseEnvironmentException : public Exception {
-        explicit DatabaseEnvironmentException(const std::string& what) : Exception(what) { }
+explicit DatabaseEnvironmentException(const std::string &what,
+        const std::string &event="db.DatabaseEnvironmentException")
+    : Exception(what, event)
+    { }
 };
 
 //##############################################################################
 //##############################################################################
 struct DatabaseLockingException : public Exception {
-        explicit DatabaseLockingException(const std::string& what) : Exception(what) { }
+    explicit DatabaseLockingException(const std::string& what,
+        const std::string &event="db.DatabaseLockingException")
+        : Exception(what, event)
+    { }
 };
 
 //##############################################################################
 //##############################################################################
 struct DatabaseVersioningError : public Exception {
-        explicit DatabaseVersioningError(const std::string& what) : Exception(what) { }
+    explicit DatabaseVersioningError(const std::string& what,
+        const std::string &event="db.DatabaseVersioningError")
+        : Exception(what, event)
+    { }
 };
 
 //##############################################################################
 //##############################################################################
 struct UnknownTransactionException : public Exception {
-    explicit UnknownTransactionException(const std::string& what) : Exception(what) { }
+    explicit UnknownTransactionException(const std::string& what,
+        const std::string &event="db.UnknownTransactionException")
+        : Exception(what, event)
+    { }
 };
 
 

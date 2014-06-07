@@ -21,6 +21,8 @@
 #include <boost/variant/static_visitor.hpp>
 
 #include "../graph/graph_interface.h"
+#include "../core/log.h"
+
 #include "compiler_types.h"
 #include "ast.h"
 
@@ -35,7 +37,7 @@ class RangeExpandingVisitor : public boost::static_visitor<>
         //######################################################################
         //######################################################################
         RangeExpandingVisitor(boost::shared_ptr<graph::GraphInterface> graph, std::string prefix = "") 
-            : graph_(graph), prefix_(prefix)
+            : graph_(graph), prefix_(prefix), log("RangeExpandingVisitor")
         {
         }
         
@@ -61,6 +63,7 @@ class RangeExpandingVisitor : public boost::static_visitor<>
     private:
         boost::shared_ptr<graph::GraphInterface> graph_;
         std::string prefix_;
+        range::Emitter log;
 
         void prefix_child(std::string& child) const;
         

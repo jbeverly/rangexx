@@ -114,10 +114,7 @@ GraphDB::get_node(const std::string& name) const
     uint64_t last_version = -1;
     auto g_versions = n->graph_versions();
 
-    std::cout << "node has " << g_versions.size() << " versions known to it" << std::endl;
-    std::cout << "wanted version: " << cmp_version << std::endl;
     for (uint64_t node_version : boost::adaptors::reverse(g_versions)) {
-        std::cout << "node `" << name << "' has version: " << node_version << std::endl;
         if (node_version == cmp_version) {
             if (cmp_version != this_version) {
                 auto it = node_version_map.find(name);
@@ -198,11 +195,7 @@ bool
 GraphDB::has_version_or_higher(uint64_t wanted_version, node_t node)
 {
     auto vers = node->graph_versions();
-    std::cout << "wanted version is " << wanted_version << std::endl;
-    std::cout << "graph version is " << this->version() << std::endl;
-    std::cout << "node has " << vers.size() << " versions known to it" << std::endl;
     for (uint64_t node_version : boost::adaptors::reverse(vers)) {
-        std::cout << "node has version: " << node_version << std::endl;
         if(node_version > wanted_version) {
             return true;
         }
@@ -222,6 +215,7 @@ GraphDB::has_version_or_higher(uint64_t wanted_version, node_t node)
 void
 GraphDB::update_versions(uint64_t prior_version)
 {
+    auto timer = log.start_timer("update_versions", boost::lexical_cast<std::string>(prior_version));
     auto lock = instance_->write_lock(db::GraphInstanceInterface::record_type::NODE_META, "");
     auto txn = instance_->start_txn();
     for (auto &n : *this) {
@@ -229,34 +223,14 @@ GraphDB::update_versions(uint64_t prior_version)
             bool removed_node = false;
             for(auto rn : removed_nodes) {
                 if (rn->name() == n.name()) {
-                    std::cout << "node " << n.name() << " is marked for removal" << std::endl;
                     removed_node = true;
                     break;
                 }
             }
             if(!removed_node) {
-                std::cout << "while adding graph version to " << n.name() << std::endl;
-                std::cout << n.name() << " has the following forward edges:" << std::endl;
-                for ( auto e : n.forward_edges() ) {
-                    std::cout << "    " << e->name() << std::endl;
-                }
-                std::cout << n.name() << " has the following reverse edges:" << std::endl;
-                for ( auto e : n.forward_edges() ) {
-                    std::cout << "    " << e->name() << std::endl;
-                }
-                std::cout << n.name() << " has the following graph versions before:" << std::endl;
-                for ( auto e : n.graph_versions() ) {
-                    std::cout << "    " << e << std::endl;
-                }
-                n.add_graph_version(this->version()); // + 1);
+                n.add_graph_version(this->version());
                 n.commit();
-                std::cout << n.name() << " has the following graph versions after:" << std::endl;
-                for ( auto e : n.graph_versions() ) {
-                    std::cout << "    " << e << std::endl;
-                }
             }
-        } else {
-            std::cout << "node " << n.name() << " failed has_version_or_higher(" << prior_version << ",...)" << std::endl;
         }
     }
     removed_nodes.clear();
@@ -350,17 +324,6 @@ GraphDB::remove(node_t node)
     }
 
     removed_nodes.push_back(node);
-
-    /* std::for_each(std::begin(*this), std::end(*this),
-            [this, txn, node](range::graph::NodeIface& v) { 
-                if (node->name() != v.name()) { 
-                    v.add_graph_version(this->version() + 1);
-                    txn->flush();
-                }
-            }
-        );
-    */
-
     return node;
 }
 

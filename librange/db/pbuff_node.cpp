@@ -168,21 +168,20 @@ ProtobufNode::init_info() const
                 std::string buffer { instance_->get_record(rectype, name_) };
 
                 if (buffer.length() > 0) {
-                    std::cout << "reading record for `" << name_ << "' from db successful, length is " << buffer.length() << std::endl;
                     tmp.ParseFromString(buffer);
                 }
             }
 
             if (tmp.IsInitialized())                                                // newer node in db
             {
-                std::cout << "Node `" << name_ << "' is initialized from buffer" << std::endl;
+                LOG(debug5, "initialized_from_buffer") << name_ << " is initialized from buffer";
                 info = tmp;
                 type_ = node_type(info.node_type());
                 info_initialized = info.IsInitialized();
             }
             else                                                                    // new node
             {                                            
-                std::cout << "Node `" << name_ << "' is not initialized " << std::endl;
+                LOG(debug5, "uninitialized") << name_ << "is NOT initialized";
                 init_default_nodeinfo(info); //, instance_->version());
                 info_initialized = info.IsInitialized();
             }
@@ -199,11 +198,11 @@ ProtobufNode::init_info() const
 GraphInstanceInterface::lock_t
 ProtobufNode::info_lock(bool writable)
 {
-    if (instance_) {
+    //if (instance_) {
         auto lock = (writable) ? instance_->write_lock(rectype, name_) : instance_->read_lock(rectype, name_);
+        init_info();
+        /*
         if(!info_initialized) { 
-            std::cout << "getting info_lock" << std::endl;
-
             std::string buffer = instance_->get_record(rectype, name_);
             if (buffer.length() > 0) {
                 std::cout << "buffer loaded" << std::endl;
@@ -214,12 +213,12 @@ ProtobufNode::info_lock(bool writable)
                 init_default_nodeinfo(info); //, instance_->version());
             }
             info_initialized = true;
-        }
+        } */
         return lock;
-    }
-    else {
-        throw InstanceUnitializedException("Instance not initialized for node");
-    }
+    //}
+    //else {
+    //    throw InstanceUnitializedException("Instance not initialized for node");
+    //}
 }
 
 
@@ -314,8 +313,6 @@ uint64_t
 ProtobufNode::get_wanted_version() const
 {
     return wanted_version_;
-    //init_info();
-    //return info.list_version();
 }
 
 
@@ -362,6 +359,7 @@ bool
 ProtobufNode::add_forward_edge(node_t other, bool update_other_reverse_edge)
 {
     {
+        auto timer = log.start_timer("add_forward_edge");
         auto lock = info_lock(true);
         auto txn = instance_->start_txn();
 
@@ -371,7 +369,7 @@ ProtobufNode::add_forward_edge(node_t other, bool update_other_reverse_edge)
             }
         }
 
-        std::cout << "Adding forward edge from " << name_ << " to " << other->name() << std::endl;
+        LOG(debug1, "add_forward_edge") << name_ << " to " << other->name();
 
         uint64_t cmp_version = info.list_version();
         uint64_t new_version = cmp_version + 1;
@@ -386,7 +384,7 @@ ProtobufNode::add_forward_edge(node_t other, bool update_other_reverse_edge)
         update_tag_versions(info, cmp_version, new_version);
 
         if(!write_record(name_, info, instance_)) {
-            std::cout << "Unable to add forward edge from " << name_ << " to " << other->name() << std::endl;
+            LOG(error, "add_forward_edge_failed") << name_ << " to " << other->name();
             return false;
         }
     }
@@ -404,6 +402,7 @@ bool
 ProtobufNode::add_reverse_edge(node_t other, bool update_other_forward_edge)
 {
     {
+        auto timer = log.start_timer("add_reverse_edge");
         auto lock = info_lock(true);
         auto txn = instance_->start_txn();
 
@@ -413,8 +412,7 @@ ProtobufNode::add_reverse_edge(node_t other, bool update_other_forward_edge)
             }
         }
 
-
-        std::cout << "Adding reverse edge from " << name_ << " to " << other->name() << std::endl;
+        LOG(debug1, "add_reverse_edge") << name_ << " from " << other->name();
 
         uint64_t cmp_version = info.list_version();
         uint64_t new_version = cmp_version + 1;
@@ -429,7 +427,7 @@ ProtobufNode::add_reverse_edge(node_t other, bool update_other_forward_edge)
         update_tag_versions(info, cmp_version, new_version);
 
         if(!write_record(name_, info, instance_)) {
-            std::cout << "Unable to add reverse edge from " << name_ << " to " << other->name() << std::endl;
+            LOG(error, "add_reverse_edge_failed") << name_ << " from " << other->name();
             return false;
         }
     }
@@ -447,6 +445,7 @@ bool
 ProtobufNode::remove_forward_edge(node_t other, bool update_other_reverse_edge)
 {
     {
+        auto timer = log.start_timer("remove_forward_edge");
         auto lock = info_lock(true);
         auto txn = instance_->start_txn();
 
@@ -464,6 +463,8 @@ ProtobufNode::remove_forward_edge(node_t other, bool update_other_reverse_edge)
         uint64_t new_version = cmp_version + 1;
 
         int last_ver = info.forward().edges(edge_idx).versions_size();
+        // FIXME: this loop and the check below it don't seem to do anything;
+        // why is this code here, and what was it supposed to do?
         int ver_idx;
         for (ver_idx = last_ver - 1; ver_idx >= 0; --ver_idx) {
             if (cmp_version == info.forward().edges(edge_idx).versions(ver_idx)) {
@@ -471,17 +472,22 @@ ProtobufNode::remove_forward_edge(node_t other, bool update_other_reverse_edge)
             }
         }
         if (ver_idx == last_ver) {
+            LOG(debug1, "impossible_remove_forward_edge_failure");
             return false;
         }
+
+        LOG(debug1, "remove_forward_edge") << name_ << " to " << other->name();
 
         info.set_list_version(new_version);
         update_all_edge_versions(info, cmp_version, new_version);
 
+        // FIXME: should NOT remove history information for any reason
         info.mutable_forward()->mutable_edges(edge_idx)->mutable_versions()->RemoveLast(); // We can safely assume that the last element is new_version, because we
                                                                                            // aleady determined that this element was in the current version (we would
                                                                                            // have returned false earlier otherwise
 
         if(!write_record(name_, info, instance_)) {
+            LOG(error, "remove_forward_edge_failed") << name_ << " from " << other->name();
             return false;
         }
 
@@ -502,6 +508,7 @@ bool
 ProtobufNode::remove_reverse_edge(node_t other, bool update_other_forward_edge)
 {
     {
+        auto timer = log.start_timer("remove_reverse_edge", name_);
         auto lock = info_lock(true);
         auto txn = instance_->start_txn();
 
@@ -512,6 +519,7 @@ ProtobufNode::remove_reverse_edge(node_t other, bool update_other_forward_edge)
             }
         }
         if (edge_idx == info.reverse().edges_size()) {
+            LOG(debug1, "edge_not_found");
             return false;
         }
 
@@ -519,6 +527,9 @@ ProtobufNode::remove_reverse_edge(node_t other, bool update_other_forward_edge)
         uint64_t new_version = cmp_version + 1;
 
         int last_ver = info.reverse().edges(edge_idx).versions_size();
+
+        // FIXME: this loop and the check below it don't seem to do anything;
+        // why is this code here, and what was it supposed to do?
         int ver_idx;
         for (ver_idx = last_ver - 1; ver_idx >= 0; --ver_idx) {
             if (cmp_version == info.reverse().edges(edge_idx).versions(ver_idx)) {
@@ -526,16 +537,21 @@ ProtobufNode::remove_reverse_edge(node_t other, bool update_other_forward_edge)
             }
         }
         if (ver_idx == last_ver) {
+            LOG(debug1, "impossible_remove_reverse_edge_failure");
             return false;
         }
+
+        LOG(debug1, "remove_reverse_edge") << name_ << " to " << other->name();
 
         info.set_list_version(new_version);
         update_all_edge_versions(info, cmp_version, new_version);
 
+        // FIXME: should NOT remove history information for any reason
         info.mutable_reverse()->mutable_edges(edge_idx)->mutable_versions()->RemoveLast(); // We can safely assume that the last element is new_version, because we
                                                                                            // aleady determined that this element was in the current version (we would
                                                                                            // have returned false earlier otherwise
         if(!write_record(name_, info, instance_)) {
+            LOG(error, "remove_reverse_edge_failed") << name_ << " from " << other->name();
             return false;
         }
 
@@ -555,6 +571,8 @@ ProtobufNode::remove_reverse_edge(node_t other, bool update_other_forward_edge)
 bool
 ProtobufNode::update_tag(const std::string& key, const std::vector<std::string>& values)
 {
+    auto timer = log.start_timer("update_tag", key);
+
     auto lock = info_lock(true);
     int key_idx = 0;
     NodeInfo_Tags_KeyValue * kv = nullptr;
@@ -598,6 +616,7 @@ ProtobufNode::update_tag(const std::string& key, const std::vector<std::string>&
     }
 
     if(!write_record(name_, info, instance_)) {
+        LOG(error, "update_tag_failed");
         return false;
     }
     return true;
@@ -609,6 +628,7 @@ ProtobufNode::update_tag(const std::string& key, const std::vector<std::string>&
 bool
 ProtobufNode::delete_tag(const std::string& key)
 {
+    auto timer = log.start_timer("delete_tag", key);
     auto lock = info_lock(true);
 
     int key_idx;
@@ -653,6 +673,7 @@ ProtobufNode::set_wanted_version(uint64_t version)
 ProtobufNode::node_type
 ProtobufNode::set_type(node_type type)
 {
+    auto timer = log.start_timer("set_type", range::graph::NodeIface::node_type_names.find(type)->second);
     auto lock = info_lock(true);
 
     uint64_t cmp_version = info.list_version();
@@ -697,25 +718,21 @@ ProtobufNode::is_valid() const
 void
 ProtobufNode::add_graph_version(uint64_t version)
 {
+    auto timer = log.start_timer("add_graph_version", boost::lexical_cast<std::string>(version));
     auto txn = instance_->start_txn();
     auto lock = info_lock(true);
     for(int i = info.graph_versions_size() - 1; i >= 0; --i) {
         if (version == info.graph_versions(i)) {
-            std::cout << "version " << version << " already in list of versions" << std::endl;
             return;
         }
         if(version < info.graph_versions(i)) {
-            std::cout << "version " << version << " is lower than the node's version " << std::endl;
             return;
         }
     } 
 
     info.add_graph_versions(version);
-    std::cout << "adding graph version: " << version << " to " << name_ << std::endl;
     write_record(name_, info, instance_, rectype_t::NODE_META);
     txn->flush();
-
-    std::cout << "DONE adding graph version: " << version << " to " << name_ << std::endl;
     return;
 }
 

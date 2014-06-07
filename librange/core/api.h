@@ -24,13 +24,16 @@
 #include <boost/shared_ptr.hpp>
 
 #include "exceptions.h"
+#include "range_struct.h"
+#include "config_builder.h"
+#include "log.h"
+
 #include "../db/db_exceptions.h"
 #include "../compiler/compiler_exceptions.h"
 #include "../graph/graph_exceptions.h"
 #include "../db/db_interface.h"
 #include "../graph/graph_interface.h"
-#include "range_struct.h"
-#include "config_builder.h"
+#include <boost/exception_ptr.hpp>
 
 #include "config.h"
 
@@ -44,14 +47,20 @@ class RangeAPI_v1
         typedef ::range::graph::NodeIface::node_type node_type;
         //######################################################################
         explicit RangeAPI_v1(boost::shared_ptr<Config> cfg)
-            : cfg_(cfg)
+            try : cfg_(cfg), log("RangeAPI_v1")
         {
+        } 
+        catch(range::Exception &e) {
+            LOGBACKTRACE(e);
         }
         
         //######################################################################
         explicit RangeAPI_v1(const std::string &cfg_file) 
-            : cfg_(config_builder(cfg_file))
+            try : cfg_(config_builder(cfg_file)), log("RangeAPI_v1")
         {
+        }
+        catch(range::Exception &e) {
+            LOGBACKTRACE(e);
         }
         
         //######################################################################
@@ -539,6 +548,8 @@ class RangeAPI_v1
 
     private:
         boost::shared_ptr<Config> cfg_;
+        range::Emitter log;
+
         boost::shared_ptr<graph::GraphInterface> graphdb(const std::string &name, uint64_t version) const;
         std::string env_prefix(const std::string &env_name) const;
         std::string prefixed_node_name(const std::string &env_name, const std::string &node_name) const;

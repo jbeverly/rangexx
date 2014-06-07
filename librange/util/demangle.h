@@ -14,21 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGE_COMPILER_EXCEPTIONS_H
-#define _RANGE_COMPILER_EXCEPTIONS_H
+#ifndef _RANGE_UTIL_DEMANGLE_H
+#define _RANGE_UTIL_DEMANGLE_H
 
-#include "../core/exceptions.h"
-
-namespace range { namespace compiler {
-
-class InvalidRangeExpression : public ::range::Exception
-{
-    public:
-        InvalidRangeExpression(const std::string& s, const std::string &event="compiler.InvalidRangeExpression") : ::range::Exception(s, event) { }
-};
-
-
-
-} /* namespace compiler */ } /* namespace range */
+#include <string>
+namespace range { namespace util {
+std::string demangle(const char *typeid_name);
+} /* namespace util */ } /* namespace range */
 
 #endif

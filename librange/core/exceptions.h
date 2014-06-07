@@ -18,17 +18,35 @@
 #define _RANGE_CORE_EXCEPTION_H
 
 #include <stdexcept>
+#include "log.h"
+#include "../util/demangle.h"
 
 namespace range {
 
+//##############################################################################
+//##############################################################################
 struct Exception : public std::runtime_error::runtime_error {
-    Exception(const std::string& what) : std::runtime_error::runtime_error(what) { }
+    Exception(const std::string& what,
+        const std::string &event="Exception")
+        : std::runtime_error::runtime_error(what) 
+    { 
+        try {
+            auto log = range::Emitter("exception");
+            log.notice(event, what);
+        } catch(...) { }
+    }
+    virtual int vtable(void) { return 1; }
 };
 
 namespace core { namespace stored {
 
+//##############################################################################
+//##############################################################################
 struct MqueueException : public ::range::Exception {
-    MqueueException(const std::string& what) : Exception(what) {}
+    MqueueException(const std::string& what,
+        const std::string &event="stored.MqueueException") 
+        : Exception(what, event)
+    { }
 };
 
 } /* namespace stored */ } /* core */ 

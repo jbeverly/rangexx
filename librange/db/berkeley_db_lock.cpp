@@ -32,8 +32,6 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
     auto rmw = dbstl::ReadModifyWriteOption::no_read_modify_write();
     int flags = DB_TXN_SYNC; //| DB_TXN_SNAPSHOT;
 
-    std::cout << "locking " << ((readonly_) ? "readonly" : "read/write") << std::endl;
-
     if (read_write) {
         rmw = dbstl::ReadModifyWriteOption::read_modify_write();
         flags = DB_TXN_SYNC;
@@ -68,29 +66,12 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
 
 //##############################################################################
 //##############################################################################
-/* void
-BerkeleyDBLock::cleanup()
-{
-    std::thread::id id = std::this_thread::get_id();
-    auto it = backend_.weak_table.find(id);
-    if (it != backend_.weak_table.end()) {
-        backend_.weak_table.erase(it);
-    }
-} */
-
-//##############################################################################
-//##############################################################################
 void
 BerkeleyDBLock::unlock()
 {
-    std::cout << "unlocking " << std::endl;
     dbstl::commit_txn(backend_.env_, txn_, 0);
     iter_.close_cursor();
     backend_.graph_bdbgraph_instances.clear();
-    if(!readonly_) {
-        std::cout << "committed to database" << std::endl;
-    }
-    //cleanup();
 }
 
 //##############################################################################

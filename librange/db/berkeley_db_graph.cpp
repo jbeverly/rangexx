@@ -79,7 +79,10 @@ BerkeleyDBGraph::db_get(std::string key) const
 //##############################################################################
 //##############################################################################
 BerkeleyDBGraph::BerkeleyDBGraph(const std::string& name, BerkeleyDB& backend)
-    : name_(name), backend_(backend), current_version_(0), version_pending_(false), transaction_table(), weak_table(transaction_table)
+    : name_(name), backend_(backend), current_version_(0),
+    version_pending_(false), transaction_table(), weak_table(transaction_table),
+    log("BerkeleyDBGraph")
+
 {
     version(); // set current version and establish bdb rmw lock on changelist
                // as early as possible if we're in a rmw transaction.
@@ -90,6 +93,8 @@ BerkeleyDBGraph::BerkeleyDBGraph(const std::string& name, BerkeleyDB& backend)
 BerkeleyDBGraph::changelist_t 
 BerkeleyDBGraph::commit_txn(std::thread::id id)
 {
+    auto timer = log.start_timer("commit_txn");
+
     BerkeleyDBTxn::changelist_t filtered_changes;
     auto txn = transaction_table.find(id);
 
@@ -112,7 +117,6 @@ BerkeleyDBGraph::commit_txn(std::thread::id id)
 
         if (data.size() > 0) { 
             std::string lookup = key_name(type, object_name);
-            std::cout << "Writing data for " << object_name << " with of size: " << data.size() << std::endl;
             db_put(lookup, data);
         }
 
@@ -136,6 +140,8 @@ BerkeleyDBGraph::commit_txn(std::thread::id id)
 void
 BerkeleyDBGraph::inculcate_change(std::thread::id id)
 {
+    auto timer = log.start_timer("inculcate_change");
+
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
         throw InstanceUnitializedException("Map instance not found");
@@ -363,9 +369,8 @@ BerkeleyDBGraph::get_record(record_type type, const std::string& key) const
     std::string data;
     if(dit != map_instance->end()) {
         data = db_get(lookup);
-        std::cout << "Reading data for " << key << " with of size: " << data.size() << std::endl;
     } else {
-        std::cout << "data not in db" << std::endl;
+        LOG(debug0, "get_record.missing_data") << lookup << ": data not in db";
     }
 
     return data;
@@ -442,10 +447,10 @@ BerkeleyDBGraph::start_txn()
 
     auto txn = transaction_table.find(id);
     if (txn != transaction_table.end()) {
-        std::cout << "existing txn" << std::endl;
+        LOG(debug9, "existing_txn") << "Transaction already exists, reusing";
         return txn->second.lock();
     }
-    std::cout << "starting new txn" << std::endl;
+    LOG(debug9, "new_txn") << "Creating new transaction";
 
     boost::shared_ptr<BerkeleyDBTxn> txn_ptr {
                 new BerkeleyDBTxn(id, *this),
@@ -462,36 +467,19 @@ bool
 BerkeleyDBGraph::write_record(record_type type, const std::string& key,
         uint64_t object_version, const std::string& data)
 {
-    /* std::thread::id id = std::this_thread::get_id(); 
-    auto txnit = transaction_table.find(id);
-    if (txnit != transaction_table.end()) {
-        txnit->second.lock()->add_change(std::make_tuple(type, key, object_version, data));
-    }
-    else { */
     auto txn = start_txn();
     boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->add_change(
             std::make_tuple(type, key, object_version, data));
-    //}
     return true;
 }
-
-//##############################################################################
-//##############################################################################
-/*
-uint64_t
-BerkeleyDBGraph::set_wanted_version(uint64_t version)
-{
-    uint64_t old_version = wanted_version_;
-    wanted_version_ = version;
-    return old_version;
-}
-*/
 
 //##############################################################################
 //##############################################################################
 BerkeleyDBGraph::history_list_t
 BerkeleyDBGraph::get_change_history() const
 {
+    auto timer = log.start_timer("get_change_history");
+
     history_list_t history_list;
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {

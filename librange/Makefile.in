@@ -89,10 +89,13 @@ DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(nobase_librange_util_la_include_HEADERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_boost_base.m4 \
+	$(top_srcdir)/m4/ax_boost_date_time.m4 \
+	$(top_srcdir)/m4/ax_boost_filesystem.m4 \
 	$(top_srcdir)/m4/ax_boost_log.m4 \
 	$(top_srcdir)/m4/ax_boost_log_setup.m4 \
 	$(top_srcdir)/m4/ax_boost_python.m4 \
 	$(top_srcdir)/m4/ax_boost_regex.m4 \
+	$(top_srcdir)/m4/ax_boost_system.m4 \
 	$(top_srcdir)/m4/ax_boost_thread.m4 \
 	$(top_srcdir)/m4/ax_check_protoc.m4 \
 	$(top_srcdir)/m4/ax_cxx_compile_stdcxx_11.m4 \
@@ -164,7 +167,7 @@ librange_core_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_core_la_OBJECTS = ./core/config_builder.lo \
 	./core/json_visitor.lo ./core/read_api.lo \
 	./core/stored_message.lo ./core/store.pb.lo \
-	./core/write_api.lo
+	./core/write_api.lo ./core/log.lo
 librange_core_la_OBJECTS = $(am_librange_core_la_OBJECTS)
 librange_db_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_db_la_OBJECTS = db/pbuff_node.lo db/nodeinfo.pb.lo \
@@ -177,7 +180,7 @@ am_librange_graph_la_OBJECTS = graph/graphdb.lo graph/graph_iter.lo \
 	graph/node_interface.lo
 librange_graph_la_OBJECTS = $(am_librange_graph_la_OBJECTS)
 librange_util_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
-am_librange_util_la_OBJECTS = util/crc32.lo
+am_librange_util_la_OBJECTS = util/crc32.lo ./util/demangle.lo
 librange_util_la_OBJECTS = $(am_librange_util_la_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -318,11 +321,14 @@ AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BOOST_CPPFLAGS = @BOOST_CPPFLAGS@
+BOOST_DATE_TIME_LIB = @BOOST_DATE_TIME_LIB@
+BOOST_FILESYSTEM_LIB = @BOOST_FILESYSTEM_LIB@
 BOOST_LDFLAGS = @BOOST_LDFLAGS@
 BOOST_LOG_LIB = @BOOST_LOG_LIB@
 BOOST_LOG_SETUP_LIB = @BOOST_LOG_SETUP_LIB@
 BOOST_PYTHON_LIB = @BOOST_PYTHON_LIB@
 BOOST_REGEX_LIB = @BOOST_REGEX_LIB@
+BOOST_SYSTEM_LIB = @BOOST_SYSTEM_LIB@
 BOOST_THREAD_LIB = @BOOST_THREAD_LIB@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
@@ -480,7 +486,7 @@ AM_LDFLAGS_G = $(LDFLAGS)
 AM_LIBADD_G = $(LIBADD)
 AM_CPPFLAGS = @BOOST_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ $(AM_CPPFLAGS_G)
 AM_LDFLAGS = @BOOST_LDFLAGS@ @DB_CXX_LDFLAGS@  @DB_STL_LDFLAGS@ @PROTOBUF_LDFLAGS@  $(AM_LDFLAGS_G)
-AM_LIBADD = @BOOST_REGEX_LIB@ @DB_CXX_LIBS@     @DB_STL_LIBS@ @PROTOBUF_LIBS@     $(AM_LIBADD_G)
+AM_LIBADD = @BOOST_LOG_SETUP_LIB@ @BOOST_SYSTEM_LIB@ @BOOST_DATE_TIME_LIB@ @BOOST_THREAD_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_LOG_LIB@ @BOOST_REGEX_LIB@ @DB_CXX_LIBS@     @DB_STL_LIBS@ @PROTOBUF_LIBS@     $(AM_LIBADD_G)
 lib_LTLIBRARIES = librange.la
 noinst_LTLIBRARIES = librange_db.la librange_graph.la librange_compiler.la librange_util.la librange_core.la
 BUILT_SOURCES = db/nodeinfo.pb.h \
@@ -492,8 +498,12 @@ BUILT_SOURCES = db/nodeinfo.pb.h \
 
 ################################################################################
 librange_util_la_includedir = $(includedir)/rangexx
-nobase_librange_util_la_include_HEADERS = util/crc32.h
-librange_util_la_SOURCES = util/crc32.cpp
+nobase_librange_util_la_include_HEADERS = util/crc32.h \
+										  ./util/demangle.h
+
+librange_util_la_SOURCES = util/crc32.cpp \
+						   ./util/demangle.cpp
+
 librange_util_la_LIBADD = $(AM_LIBADD)
 
 ################################################################################
@@ -572,14 +582,16 @@ nobase_librange_core_la_include_HEADERS = ./core/api.h \
 										  ./core/range_struct.h \
 										  ./core/stored_config.h \
 										  ./core/stored_message.h \
-										  ./core/store.pb.h 
+										  ./core/store.pb.h \
+										  ./core/log.h
 
 librange_core_la_SOURCES = ./core/config_builder.cpp \
 						   ./core/json_visitor.cpp \
 						   ./core/read_api.cpp \
 						   ./core/stored_message.cpp \
 						   ./core/store.pb.cpp \
-						   ./core/write_api.cpp 
+						   ./core/write_api.cpp \
+						   ./core/log.cpp
 
 librange_core_la_LIBADD = $(AM_LIBADD)
 librange_la_SOURCES = 
@@ -702,6 +714,7 @@ core/$(DEPDIR)/$(am__dirstamp):
 	core/$(DEPDIR)/$(am__dirstamp)
 ./core/write_api.lo: core/$(am__dirstamp) \
 	core/$(DEPDIR)/$(am__dirstamp)
+./core/log.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
 
 librange_core.la: $(librange_core_la_OBJECTS) $(librange_core_la_DEPENDENCIES) $(EXTRA_librange_core_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_core_la_OBJECTS) $(librange_core_la_LIBADD) $(LIBS)
@@ -748,6 +761,8 @@ util/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) util/$(DEPDIR)
 	@: > util/$(DEPDIR)/$(am__dirstamp)
 util/crc32.lo: util/$(am__dirstamp) util/$(DEPDIR)/$(am__dirstamp)
+./util/demangle.lo: util/$(am__dirstamp) \
+	util/$(DEPDIR)/$(am__dirstamp)
 
 librange_util.la: $(librange_util_la_OBJECTS) $(librange_util_la_DEPENDENCIES) $(EXTRA_librange_util_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_util_la_OBJECTS) $(librange_util_la_LIBADD) $(LIBS)
@@ -756,6 +771,8 @@ mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f ./core/*.$(OBJEXT)
 	-rm -f ./core/*.lo
+	-rm -f ./util/*.$(OBJEXT)
+	-rm -f ./util/*.lo
 	-rm -f compiler/*.$(OBJEXT)
 	-rm -f compiler/*.lo
 	-rm -f db/*.$(OBJEXT)
@@ -770,10 +787,12 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/config_builder.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/json_visitor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/log.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/read_api.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/store.pb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/stored_message.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/write_api.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./util/$(DEPDIR)/demangle.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeParser_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeScanner_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/expanding_visitor.Plo@am__quote@
@@ -821,6 +840,7 @@ mostlyclean-libtool:
 clean-libtool:
 	-rm -rf .libs _libs
 	-rm -rf ./core/.libs ./core/_libs
+	-rm -rf ./util/.libs ./util/_libs
 	-rm -rf compiler/.libs compiler/_libs
 	-rm -rf db/.libs db/_libs
 	-rm -rf graph/.libs graph/_libs
@@ -1157,7 +1177,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	clean-noinstLTLIBRARIES mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./core/$(DEPDIR) compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
+	-rm -rf ./core/$(DEPDIR) ./util/$(DEPDIR) compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1207,7 +1227,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./core/$(DEPDIR) compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
+	-rm -rf ./core/$(DEPDIR) ./util/$(DEPDIR) compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

@@ -33,6 +33,7 @@
 
 #include "berkeley_db_weak_deleter.h"
 #include "berkeley_db_types.h"
+#include "../core/log.h"
 
 //##############################################################################
 #ifdef _ENABLE_TESTING
@@ -119,6 +120,7 @@ class BerkeleyDBGraph
 
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBTxn>> transaction_table; 
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBTxn>>& weak_table; 
+        range::Emitter log;
 
         //######################################################################
         DbEnv * env(void); 

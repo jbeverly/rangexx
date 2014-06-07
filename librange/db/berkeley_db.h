@@ -32,11 +32,9 @@
 
 #include "berkeley_db_types.h"
 
-//#include "berkeley_db_graph.h"
-//#include "berkeley_db_cursor.h"
-//#include "berkeley_db_txn.h"
-//#include "berkeley_db_lock.h"
 #include "berkeley_db_weak_deleter.h"
+
+#include "../core/log.h"
 
 #ifdef _ENABLE_TESTING
 class TestGraphDB; // For test introspection
@@ -100,6 +98,8 @@ class BerkeleyDB : public BackendInterface {
                     | DB_INIT_LOCK | DB_INIT_TXN | DB_RECOVER | DB_REGISTER |
                     DB_MULTIVERSION;
         static const uint32_t env_set_flags = DB_REGION_INIT | DB_DIRECT_DB | DB_MULTIVERSION;
+
+        range::Emitter log;
 
         void init_graph_info();
         void add_graph_instance(const std::string& name);
