@@ -131,7 +131,7 @@ BerkeleyDB::~BerkeleyDB() noexcept
 //##############################################################################
 //##############################################################################
 bool
-BerkeleyDB::db_put(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string &key, const std::string &value)
+BerkeleyDB::db_put(DbTxn *dbtxn, map_t &map, const std::string &key, const std::string &value)
 {
     BOOST_LOG_FUNCTION();
 
@@ -139,14 +139,14 @@ BerkeleyDB::db_put(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string
     {
         const char *db_filename;
         const char *db_name;
-        map->get_db_handle()->get_dbname(&db_filename, &db_name);
+        map.get_db_handle()->get_dbname(&db_filename, &db_name);
         event = db_name;
     }
     event = "db_put." + event;
     auto timer = log.start_timer(event);
     timer << "key: " << key << "  size: " << value.size();
 
-    Db * hdl = map->get_db_handle();
+    Db * hdl = map.get_db_handle();
 
     char keybuf[key.size() + 1];
     std::memset(keybuf, 0, sizeof(keybuf));
@@ -168,7 +168,7 @@ BerkeleyDB::db_put(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string
 //##############################################################################
 //##############################################################################
 std::string
-BerkeleyDB::db_get(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string &key) const
+BerkeleyDB::db_get(DbTxn *dbtxn, map_t &map, const std::string &key) const
 {
     BOOST_LOG_FUNCTION();
 
@@ -176,14 +176,14 @@ BerkeleyDB::db_get(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string
     {
         const char *db_filename;
         const char *db_name;
-        map->get_db_handle()->get_dbname(&db_filename, &db_name);
+        map.get_db_handle()->get_dbname(&db_filename, &db_name);
         event = db_name;
     }
     event += "db_get." + event;
     auto timer = log.start_timer(event);
     timer << "key: " << key << " size: ";
 
-    Db * hdl = map->get_db_handle();
+    Db * hdl = map.get_db_handle();
 
     char keybuf[key.size() + 1];
     std::memset(keybuf, 0, sizeof(keybuf));
@@ -220,7 +220,8 @@ BerkeleyDB::init_graph_info()
     RANGE_LOG_TIMED_FUNCTION();
 
     if (!graph_info_map) {
-        graph_info_map = boost::shared_ptr<map_t>(new map_t(graph_info, env_));
+        map_t *map = new map_t(graph_info, env_);
+        graph_info_map = std::move(std::unique_ptr<map_t>(map));
     }
 
     for(auto name : listGraphInstances()) {
@@ -250,7 +251,7 @@ BerkeleyDB::listGraphInstances() const
     BerkeleyDBLock lock { const_cast<BerkeleyDB&>(*this), *graph_info_map,
                             false };
     GraphList listbuf;
-    std::string graph_list = db_get(lock.txn(), graph_info_map, "graph_list");
+    std::string graph_list = db_get(lock.txn(), *graph_info_map, "graph_list");
     std::vector<std::string> list;
     if (graph_list.size() > 0) { 
         listbuf.ParseFromString(graph_list);
@@ -289,14 +290,14 @@ BerkeleyDB::add_graph_instance(const std::string& name) {
     }
 
     GraphList listbuf;
-    std::string graph_list = db_get(lock.txn(), graph_info_map, "graph_list"); 
+    std::string graph_list = db_get(lock.txn(), *graph_info_map, "graph_list"); 
     if (graph_list.size() > 0) {
         listbuf.ParseFromString(graph_list);
     } 
 
     listbuf.add_name()->assign(name);
 
-    db_put(lock.txn(), graph_info_map, "graph_list", listbuf.SerializeAsString());
+    db_put(lock.txn(), *graph_info_map, "graph_list", listbuf.SerializeAsString());
 }
 
 //##############################################################################

@@ -74,8 +74,8 @@ BerkeleyDBLock::unlock()
 {
     BOOST_LOG_FUNCTION();
 
-    dbstl::commit_txn(backend_.env_, txn_, 0);
     iter_.close_cursor();
+    dbstl::commit_txn(backend_.env_, txn_, 0);
     backend_.graph_bdbgraph_instances.clear();
 }
 

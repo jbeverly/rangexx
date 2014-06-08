@@ -56,7 +56,7 @@ BerkeleyDBGraph::db_put(std::string key, std::string value)
     }
 
     DbTxn * dbtxn = txn_it->second.lock()->txn();
-    return backend_.db_put(dbtxn, map_instance, key, value);
+    return backend_.db_put(dbtxn, *map_instance, key, value);
 }
 
 //##############################################################################
@@ -78,7 +78,7 @@ BerkeleyDBGraph::db_get(std::string key) const
     }
 
     DbTxn * dbtxn = txn_it->second.lock()->txn();
-    return backend_.db_get(dbtxn, map_instance, key);
+    return backend_.db_get(dbtxn, *map_instance, key);
 }
 
 
