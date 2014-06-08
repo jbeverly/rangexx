@@ -104,10 +104,6 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
 BerkeleyDB::~BerkeleyDB() noexcept
 {
     try {
-        LOG(debug9, "dtor") << "destructing BerkeleyDB";
-    } catch(...) { }
-
-    try {
         for(auto dbi : graph_db_instances) {
             try {
                 dbstl::close_db(dbi.second);
