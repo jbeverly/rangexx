@@ -179,7 +179,7 @@ Emitter::Emitter(std::string module)
 //######################################################################
 //######################################################################
 void
-Emitter::normalize_event(std::string &event) const
+Emitter::normalize_event(std::string &event)
 {
     auto f = [](char c) { return !std::isalnum(c) && c != '_' && c != '.'; };
     std::replace_if(event.begin(), event.end(), f, '_');
@@ -188,7 +188,7 @@ Emitter::normalize_event(std::string &event) const
 //######################################################################
 //######################################################################
 void
-Emitter::normalize_extra(std::string &extra) const
+Emitter::normalize_extra(std::string &extra)
 {
     auto f = [](char c) { return c == 7 || !std::isprint(c); };
     std::replace_if(extra.begin(), extra.end(), f, '_');
