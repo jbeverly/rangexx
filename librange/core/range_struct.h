@@ -80,6 +80,7 @@ class RangeTrue {
         bool operator==(const RangeFalse &) const { return false; }
         bool operator==(const RangeNull &) const { return false; }
         bool operator==(bool other) const { return other == true; }
+
         template <typename T> 
             bool operator==(const T &other) const { return other == true; }
 };
@@ -92,6 +93,7 @@ class RangeFalse {
         bool operator==(const RangeFalse &) const { return true; }
         bool operator==(const RangeNull &) const { return true; }
         bool operator==(bool other) { return other == false; }
+
         template <typename T> 
         bool operator==(const T &other) const { return other == false; }
 };
@@ -148,6 +150,7 @@ class RangeTuple {
 
         template <typename T> 
         bool operator==(const T &other) const { return other == values; }
+
 
         RangeTuple() {}
         RangeTuple(const std::pair<RangeStruct, RangeStruct> &pair)
