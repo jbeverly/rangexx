@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "builtins.h"
+
 #include <map>
 
 #include "config_builder.h"
@@ -27,6 +29,22 @@
 
 namespace range {
 
+boost::shared_ptr<Config> config;
+
+//##############################################################################
+//##############################################################################
+static boost::shared_ptr<compiler::functor_map_t>
+build_symtable() {
+    auto symtable = boost::make_shared<compiler::functor_map_t>();
+
+    (*symtable)["expand"] = boost::make_shared<range::builtins::ExpandFn>();
+    (*symtable)["expand_hosts"] = boost::make_shared<range::builtins::ExpandHostsFn>();
+    (*symtable)["clusters"] = boost::make_shared<range::builtins::ClustersFn>();
+    (*symtable)["all_clusters"] = boost::make_shared<range::builtins::AllClustersFn>();
+
+    return symtable;
+}
+
 boost::shared_ptr<Config>
 config_builder(const std::string& filename)
 {
@@ -39,7 +57,7 @@ config_builder(const std::string& filename)
     cfg->db_backend(boost::shared_ptr<range::db::BerkeleyDB>(db));
     cfg->graph_factory(boost::make_shared<graph::GraphdbConcreteFactory<graph::GraphDB>>());
     cfg->node_factory(boost::make_shared<graph::NodeIfaceConcreteFactory<db::ProtobufNode>>()); 
-    cfg->range_symbol_table(boost::make_shared<compiler::functor_map_t>());
+    cfg->range_symbol_table(build_symtable());
     cfg->use_stored(false);
     cfg->stored_mq_name("bob");
     cfg->stored_request_timeout(0);
@@ -58,7 +76,8 @@ config_builder(const std::string& filename)
         cfg->db_backend()->createGraphInstance("dependency");
     }
 
-    return boost::shared_ptr<Config>(cfg);
+    ::range::config = boost::shared_ptr<Config>(cfg);
+    return config;
 }
 
 } /* namespace range */
