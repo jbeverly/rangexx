@@ -287,7 +287,6 @@ TEST_F(TestGraphDB, test_db_readwrite) {
 //##############################################################################
 TEST_F(TestGraphDB, test_db_readwrite_with_null)
 {
-    std::cout << "path: " << path << std::endl;
     std::string test_data { "hello\0\aFoobar\0\aThingy", 21 };
     std::string test_key { "foobar\apad", 10 };
 

@@ -57,10 +57,6 @@ class BerkeleyDBCursor : public graph::GraphCursorInterface {
             try {
                 iter.close_cursor();
             } catch (...) { /* pass */ }
-            try {
-                boost::shared_ptr<BerkeleyDBGraph> mutable_graph 
-                    = boost::const_pointer_cast<BerkeleyDBGraph>(graph_);
-            } catch(...) { /* pass */ } 
         }
 
         //######################################################################

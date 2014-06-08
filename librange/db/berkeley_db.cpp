@@ -19,6 +19,7 @@
 #include <sstream>
 
 #include <boost/make_shared.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 #include <db_cxx.h>
 #include <dbstl_map.h>
@@ -33,6 +34,8 @@
 
 namespace range {
 namespace db {
+
+static const char stupid_ordinal[] = "\xFF\x01\x02\x03\x04\x05\xFF";
 
 //##############################################################################
 //##############################################################################
@@ -133,8 +136,8 @@ BerkeleyDB::~BerkeleyDB() noexcept
 bool
 BerkeleyDB::db_put(DbTxn *dbtxn, map_t &map, const std::string &key, const std::string &value)
 {
+    (void)(dbtxn); // UNUSED
     BOOST_LOG_FUNCTION();
-
     std::string event;
     {
         const char *db_filename;
@@ -146,6 +149,11 @@ BerkeleyDB::db_put(DbTxn *dbtxn, map_t &map, const std::string &key, const std::
     auto timer = log.start_timer(event);
     timer << "key: " << key << "  size: " << value.size();
 
+    std::string stupid_key = boost::replace_all_copy<std::string>(key, std::string("\0",1), std::string(stupid_ordinal));
+    std::string stupid_value = boost::replace_all_copy<std::string>(value, std::string("\0",1), std::string(stupid_ordinal));
+    map[stupid_key] = stupid_value;
+    return true;
+/*
     Db * hdl = map.get_db_handle();
 
     char keybuf[key.size() + 1];
@@ -163,6 +171,7 @@ BerkeleyDB::db_put(DbTxn *dbtxn, map_t &map, const std::string &key, const std::
         THROW_STACK(DatabaseEnvironmentException("Unable to write data for " + key));
     }
     return true;
+*/
 }
 
 //##############################################################################
@@ -171,7 +180,7 @@ std::string
 BerkeleyDB::db_get(DbTxn *dbtxn, map_t &map, const std::string &key) const
 {
     BOOST_LOG_FUNCTION();
-
+    (void)(dbtxn); // UNUSED
     std::string event;
     {
         const char *db_filename;
@@ -182,6 +191,18 @@ BerkeleyDB::db_get(DbTxn *dbtxn, map_t &map, const std::string &key) const
     event += "db_get." + event;
     auto timer = log.start_timer(event);
     timer << "key: " << key << " size: ";
+
+    std::string stupid_key = boost::replace_all_copy<std::string>(key, std::string("\0",1), std::string(stupid_ordinal));
+    auto it = map.find(stupid_key);
+    if(it != map.end()) {
+        std::string value = it->second;
+        boost::replace_all(value, std::string(stupid_ordinal), std::string("\0", 1));
+        return value;
+    } else {
+        return "";
+    }
+
+/*
 
     Db * hdl = map.get_db_handle();
 
@@ -200,6 +221,7 @@ BerkeleyDB::db_get(DbTxn *dbtxn, map_t &map, const std::string &key) const
     }
 
     return std::string(static_cast<char*>(dbdata.get_data()), dbdata.get_size());
+*/
 }
 
 //##############################################################################
