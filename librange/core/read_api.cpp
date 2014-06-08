@@ -223,7 +223,7 @@ RangeAPI_v1::expand_range_expression(const std::string &env_name,
 
             std::string prefix = (env_name.size() > 0) ? env_name + "#" : "";
 
-            boost::apply_visitor(compiler::RangeExpandingVisitor(primary, prefix), top);
+            boost::apply_visitor(compiler::RangeExpandingVisitor(primary, env_name, prefix), top);
             results = boost::apply_visitor(compiler::FetchChildrenVisitor(), top);
             std::for_each(results.values.begin(), results.values.end(), 
                     [this,&env_name](RangeStruct &v) { 

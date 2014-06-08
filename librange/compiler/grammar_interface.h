@@ -42,7 +42,8 @@ class RangeGrammar
 class RangeFunction {
     public:
         virtual ~RangeFunction() = default;
-        virtual std::vector<std::string> operator()(const std::vector<std::vector<std::string>>&) = 0;
+        virtual std::vector<std::string> operator()(const std::string &env_name,
+                const std::vector<std::vector<std::string>>& args) = 0;
         virtual size_t n_args() const = 0;
     protected:
         RangeFunction() = default;

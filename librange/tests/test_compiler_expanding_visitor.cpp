@@ -640,7 +640,7 @@ TEST_F(TestCompiler, test_function)
 {
     auto func = boost::make_shared<MockRangeFunction>();
 
-    EXPECT_CALL(*func, call(std::vector<std::vector<std::string>>(
+    EXPECT_CALL(*func, call("", std::vector<std::vector<std::string>>(
                     {
                         {"thing0", "thing1", "thing2", "thing3", "thing4", "thing5", "thing6"},
                         {"thing3", "thing4", "thing5", "thing6", "thing7", "thing8", "thing9"}

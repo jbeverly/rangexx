@@ -26,9 +26,9 @@
 class MockRangeFunction : public ::range::compiler::RangeFunction {
     public:
         MOCK_CONST_METHOD0(n_args, size_t(void));
-        MOCK_METHOD1(call, std::vector<std::string>(const std::vector<std::vector<std::string>>&));
-        virtual std::vector<std::string> operator()(const std::vector<std::vector<std::string>>& vs) override {
-            return call(vs);
+        MOCK_METHOD2(call, std::vector<std::string>(const std::string &env_name, const std::vector<std::vector<std::string>>&));
+        virtual std::vector<std::string> operator()(const std::string &env_name, const std::vector<std::vector<std::string>>& vs) override {
+            return call(env_name, vs);
         }
 };
 #endif

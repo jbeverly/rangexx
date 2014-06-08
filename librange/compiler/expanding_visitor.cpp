@@ -437,7 +437,7 @@ RangeExpandingVisitor::operator()(ast::ASTFunction& fn) const
 {
     BOOST_LOG_FUNCTION();
     (*this)(fn.args_node);
-    fn.children = (*fn.fn)(fn.args_node.argument_vecs );
+    fn.children = (*fn.fn)(env_name_, fn.args_node.argument_vecs);
 }
 
 //##############################################################################
