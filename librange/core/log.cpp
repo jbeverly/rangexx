@@ -124,6 +124,13 @@ try : log_(log), event_(event), extrastream_ptr_(),
 {
     extrastream_ptr_ = boost::make_shared<std::stringstream>();
     (*extrastream_ptr_) << extra;
+
+    std::stringstream s;
+    std::time_t start_time = std::chrono::high_resolution_clock::to_time_t(s_time);
+    s << " started at: " << std::ctime(&start_time);
+    log_->writelog(event_, s.str().substr(0,s.str().size()-1), Emitter::logseverity::debug1);
+
+
 }
 catch(std::exception &e) {
     log->fatal("unknown", e.what());
@@ -137,15 +144,14 @@ Emitter::Timer::time()
 {
     using namespace std::chrono;
     high_resolution_clock::time_point end = high_resolution_clock::now();
-
-    std::stringstream s;
-    std::time_t start_time = std::chrono::high_resolution_clock::to_time_t(s_time);
-    s << " started at: " << std::ctime(&start_time);
-    log_->writelog(event_, s.str().substr(0,s.str().size()-1), Emitter::logseverity::debug1);
-
     std::chrono::milliseconds span = duration_cast<std::chrono::milliseconds>(end - s_time);
+
     *extrastream_ptr_ << " completed in " << span.count() << "ms";
-    log_->writelog(event_ , extrastream_ptr_->str(), Emitter::logseverity::debug4);
+
+    std::string extra = extrastream_ptr_->str();
+    Emitter::normalize_event(extra);
+
+    log_->writelog(event_, extra, Emitter::logseverity::debug4);
     log_->timetaken(event_, span.count());
 }
 
@@ -393,10 +399,11 @@ void initialize_logger(const std::string &filename, uint8_t sev)
 
     add_common_attributes();
     core::get()->add_global_attribute("Scope", attributes::named_scope());
+    core::get()->add_global_attribute("Function", attributes::make_function([]() { return attributes::named_scope::get_scopes().back().scope_name; }));
 
     std::string format = "[%TimeStamp%]:[%SevString%]:[%Channel%]: %Message%";
     if (Emitter::logseverity(sev) > Emitter::logseverity::debug0) {
-        format = "[%TimeStamp%]:[%SevString%]:[%Channel%]:[%Scope%]: %Message%";
+        format = "[%TimeStamp%]:[%SevString%]:[%Channel%]:[%Function%]: %Message%";
     }
 
     add_file_log(

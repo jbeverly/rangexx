@@ -45,7 +45,7 @@
 
 
 #define LOG(LEVEL, EVENT) \
-    for(std::stringstream range_logmsg_; range_logmsg_.str().empty(); log.LEVEL(EVENT, range_logmsg_.str())) range_logmsg_
+    for(std::stringstream range_logmsg_; range_logmsg_.str().empty(); log.LEVEL(EVENT, range_logmsg_.str().substr(1))) range_logmsg_ << ":"
 
 #define LOGBACKTRACE(EXE) \
        do { \
@@ -165,8 +165,8 @@ class Emitter {
         //######################################################################
         //######################################################################
         explicit Emitter(std::string module) ;
-        void normalize_event(std::string &event) const;
-        void normalize_extra(std::string &extra) const;
+        static void normalize_event(std::string &event);
+        static void normalize_extra(std::string &extra);
         //######################################################################
         void writelog(const std::string &event, const std::string &extra,
                 logseverity s) const;
