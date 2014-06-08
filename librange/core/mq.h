@@ -28,6 +28,8 @@
 #pragma GCC diagnostic pop
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include "log.h"
+
 namespace range { namespace core { namespace stored { 
 
 namespace ipc = boost::interprocess;
@@ -52,6 +54,8 @@ class MessageQueue {
         std::string
         receive() const
         {
+            BOOST_LOG_FUNCTION();
+
             char buf[bufsize] = {0};
             std::string msg;
             uint32_t bytes = 0;
@@ -89,6 +93,7 @@ class MessageQueue {
         bool
         send(const std::string& msg) const
         {
+            BOOST_LOG_FUNCTION();
             char buf[bufsize] = {0};
             const char * s_ptr = msg.c_str();
             uint32_t bytes = msg.size();
@@ -152,6 +157,7 @@ const uint32_t MessageQueue<mqImpl>::msg_ordinal = 0xAAAAAAAA;
 //##############################################################################
 template <typename T = ipc::message_queue>
 boost::shared_ptr<T> CreateMQ(std::string name, size_t qlen=512) {
+    BOOST_LOG_FUNCTION();
     return boost::make_shared<T>( ipc::open_or_create, name.c_str(), qlen,
                     MessageQueue<T>::bufsize);
 }

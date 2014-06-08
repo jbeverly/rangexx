@@ -28,6 +28,8 @@
 #include <boost/bind.hpp>
 #include <boost/mem_fn.hpp>
 
+
+#include "../core/log.h"
 #include "../graph/graph_interface.h"
 #include "../graph/node_interface.h"
 
@@ -179,6 +181,7 @@ TEST_F(GraphIteratorTests, TestConstIteration) {
 int
 main(int argc, char **argv)
 {
+    range::initialize_logger("/dev/null", 0);
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     ::testing::InitGoogleTest(&argc, argv);
     google::protobuf::ShutdownProtobufLibrary();

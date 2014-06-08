@@ -18,6 +18,8 @@
 #include <boost/make_shared.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
+#include "../core/log.h"
+
 #include "berkeley_db.h"
 #include "berkeley_db_lock.h"
 #include "berkeley_db_cursor.h"
@@ -39,7 +41,7 @@ unprefix(std::string prefix, std::string name) {
 //##############################################################################
 //##############################################################################
 BerkeleyDBCursor::BerkeleyDBCursor(const_graph_sptr graph_instance)
-    : graph_(graph_instance), iter(), iterator_valid(false)
+    : graph_(graph_instance), iter(), iterator_valid(false), log("BerkeleyDBCursor")
 {
     boost::shared_ptr<BerkeleyDBGraph> mutable_graph
         = boost::const_pointer_cast<BerkeleyDBGraph>(graph_);
@@ -57,6 +59,7 @@ BerkeleyDBCursor::BerkeleyDBCursor(const_graph_sptr graph_instance)
 const BerkeleyDBCursor::map_t&
 BerkeleyDBCursor::get_const_map() const
 {
+    BOOST_LOG_FUNCTION();
     const std::string& name = graph_->name_;
     auto& backend = graph_->backend_; 
     const map_t& const_map = *backend.graph_map_instances[name];
@@ -68,6 +71,7 @@ BerkeleyDBCursor::get_const_map() const
 BerkeleyDBCursor::node_t
 BerkeleyDBCursor::fetch(const std::string& name) const 
 {
+    BOOST_LOG_FUNCTION();
     const map_t& map = get_const_map();
 
     auto found = map.rbegin(dbstl::BulkRetrievalOption::bulk_retrieval(4096), false);
@@ -99,6 +103,7 @@ BerkeleyDBCursor::fetch(const std::string& name) const
 BerkeleyDBCursor::node_t
 BerkeleyDBCursor::next() const 
 {
+    BOOST_LOG_FUNCTION();
     const map_t& map = get_const_map();
 
     if (iterator_valid && iter != map.end()) {
@@ -131,6 +136,7 @@ BerkeleyDBCursor::next() const
 BerkeleyDBCursor::node_t
 BerkeleyDBCursor::prev() const 
 {
+    BOOST_LOG_FUNCTION();
     const map_t& map = get_const_map();
 
     if (iterator_valid && riter != map.rend()) {
@@ -165,6 +171,7 @@ BerkeleyDBCursor::prev() const
 BerkeleyDBCursor::node_t
 BerkeleyDBCursor::next(node_t node) const 
 {
+    BOOST_LOG_FUNCTION();
     fetch(node->name());
     return next();
 }
@@ -174,6 +181,7 @@ BerkeleyDBCursor::next(node_t node) const
 BerkeleyDBCursor::node_t
 BerkeleyDBCursor::prev(node_t node) const 
 {
+    BOOST_LOG_FUNCTION();
     fetch(node->name());
     return prev();
 }
@@ -183,6 +191,7 @@ BerkeleyDBCursor::prev(node_t node) const
 BerkeleyDBCursor::node_t
 BerkeleyDBCursor::first() const 
 {
+    BOOST_LOG_FUNCTION();
     const map_t& map = get_const_map();
 
     auto first = map.begin();
@@ -204,6 +213,7 @@ BerkeleyDBCursor::first() const
 BerkeleyDBCursor::node_t
 BerkeleyDBCursor::last() const 
 {
+    BOOST_LOG_FUNCTION();
     const map_t& map = get_const_map();
 
     auto last = map.rbegin();

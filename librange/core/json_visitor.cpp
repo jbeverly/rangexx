@@ -19,10 +19,13 @@
 
 #include <boost/lexical_cast.hpp>
 #include "json_visitor.h"
+#include "log.h"
 
 namespace range {
 
 static void add_indent(std::stringstream &s, bool pretty_, size_t cur_indent_) {
+    BOOST_LOG_FUNCTION();
+
     if(pretty_) {
         for(size_t i = 0; i < cur_indent_; ++i) {
             s << " ";
@@ -36,6 +39,7 @@ static void add_indent(std::stringstream &s, bool pretty_, size_t cur_indent_) {
 std::string
 JSONVisitor::make_array(const std::vector<RangeStruct> &values) const
 {
+    BOOST_LOG_FUNCTION();
     std::stringstream s;
     //add_indent(s, pretty_, cur_indent_);
     s << "[";
@@ -65,6 +69,7 @@ JSONVisitor::make_array(const std::vector<RangeStruct> &values) const
 std::string
 JSONVisitor::operator()(const RangeObject &obj) const
 {
+    BOOST_LOG_FUNCTION();
     std::stringstream s;
     //add_indent(s, pretty_, cur_indent_);
     s << "{";
@@ -97,6 +102,7 @@ JSONVisitor::operator()(const RangeObject &obj) const
 std::string
 JSONVisitor::operator()(const RangeArray &ary) const
 {
+    BOOST_LOG_FUNCTION();
     return make_array(ary.values);
 }
 
@@ -105,6 +111,7 @@ JSONVisitor::operator()(const RangeArray &ary) const
 std::string
 JSONVisitor::operator()(const RangeTuple &tpl) const
 {
+    BOOST_LOG_FUNCTION();
     return make_array(tpl.values);
 }
 
@@ -113,6 +120,7 @@ JSONVisitor::operator()(const RangeTuple &tpl) const
 std::string
 JSONVisitor::operator()(const RangeNumber &num) const
 {
+    BOOST_LOG_FUNCTION();
     return boost::lexical_cast<std::string>(num.value);
 }
 
@@ -121,6 +129,7 @@ JSONVisitor::operator()(const RangeNumber &num) const
 std::string
 JSONVisitor::operator()(const RangeString &str) const
 {
+    BOOST_LOG_FUNCTION();
     return "\"" + str.value + "\"";
 }
 
@@ -129,6 +138,7 @@ JSONVisitor::operator()(const RangeString &str) const
 std::string
 JSONVisitor::operator()(const RangeTrue &) const
 {
+    BOOST_LOG_FUNCTION();
     return "true";
 }
 
@@ -137,6 +147,7 @@ JSONVisitor::operator()(const RangeTrue &) const
 std::string
 JSONVisitor::operator()(const RangeFalse &) const
 {
+    BOOST_LOG_FUNCTION();
     return "false";
 }
 
@@ -145,6 +156,7 @@ JSONVisitor::operator()(const RangeFalse &) const
 std::string
 JSONVisitor::operator()(const RangeNull &) const
 {
+    BOOST_LOG_FUNCTION();
     return "null";
 }
 

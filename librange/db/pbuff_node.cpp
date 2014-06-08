@@ -35,6 +35,8 @@ static inline bool
 write_record(const std::string& name, NodeInfo& info,
         ProtobufNode::instance_t instance, rectype_t rectype = rectype_t::NODE)
 {
+    BOOST_LOG_FUNCTION();
+
     info.set_crc32(0);
     uint32_t crc = range::util::crc32(info.SerializeAsString());
     info.set_crc32(crc);
@@ -51,6 +53,7 @@ template <typename Type>
 static inline void
 add_unique_new_version(Type item, uint64_t new_version)
 {
+    BOOST_LOG_FUNCTION();
     for(int vv_idx = item->versions_size() - 1; vv_idx >= 0; --vv_idx) {
         if (new_version == item->versions(vv_idx)) {
             return;
@@ -66,6 +69,7 @@ template <typename Type>
 static inline void
 update_unique_new_version(Type item, uint64_t cmp_version, uint64_t new_version)
 {
+    BOOST_LOG_FUNCTION();
     for(int vv_idx = item->versions_size() - 1; vv_idx >= 0; --vv_idx) {
         if (new_version == item->versions(vv_idx)) {
             return;
@@ -82,6 +86,7 @@ update_unique_new_version(Type item, uint64_t cmp_version, uint64_t new_version)
 static inline range::db::NodeInfo_Tags_KeyValue_Values *
 find_value(const std::string& value, NodeInfo_Tags_KeyValue * kv)
 {
+    BOOST_LOG_FUNCTION();
     for (int val_idx = 0; val_idx < kv->values_size(); ++val_idx) {
         if (value == kv->values(val_idx).data() ) {
             return kv->mutable_values(val_idx);
@@ -96,6 +101,7 @@ find_value(const std::string& value, NodeInfo_Tags_KeyValue * kv)
 //##############################################################################
 static inline void
 update_tag_versions(range::db::NodeInfo& info, uint64_t cmp_version, uint64_t new_version) {
+    BOOST_LOG_FUNCTION();
     int keys_size = info.tags().keys_size();
     for (int key_idx = 0; key_idx < keys_size; ++key_idx) {
         update_unique_new_version(info.mutable_tags()->mutable_keys(key_idx), cmp_version, new_version);
@@ -108,6 +114,7 @@ update_tag_versions(range::db::NodeInfo& info, uint64_t cmp_version, uint64_t ne
 static inline void
 init_default_nodeinfo(NodeInfo& info) //, uint64_t graph_version)
 {
+    BOOST_LOG_FUNCTION();
     info.set_node_type(static_cast<int>(graph::NodeIface::node_type::UNKNOWN));
     info.set_list_version(0);
     info.set_crc32(0);
@@ -125,6 +132,7 @@ init_default_nodeinfo(NodeInfo& info) //, uint64_t graph_version)
 static inline void
 update_all_edge_versions(NodeInfo& info, uint64_t cmp_version, uint64_t new_version)
 {
+    BOOST_LOG_FUNCTION();
     for (auto direction : { info.mutable_forward(), info.mutable_reverse() }) {
         for (int i = 0; i < direction->edges_size(); ++i) {
             update_unique_new_version(direction->mutable_edges(i), cmp_version, new_version);
@@ -138,6 +146,7 @@ update_all_edge_versions(NodeInfo& info, uint64_t cmp_version, uint64_t new_vers
 static inline std::vector<std::string>
 get_map_value(uint64_t cmp_version, const NodeInfo_Tags_KeyValue& key) 
 {
+    BOOST_LOG_FUNCTION();
     std::vector<std::string> values;
 
     for (int values_idx = 0; values_idx < key.values_size(); ++values_idx) {
@@ -160,6 +169,7 @@ get_map_value(uint64_t cmp_version, const NodeInfo_Tags_KeyValue& key)
 inline void
 ProtobufNode::init_info() const
 {
+    BOOST_LOG_FUNCTION();
     if (instance_) {
         if(!info_initialized) { 
             NodeInfo tmp;
@@ -188,7 +198,7 @@ ProtobufNode::init_info() const
         }
     }
     else {
-        throw InstanceUnitializedException("Instance not initialized for node");
+        THROW_STACK(InstanceUnitializedException("Instance not initialized for node"));
     }
 }
 
@@ -198,27 +208,10 @@ ProtobufNode::init_info() const
 GraphInstanceInterface::lock_t
 ProtobufNode::info_lock(bool writable)
 {
-    //if (instance_) {
-        auto lock = (writable) ? instance_->write_lock(rectype, name_) : instance_->read_lock(rectype, name_);
-        init_info();
-        /*
-        if(!info_initialized) { 
-            std::string buffer = instance_->get_record(rectype, name_);
-            if (buffer.length() > 0) {
-                std::cout << "buffer loaded" << std::endl;
-                info.ParseFromString(buffer);
-                type_ = node_type(info.node_type());
-            } else {                                                            ///< New node
-                std::cout << "buffer load FAILED, defaulting" << std::endl;
-                init_default_nodeinfo(info); //, instance_->version());
-            }
-            info_initialized = true;
-        } */
-        return lock;
-    //}
-    //else {
-    //    throw InstanceUnitializedException("Instance not initialized for node");
-    //}
+    BOOST_LOG_FUNCTION();
+    auto lock = (writable) ? instance_->write_lock(rectype, name_) : instance_->read_lock(rectype, name_);
+    init_info();
+    return lock;
 }
 
 
@@ -227,6 +220,7 @@ ProtobufNode::info_lock(bool writable)
 inline std::vector<ProtobufNode::node_t>
 ProtobufNode::get_edges(const NodeInfo_Edges& direction) const
 {
+    BOOST_LOG_FUNCTION();
     std::vector<node_t> found_edges;
 
     uint64_t cmp_version = (wanted_version_ == static_cast<uint64_t>(-1)) ? info.list_version() : wanted_version_;
@@ -255,6 +249,7 @@ ProtobufNode::get_edges(const NodeInfo_Edges& direction) const
 std::vector<ProtobufNode::node_t>
 ProtobufNode::forward_edges() const
 {
+    BOOST_LOG_FUNCTION();
     init_info();
 
     if (info.has_forward()) {
@@ -269,6 +264,7 @@ ProtobufNode::forward_edges() const
 std::vector<ProtobufNode::node_t>
 ProtobufNode::reverse_edges() const
 {
+    BOOST_LOG_FUNCTION();
     init_info();
 
     if (info.has_reverse()) {
@@ -292,6 +288,7 @@ ProtobufNode::name() const
 graph::NodeIface::node_type
 ProtobufNode::type() const
 {
+    BOOST_LOG_FUNCTION();
     init_info();
 
     return node_type(info.node_type());
@@ -303,6 +300,7 @@ ProtobufNode::type() const
 uint64_t
 ProtobufNode::version() const
 {
+    BOOST_LOG_FUNCTION();
     init_info();
     return info.list_version();
 }
@@ -321,6 +319,7 @@ ProtobufNode::get_wanted_version() const
 uint32_t
 ProtobufNode::crc32() const
 {
+    BOOST_LOG_FUNCTION();
     init_info();
 
     return info.crc32();
@@ -332,6 +331,7 @@ ProtobufNode::crc32() const
 std::unordered_map<std::string, std::vector<std::string>>
 ProtobufNode::tags() const
 {
+    BOOST_LOG_FUNCTION();
     init_info();
     std::unordered_map<std::string, std::vector<std::string>> tagtable;
 
@@ -359,7 +359,7 @@ bool
 ProtobufNode::add_forward_edge(node_t other, bool update_other_reverse_edge)
 {
     {
-        auto timer = log.start_timer("add_forward_edge");
+        RANGE_LOG_TIMED_FUNCTION() << "name: " << name_ << " to: " << other->name();
         auto lock = info_lock(true);
         auto txn = instance_->start_txn();
 
@@ -368,8 +368,6 @@ ProtobufNode::add_forward_edge(node_t other, bool update_other_reverse_edge)
                 return false;
             }
         }
-
-        LOG(debug1, "add_forward_edge") << name_ << " to " << other->name();
 
         uint64_t cmp_version = info.list_version();
         uint64_t new_version = cmp_version + 1;
@@ -402,7 +400,7 @@ bool
 ProtobufNode::add_reverse_edge(node_t other, bool update_other_forward_edge)
 {
     {
-        auto timer = log.start_timer("add_reverse_edge");
+        RANGE_LOG_TIMED_FUNCTION() << "name: " << name_ << " from: " << other->name();
         auto lock = info_lock(true);
         auto txn = instance_->start_txn();
 
@@ -411,8 +409,6 @@ ProtobufNode::add_reverse_edge(node_t other, bool update_other_forward_edge)
                 return false;
             }
         }
-
-        LOG(debug1, "add_reverse_edge") << name_ << " from " << other->name();
 
         uint64_t cmp_version = info.list_version();
         uint64_t new_version = cmp_version + 1;
@@ -445,7 +441,7 @@ bool
 ProtobufNode::remove_forward_edge(node_t other, bool update_other_reverse_edge)
 {
     {
-        auto timer = log.start_timer("remove_forward_edge");
+        RANGE_LOG_TIMED_FUNCTION() << "name: " << name_ << " from: " << other->name();
         auto lock = info_lock(true);
         auto txn = instance_->start_txn();
 
@@ -475,8 +471,6 @@ ProtobufNode::remove_forward_edge(node_t other, bool update_other_reverse_edge)
             LOG(debug1, "impossible_remove_forward_edge_failure");
             return false;
         }
-
-        LOG(debug1, "remove_forward_edge") << name_ << " to " << other->name();
 
         info.set_list_version(new_version);
         update_all_edge_versions(info, cmp_version, new_version);
@@ -508,7 +502,7 @@ bool
 ProtobufNode::remove_reverse_edge(node_t other, bool update_other_forward_edge)
 {
     {
-        auto timer = log.start_timer("remove_reverse_edge", name_);
+        RANGE_LOG_TIMED_FUNCTION() << "name: " << name_ << " to: " << other->name();
         auto lock = info_lock(true);
         auto txn = instance_->start_txn();
 
@@ -541,8 +535,6 @@ ProtobufNode::remove_reverse_edge(node_t other, bool update_other_forward_edge)
             return false;
         }
 
-        LOG(debug1, "remove_reverse_edge") << name_ << " to " << other->name();
-
         info.set_list_version(new_version);
         update_all_edge_versions(info, cmp_version, new_version);
 
@@ -571,7 +563,7 @@ ProtobufNode::remove_reverse_edge(node_t other, bool update_other_forward_edge)
 bool
 ProtobufNode::update_tag(const std::string& key, const std::vector<std::string>& values)
 {
-    auto timer = log.start_timer("update_tag", key);
+    RANGE_LOG_TIMED_FUNCTION() << key;
 
     auto lock = info_lock(true);
     int key_idx = 0;
@@ -628,7 +620,7 @@ ProtobufNode::update_tag(const std::string& key, const std::vector<std::string>&
 bool
 ProtobufNode::delete_tag(const std::string& key)
 {
-    auto timer = log.start_timer("delete_tag", key);
+    RANGE_LOG_TIMED_FUNCTION() << key;
     auto lock = info_lock(true);
 
     int key_idx;
@@ -673,7 +665,7 @@ ProtobufNode::set_wanted_version(uint64_t version)
 ProtobufNode::node_type
 ProtobufNode::set_type(node_type type)
 {
-    auto timer = log.start_timer("set_type", range::graph::NodeIface::node_type_names.find(type)->second);
+    RANGE_LOG_TIMED_FUNCTION() << range::graph::NodeIface::node_type_names.find(type)->second;
     auto lock = info_lock(true);
 
     uint64_t cmp_version = info.list_version();
@@ -697,6 +689,7 @@ ProtobufNode::set_type(node_type type)
 bool
 ProtobufNode::commit()
 {
+    BOOST_LOG_FUNCTION();
     //auto lock = instance_->write_lock(rectype, name_);
     return write_record(name_, info, instance_);
 }
@@ -706,6 +699,8 @@ ProtobufNode::commit()
 bool
 ProtobufNode::is_valid() const
 {
+    BOOST_LOG_FUNCTION();
+
     auto copy = info;
     copy.set_crc32(0);
     uint32_t crc = range::util::crc32(copy.SerializeAsString());
@@ -718,7 +713,8 @@ ProtobufNode::is_valid() const
 void
 ProtobufNode::add_graph_version(uint64_t version)
 {
-    auto timer = log.start_timer("add_graph_version", boost::lexical_cast<std::string>(version));
+    RANGE_LOG_TIMED_FUNCTION() << version;
+
     auto txn = instance_->start_txn();
     auto lock = info_lock(true);
     for(int i = info.graph_versions_size() - 1; i >= 0; --i) {
@@ -741,6 +737,7 @@ ProtobufNode::add_graph_version(uint64_t version)
 std::vector<uint64_t>
 ProtobufNode::graph_versions() const
 {
+    BOOST_LOG_FUNCTION();
     init_info();
     std::vector<uint64_t> vers;
     for (int i = 0; i < info.graph_versions_size(); ++i) {
@@ -755,6 +752,7 @@ ProtobufNode::graph_versions() const
 ProtobufNode::instance_t
 ProtobufNode::set_instance(instance_t instance)
 {
+    BOOST_LOG_FUNCTION();
     instance_t old_instance = instance_;
     instance_ = instance;
     info_initialized = false;

@@ -46,7 +46,7 @@ class BerkeleyDBLock : public GraphInstanceLock {
         //######################################################################
         BerkeleyDBLock(BerkeleyDBLock&& other)
             : backend_(other.backend_), txn_(std::move(other.txn_)),
-            iter_(std::move(other.iter_)), readonly_(true)
+            iter_(std::move(other.iter_)), readonly_(true), log("BerkeleyDBLock")
         {
         }
         
@@ -69,6 +69,7 @@ class BerkeleyDBLock : public GraphInstanceLock {
         DbTxn * txn_;
         ::range::db::map_t::iterator iter_;
         bool readonly_;
+        range::Emitter log;
 
 };
 

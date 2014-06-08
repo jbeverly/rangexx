@@ -21,6 +21,8 @@
 
 #include <boost/variant/static_visitor.hpp>
 
+#include "../core/log.h"
+
 #include "range_struct.h"
 
 namespace range {
@@ -31,7 +33,8 @@ class JSONVisitor : public boost::static_visitor<std::string>
 {
     public:
         JSONVisitor(bool pretty=false, uint32_t indent=4, uint32_t cur_indent=0) 
-            : pretty_(pretty), indent_(indent), cur_indent_(cur_indent)
+            : pretty_(pretty), indent_(indent), cur_indent_(cur_indent),
+                log("JSONVisitor")
         {
         }
         std::string operator()(const RangeObject &obj) const;
@@ -47,6 +50,7 @@ class JSONVisitor : public boost::static_visitor<std::string>
         bool pretty_;
         uint32_t indent_;
         mutable uint32_t cur_indent_;
+        range::Emitter log;
 };
 
 } /* namespace range */

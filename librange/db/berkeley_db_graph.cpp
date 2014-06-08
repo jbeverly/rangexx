@@ -21,6 +21,8 @@
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include "../core/log.h"
+
 #include "db_exceptions.h"
 #include "changelist.pb.h"
 
@@ -40,15 +42,17 @@ namespace db {
 bool
 BerkeleyDBGraph::db_put(std::string key, std::string value)
 {
+    BOOST_LOG_FUNCTION();
+
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
-        throw InstanceUnitializedException("Map instance not found");
+        THROW_STACK(InstanceUnitializedException("Map instance not found"));
     }
     auto map_instance = it->second;
 
     auto txn_it = backend_.lock_table.find(std::this_thread::get_id());
     if(txn_it == backend_.lock_table.end()) {
-        throw UnknownTransactionException("No transaction");
+        THROW_STACK(UnknownTransactionException("No transaction"));
     }
 
     DbTxn * dbtxn = txn_it->second.lock()->txn();
@@ -60,15 +64,17 @@ BerkeleyDBGraph::db_put(std::string key, std::string value)
 std::string
 BerkeleyDBGraph::db_get(std::string key) const
 {
+    BOOST_LOG_FUNCTION();
+
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
-        throw InstanceUnitializedException("Map instance not found");
+        THROW_STACK(InstanceUnitializedException("Map instance not found"));
     }
     auto map_instance = it->second;
 
     auto txn_it = backend_.lock_table.find(std::this_thread::get_id());
     if(txn_it == backend_.lock_table.end()) {
-        throw UnknownTransactionException("No transaction");
+        THROW_STACK(UnknownTransactionException("No transaction"));
     }
 
     DbTxn * dbtxn = txn_it->second.lock()->txn();
@@ -93,18 +99,18 @@ BerkeleyDBGraph::BerkeleyDBGraph(const std::string& name, BerkeleyDB& backend)
 BerkeleyDBGraph::changelist_t 
 BerkeleyDBGraph::commit_txn(std::thread::id id)
 {
-    auto timer = log.start_timer("commit_txn");
+    RANGE_LOG_TIMED_FUNCTION();
 
     BerkeleyDBTxn::changelist_t filtered_changes;
     auto txn = transaction_table.find(id);
 
     if (txn == transaction_table.end()) {
-        throw UnknownTransactionException("Transaction not found in transaction table");
+        THROW_STACK(UnknownTransactionException("Transaction not found in transaction table"));
     }
 
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
-        throw InstanceUnitializedException("Map instance not found");
+        THROW_STACK(InstanceUnitializedException("Map instance not found"));
     }
     auto map_instance = it->second;
 
@@ -140,11 +146,11 @@ BerkeleyDBGraph::commit_txn(std::thread::id id)
 void
 BerkeleyDBGraph::inculcate_change(std::thread::id id)
 {
-    auto timer = log.start_timer("inculcate_change");
+    RANGE_LOG_TIMED_FUNCTION();
 
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
-        throw InstanceUnitializedException("Map instance not found");
+        THROW_STACK(InstanceUnitializedException("Map instance not found"));
     }
     auto map_instance = it->second;
 
@@ -191,9 +197,11 @@ BerkeleyDBGraph::inculcate_change(std::thread::id id)
 size_t
 BerkeleyDBGraph::n_vertices() const
 {
+    RANGE_LOG_TIMED_FUNCTION();
+
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
-        throw InstanceUnitializedException("Map instance not found");
+        THROW_STACK(InstanceUnitializedException("Map instance not found"));
     }
 
     auto key = key_name(record_type::GRAPH_META, "n_vertices");
@@ -223,9 +231,11 @@ BerkeleyDBGraph::n_vertices() const
 size_t
 BerkeleyDBGraph::n_edges() const
 {
+    RANGE_LOG_TIMED_FUNCTION();
+
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
-        throw InstanceUnitializedException("Map instance not found");
+        THROW_STACK(InstanceUnitializedException("Map instance not found"));
     }
 
     auto key = key_name(record_type::GRAPH_META, "n_edges");
@@ -255,9 +265,11 @@ BerkeleyDBGraph::n_edges() const
 size_t
 BerkeleyDBGraph::n_redges() const
 {
+    RANGE_LOG_TIMED_FUNCTION();
+
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
-        throw InstanceUnitializedException("Map instance not found");
+        THROW_STACK(InstanceUnitializedException("Map instance not found"));
     }
 
     auto key = key_name(record_type::GRAPH_META, "n_redges");
@@ -286,6 +298,7 @@ BerkeleyDBGraph::n_redges() const
 uint64_t
 BerkeleyDBGraph::version() const
 {
+
     std::thread::id id = std::this_thread::get_id();
     auto txn_it = transaction_table.find(id);
     if(txn_it != transaction_table.end()) {
@@ -298,9 +311,11 @@ BerkeleyDBGraph::version() const
         return (version_pending_) ? current_version_ + 1 : current_version_;
     }
 
+    RANGE_LOG_TIMED_FUNCTION();
+
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
-        throw InstanceUnitializedException("Map instance not found");
+        THROW_STACK(InstanceUnitializedException("Map instance not found"));
     }
 
     ChangeList changes;
@@ -335,6 +350,7 @@ BerkeleyDBGraph::version() const
 BerkeleyDBGraph::cursor_t
 BerkeleyDBGraph::get_cursor() const
 {
+    BOOST_LOG_FUNCTION();
     return boost::make_shared<BerkeleyDBCursor>(shared_from_this());
 }
 
@@ -343,9 +359,11 @@ BerkeleyDBGraph::get_cursor() const
 std::string
 BerkeleyDBGraph::get_record(record_type type, const std::string& key) const
 {
+    BOOST_LOG_FUNCTION();
+
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
-        throw InstanceUnitializedException("Map instance not found");
+        THROW_STACK(InstanceUnitializedException("Map instance not found"));
     }
 
     std::thread::id id = std::this_thread::get_id();
@@ -381,6 +399,8 @@ BerkeleyDBGraph::get_record(record_type type, const std::string& key) const
 BerkeleyDBGraph::lock_t
 BerkeleyDBGraph::read_lock(record_type type, const std::string& key) const
 {
+    BOOST_LOG_FUNCTION();
+
     std::thread::id id = std::this_thread::get_id();
     auto lock_it = backend_.lock_table.find(id);
     if (lock_it != backend_.lock_table.end()) {
@@ -394,7 +414,7 @@ BerkeleyDBGraph::read_lock(record_type type, const std::string& key) const
 
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
-        throw InstanceUnitializedException("Map instance not found");
+        THROW_STACK(InstanceUnitializedException("Map instance not found"));
     }
     auto map_instance = it->second;
 
@@ -412,11 +432,13 @@ BerkeleyDBGraph::read_lock(record_type type, const std::string& key) const
 BerkeleyDBGraph::lock_t
 BerkeleyDBGraph::write_lock(record_type type, const std::string& key)
 {
+    BOOST_LOG_FUNCTION();
+
     std::thread::id id = std::this_thread::get_id();
     auto lock_it = backend_.lock_table.find(id);
     if (lock_it != backend_.lock_table.end()) {
         if (lock_it->second.lock()->readonly()) {
-            throw DatabaseLockingException("Already locked readonly, and this lock doesn't know how to promote itself safely");
+            THROW_STACK(DatabaseLockingException("Already locked readonly, and this lock doesn't know how to promote itself safely"));
         }
         return lock_it->second.lock();
     }
@@ -443,6 +465,8 @@ BerkeleyDBGraph::write_lock(record_type type, const std::string& key)
 BerkeleyDBGraph::txn_t
 BerkeleyDBGraph::start_txn()
 {
+    BOOST_LOG_FUNCTION();
+
     std::thread::id id = std::this_thread::get_id();
 
     auto txn = transaction_table.find(id);
@@ -467,6 +491,8 @@ bool
 BerkeleyDBGraph::write_record(record_type type, const std::string& key,
         uint64_t object_version, const std::string& data)
 {
+    BOOST_LOG_FUNCTION();
+
     auto txn = start_txn();
     boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->add_change(
             std::make_tuple(type, key, object_version, data));
@@ -478,12 +504,12 @@ BerkeleyDBGraph::write_record(record_type type, const std::string& key,
 BerkeleyDBGraph::history_list_t
 BerkeleyDBGraph::get_change_history() const
 {
-    auto timer = log.start_timer("get_change_history");
+    RANGE_LOG_TIMED_FUNCTION();
 
     history_list_t history_list;
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
-        throw InstanceUnitializedException("Map instance not found");
+        THROW_STACK(InstanceUnitializedException("Map instance not found"));
     }
     auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "changelist");
@@ -515,6 +541,8 @@ BerkeleyDBGraph::get_change_history() const
 BerkeleyDBGraph::record_type
 BerkeleyDBGraph::get_type_from_keyname(const std::string& keyname)
 {
+    BOOST_LOG_FUNCTION();
+
     std::string type_prefix;
     for (char c : keyname) {
         if (c == '\a') break;
@@ -539,6 +567,8 @@ BerkeleyDBGraph::key_prefix(record_type type)
 std::string
 BerkeleyDBGraph::key_name(record_type type, const std::string& name)
 {
+    BOOST_LOG_FUNCTION();
+
     std::string lookup { key_prefix(type) + name };
     return lookup;
 }
@@ -548,6 +578,7 @@ BerkeleyDBGraph::key_name(record_type type, const std::string& name)
 DbEnv *
 BerkeleyDBGraph::env(void)
 {
+    BOOST_LOG_FUNCTION();
     return backend_.env_; 
 }
 

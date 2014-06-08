@@ -15,7 +15,6 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <boost/lexical_cast.hpp>
 #include "python_visitor.h"
 
 namespace range {

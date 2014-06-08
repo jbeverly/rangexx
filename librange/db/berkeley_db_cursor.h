@@ -27,6 +27,8 @@
 #include <dbstl_common.h>
 #include <dbstl_map.h>
 
+#include "../core/log.h"
+
 #include "db_interface.h"
 //#include "berkeley_db_lock.h"
 #include "config_interface.h"
@@ -87,6 +89,7 @@ class BerkeleyDBCursor : public graph::GraphCursorInterface {
         mutable map_t::const_iterator iter;
         mutable map_t::const_reverse_iterator riter;
         mutable bool iterator_valid;
+        range::Emitter log;
 
         //######################################################################
         const map_t& get_const_map() const;

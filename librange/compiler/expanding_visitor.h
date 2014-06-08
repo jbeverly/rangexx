@@ -79,6 +79,7 @@ class FetchChildrenVisitor : public boost::static_visitor<std::vector<std::strin
         template <typename ChildType>
         std::vector<std::string> operator()(ChildType& n) const
         {
+            BOOST_LOG_FUNCTION();
             std::vector<std::string> tmp = n.children;
             n.children.clear();                                                 // Cleanup after ourselves as we go
             n.children.shrink_to_fit();
@@ -90,6 +91,7 @@ class FetchChildrenVisitor : public boost::static_visitor<std::vector<std::strin
         //######################################################################
         std::vector<std::string> operator()(ast::ASTNull&) const
         { 
+            BOOST_LOG_FUNCTION();
             return std::vector<std::string>();
         }
 
@@ -98,6 +100,7 @@ class FetchChildrenVisitor : public boost::static_visitor<std::vector<std::strin
         //######################################################################
         std::vector<std::string> operator()(ast::ASTFunctionArguments&) const
         {
+            BOOST_LOG_FUNCTION();
             return std::vector<std::string>();
         }
 

@@ -22,6 +22,8 @@
 
 #include <boost/interprocess/ipc/message_queue.hpp>
 
+
+#include "../core/log.h"
 #include "../db/pbuff_node.h"
 
 #include "../core/mq.h"
@@ -181,6 +183,7 @@ TEST_F(TestMQ, test_receive_almost_full)
 int
 main(int argc, char **argv)
 {
+    range::initialize_logger("/dev/null", 0);
     ::testing::InitGoogleTest(&argc, argv);
     int rval = RUN_ALL_TESTS();
     range::db::ProtobufNode::s_shutdown();

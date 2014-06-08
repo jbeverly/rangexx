@@ -23,6 +23,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <google/protobuf/message.h>
+
+#include "../core/log.h"
 #include "../core/api.h"
 #include "../db/pbuff_node.h"
 
@@ -1065,6 +1067,7 @@ TEST_F(TestRangeWriteAPI, test_remove_node_env_dependency)
 int
 main(int argc, char **argv)
 {
+    range::initialize_logger("/dev/null", 0);
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     ::testing::InitGoogleTest(&argc, argv);
     range::db::ProtobufNode::s_shutdown();

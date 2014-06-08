@@ -124,10 +124,6 @@ try : log_(log), event_(event), extrastream_ptr_(),
 {
     extrastream_ptr_ = boost::make_shared<std::stringstream>();
     (*extrastream_ptr_) << extra;
-    std::stringstream s;
-    std::time_t start_time = std::chrono::high_resolution_clock::to_time_t(s_time);
-    s << extra << " started at: " << std::ctime(&start_time);
-    log_->writelog(event_, s.str().substr(0,s.str().size()-1), Emitter::logseverity::debug1);
 }
 catch(std::exception &e) {
     log->fatal("unknown", e.what());
@@ -141,8 +137,13 @@ Emitter::Timer::time()
 {
     using namespace std::chrono;
     high_resolution_clock::time_point end = high_resolution_clock::now();
-    std::chrono::milliseconds span = duration_cast<std::chrono::milliseconds>(end - s_time);
 
+    std::stringstream s;
+    std::time_t start_time = std::chrono::high_resolution_clock::to_time_t(s_time);
+    s << " started at: " << std::ctime(&start_time);
+    log_->writelog(event_, s.str().substr(0,s.str().size()-1), Emitter::logseverity::debug1);
+
+    std::chrono::milliseconds span = duration_cast<std::chrono::milliseconds>(end - s_time);
     *extrastream_ptr_ << " completed in " << span.count() << "ms";
     log_->writelog(event_ , extrastream_ptr_->str(), Emitter::logseverity::debug4);
     log_->timetaken(event_, span.count());
@@ -183,7 +184,7 @@ Emitter::normalize_event(std::string &event) const
 void
 Emitter::normalize_extra(std::string &extra) const
 {
-    auto f = [](char c) { return !std::isprint(c); };
+    auto f = [](char c) { return c == 7 || !std::isprint(c); };
     std::replace_if(extra.begin(), extra.end(), f, '_');
 }
 
@@ -411,6 +412,27 @@ void initialize_logger(const std::string &filename, uint8_t sev)
     BOOST_LOG_FUNCTION();
     auto log = Emitter("init");
     LOG(critical, "service_start") << "Starting up";
+}
+
+//##############################################################################
+//##############################################################################
+void cleanup_logger()
+{
+    namespace log = boost::log;
+
+    log::core::get()->remove_all_sinks();
+    auto scopes = log::attributes::named_scope::get_scopes();
+    for(size_t n = 0; n < scopes.size(); ++n) {
+        log::attributes::named_scope::pop_scope();
+    }
+    auto global_attr = log::core::get()->get_global_attributes();
+    auto thread_attr = log::core::get()->get_thread_attributes();
+    for (auto it = global_attr.begin(); it != global_attr.end(); ++it) {
+        log::core::get()->remove_global_attribute(it);
+    }
+    for (auto it = thread_attr.begin(); it != thread_attr.end(); ++it) {
+        log::core::get()->remove_thread_attribute(it);
+    } 
 }
 
 } /* namespace range */

@@ -20,6 +20,8 @@
 
 #include <boost/make_shared.hpp>
 
+#include "../core/log.h"
+
 #include "node_factory.h"
 #include "../db/db_interface.h"
 
@@ -54,6 +56,7 @@ class GraphdbConcreteFactory : public GraphdbAbstractFactory
                                         node_factory_t node_factory,
                                         uint64_t wanted_version=-1) override
         {
+            BOOST_LOG_FUNCTION();
             auto g = boost::make_shared<T>(name, backend->getGraphInstance(name), node_factory);
             if(wanted_version != static_cast<uint64_t>(-1)) {
                 g->set_wanted_version(wanted_version);

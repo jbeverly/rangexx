@@ -16,6 +16,8 @@
  */
 #include <boost/make_shared.hpp>
 
+#include "../core/log.h"
+
 #include "graph_interface.h"
 #include "node_interface.h"
 
@@ -30,6 +32,7 @@ namespace graph {
 graph::NodeIface&
 GraphIterator::dereference() const
 {
+    BOOST_LOG_FUNCTION();
     return *node_;
 }
 
@@ -37,6 +40,7 @@ GraphIterator::dereference() const
 bool
 GraphIterator::equal(const GraphIterator& other) const
 {
+    BOOST_LOG_FUNCTION();
     return other.node_ == node_;
 }
 
@@ -44,6 +48,7 @@ GraphIterator::equal(const GraphIterator& other) const
 void
 GraphIterator::increment()
 {
+    BOOST_LOG_FUNCTION();
     node_ = cursor_->next();
 }
 
@@ -51,6 +56,7 @@ GraphIterator::increment()
 void
 GraphIterator::decrement()
 {
+    BOOST_LOG_FUNCTION();
     node_ = cursor_->prev();
 }
 
@@ -63,6 +69,7 @@ GraphIterator::decrement()
 const graph::NodeIface&
 const_GraphIterator::dereference() const
 {
+    BOOST_LOG_FUNCTION();
     return const_cast<const graph::NodeIface&>(*node_);
 }
 
@@ -70,6 +77,7 @@ const_GraphIterator::dereference() const
 bool
 const_GraphIterator::equal(const const_GraphIterator& other) const
 {
+    BOOST_LOG_FUNCTION();
     return other.node_ == node_;
 }
 
@@ -77,6 +85,7 @@ const_GraphIterator::equal(const const_GraphIterator& other) const
 void
 const_GraphIterator::increment()
 {
+    BOOST_LOG_FUNCTION();
     node_ = cursor_->next();
 }
 
@@ -84,6 +93,7 @@ const_GraphIterator::increment()
 void
 const_GraphIterator::decrement()
 {
+    BOOST_LOG_FUNCTION();
     node_ = cursor_->prev();
 }
 

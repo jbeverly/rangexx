@@ -18,6 +18,7 @@
 #define _RANGE_PYTHON_PYTHON_VISITOR_H
 
 #include <boost/python.hpp>
+
 #include <string>
 
 #include <boost/variant/apply_visitor.hpp>

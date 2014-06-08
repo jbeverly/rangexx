@@ -30,6 +30,7 @@
 #include <gmock/gmock.h>
 #include <google/protobuf/message.h>
 
+#include "../core/log.h"
 #include "mock_db_config.h"
 #include "../db/config_interface.h"
 #include "../db/db_exceptions.h"
@@ -654,16 +655,20 @@ TEST_F(TestDBCursor, test_fetch_nonexisting) {
 
 
 
- 
+namespace range {
+   void cleanup_logger(void);
+} 
 
 //##############################################################################
 //##############################################################################
 int
 main(int argc, char **argv)
 {
+    range::initialize_logger("/dev/null", 0);
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     ::testing::InitGoogleTest(&argc, argv);
     int rval = RUN_ALL_TESTS();
     range::db::BerkeleyDB::s_shutdown();
+    range::cleanup_logger();
     return rval;
 }

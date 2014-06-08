@@ -15,6 +15,7 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "log.h"
 #include "stored_message.h"
 #include "exceptions.h"
 
@@ -31,6 +32,8 @@ const std::string RequestQueue::request_queue = "rangexx_request_queue";
 bool
 RequestQueue::verify_request(const Request& req)
 {
+    BOOST_LOG_FUNCTION();
+
     if (! req.IsInitialized()) {
         return false;
     }
@@ -78,6 +81,7 @@ RequestQueue::verify_request(const Request& req)
 bool
 RequestQueueClient::request(const Request& req, Ack& ack)
 {
+    RANGE_LOG_TIMED_FUNCTION();
     if (! verify_request(req)) {
         throw MqueueException("invalid request");
     }
@@ -99,6 +103,7 @@ RequestQueueClient::request(const Request& req, Ack& ack)
 bool
 RequestQueueListener::receive(Request& req)
 {
+    BOOST_LOG_FUNCTION();
     std::string msg = receiving_queue.receive();
     if (msg.size() > 0) {
         if (! req.ParseFromString(msg)) {

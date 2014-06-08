@@ -21,6 +21,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "../core/log.h"
 #include "../db/pbuff_node.h"
 #include "../compiler/expanding_visitor.h"
 #include "../compiler/RangeParser_v1.h"
@@ -711,6 +712,7 @@ TEST_F(TestCompiler, test_key_expand)
 int
 main(int argc, char **argv)
 {
+    range::initialize_logger("/dev/null", 0);
     ::testing::InitGoogleTest(&argc, argv);
     int rval = RUN_ALL_TESTS();
     range::db::ProtobufNode::s_shutdown();

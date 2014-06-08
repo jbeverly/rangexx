@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "../core/log.h"
 #include "../db/pbuff_node.h"
 #include "mock_scanner.h"
 #include "../compiler/RangeParser_v1.h"
@@ -869,6 +870,7 @@ TEST_F(TestParserV1, test_get_nested_key_expand) {
 int
 main(int argc, char **argv)
 {
+    range::initialize_logger("/dev/null", 0);
     ::testing::InitGoogleTest(&argc, argv);
 #ifdef _ENABLE_TESTING
     int rval = RUN_ALL_TESTS();

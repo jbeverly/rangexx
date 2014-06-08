@@ -56,6 +56,7 @@ class GraphTxn : public GraphTxnIface
         //######################################################################
         ~GraphTxn() {
             try {
+                BOOST_LOG_FUNCTION();
                 if(graphdb_->version() > s_version) {
                     LOG(debug1, "graph_transaction_pushing_update") 
                         << "graphdb version: " << graphdb_->version()

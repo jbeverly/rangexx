@@ -33,6 +33,7 @@ namespace graph {
 size_t
 GraphDB::V() const
 {
+    BOOST_LOG_FUNCTION();
     return instance_->n_vertices();
 }
 
@@ -41,6 +42,7 @@ GraphDB::V() const
 size_t
 GraphDB::E() const
 {
+    BOOST_LOG_FUNCTION();
     return instance_->n_edges();
 }
 
@@ -49,6 +51,7 @@ GraphDB::E() const
 uint64_t
 GraphDB::version() const
 {
+    BOOST_LOG_FUNCTION();
     return instance_->version();
 }
 
@@ -57,6 +60,7 @@ GraphDB::version() const
 uint64_t
 GraphDB::get_wanted_version() const
 {
+    BOOST_LOG_FUNCTION();
     return wanted_version_;
 }
 
@@ -65,6 +69,7 @@ GraphDB::get_wanted_version() const
 std::vector<GraphDB::node_t>
 GraphDB::forward_edges(const graph::NodeIface& node) const
 {
+    BOOST_LOG_FUNCTION();
     return node.forward_edges();
 }
 
@@ -73,6 +78,7 @@ GraphDB::forward_edges(const graph::NodeIface& node) const
 std::vector<GraphDB::node_t>
 GraphDB::reverse_edges(const graph::NodeIface& node) const
 {
+    BOOST_LOG_FUNCTION();
     return node.reverse_edges();
 }
 
@@ -81,6 +87,7 @@ GraphDB::reverse_edges(const graph::NodeIface& node) const
 graph::GraphInterface::cursor_t 
 GraphDB::get_cursor() const
 {
+    BOOST_LOG_FUNCTION();
     return instance_->get_cursor();
 }
 
@@ -89,6 +96,7 @@ GraphDB::get_cursor() const
 GraphDB::cursor_t
 GraphDB::get_cursor(GraphDB::node_t node) const
 {
+    BOOST_LOG_FUNCTION();
     if (node) { 
         cursor_t cur = instance_->get_cursor();
         cur->fetch(node->name());
@@ -102,6 +110,7 @@ GraphDB::get_cursor(GraphDB::node_t node) const
 GraphDB::node_t
 GraphDB::get_node(const std::string& name) const
 {
+    BOOST_LOG_FUNCTION();
     auto n = get_cursor()->fetch(name);
     if(!n) {
         return nullptr;
@@ -140,6 +149,7 @@ GraphDB::get_node(const std::string& name) const
 GraphDB::iterator_t
 GraphDB::begin()
 {
+    BOOST_LOG_FUNCTION();
     cursor_t c = instance_->get_cursor();
     return iterator_t(*this, c->first());
 }
@@ -149,6 +159,7 @@ GraphDB::begin()
 GraphDB::const_iterator_t
 GraphDB::cbegin() const
 {
+    BOOST_LOG_FUNCTION();
     cursor_t c = instance_->get_cursor();
     return const_iterator_t(*this, c->first());
 }
@@ -158,6 +169,7 @@ GraphDB::cbegin() const
 GraphDB::iterator_t
 GraphDB::end()
 {
+    BOOST_LOG_FUNCTION();
     return iterator_t(*this, nullptr);
 }
 
@@ -166,6 +178,7 @@ GraphDB::end()
 GraphDB::const_iterator_t
 GraphDB::cend() const
 {
+    BOOST_LOG_FUNCTION();
     return const_iterator_t(*this, nullptr);
 }
 
@@ -174,6 +187,7 @@ GraphDB::cend() const
 GraphDB::node_t
 GraphDB::create(const std::string& name)
 {
+    BOOST_LOG_FUNCTION();
     auto lock = instance_->write_lock(db::GraphInstanceInterface::record_type::NODE, name);
     auto node = this->node_factory_->createNode(name, instance_);
 
@@ -194,6 +208,7 @@ GraphDB::create(const std::string& name)
 bool
 GraphDB::has_version_or_higher(uint64_t wanted_version, node_t node)
 {
+    BOOST_LOG_FUNCTION();
     auto vers = node->graph_versions();
     for (uint64_t node_version : boost::adaptors::reverse(vers)) {
         if(node_version > wanted_version) {
@@ -215,7 +230,7 @@ GraphDB::has_version_or_higher(uint64_t wanted_version, node_t node)
 void
 GraphDB::update_versions(uint64_t prior_version)
 {
-    auto timer = log.start_timer("update_versions", boost::lexical_cast<std::string>(prior_version));
+    RANGE_LOG_TIMED_FUNCTION() << prior_version;
     auto lock = instance_->write_lock(db::GraphInstanceInterface::record_type::NODE_META, "");
     auto txn = instance_->start_txn();
     for (auto &n : *this) {
@@ -241,6 +256,7 @@ GraphDB::update_versions(uint64_t prior_version)
 bool
 GraphDB::set_wanted_version(uint64_t ver) 
 {
+    BOOST_LOG_FUNCTION();
     if (ver == wanted_version_) {
         return true;
     }
@@ -264,7 +280,7 @@ GraphDB::set_wanted_version(uint64_t ver)
             std::string msg { "changehistory inconsistent with graph version" };
             msg += ", found: " + boost::lexical_cast<std::string>(changehistory.size()); 
             msg += ", expected: " + boost::lexical_cast<std::string>(v);
-            throw db::DatabaseVersioningError(msg);
+            THROW_STACK(db::DatabaseVersioningError(msg));
         }
 
         auto it = changehistory.rbegin();
@@ -294,6 +310,7 @@ GraphDB::set_wanted_version(uint64_t ver)
 boost::shared_ptr<GraphTxnIface>
 GraphDB::start_txn()
 {
+    BOOST_LOG_FUNCTION();
     return boost::make_shared<GraphTxn>(shared_from_this(), instance_);
 }
 
@@ -302,6 +319,7 @@ GraphDB::start_txn()
 GraphDB::node_t
 GraphDB::remove(node_t node)
 {
+    BOOST_LOG_FUNCTION();
     auto vers = node->graph_versions();
 
     for (auto it = vers.rbegin(); it != vers.rend(); ++it) {

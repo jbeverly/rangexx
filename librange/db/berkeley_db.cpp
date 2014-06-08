@@ -41,6 +41,7 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
         weak_table(lock_table), graph_info_map(nullptr),  
         graph_db_instances(), graph_map_instances(), log("BerkeleyDB")
 { 
+    RANGE_LOG_TIMED_FUNCTION();
     /* try { 
         dbstl::dbstl_startup();
     } catch(dbstl::DbstlException& e) {
@@ -52,16 +53,16 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
         env_ = dbstl::open_env(conf_.db_home().c_str(), env_set_flags,
                 env_open_flags, conf_.cache_size(), 0664, 0);
         if(!env_) {
-            throw DatabaseEnvironmentException(
-                    std::string("Unable to open environment"));
+            THROW_STACK(DatabaseEnvironmentException(
+                    std::string("Unable to open environment")));
         }
 
         const char * home;
         env_->get_home(&home);
 
         if(strncmp(home, conf_.db_home().c_str(), conf_.db_home().size()) != 0) {
-            throw DatabaseEnvironmentException(
-                    std::string("Unable to open environment"));
+            THROW_STACK(DatabaseEnvironmentException(
+                    std::string("Unable to open environment")));
         }
     } catch(dbstl::DbstlException& e) {
         try { 
@@ -69,8 +70,8 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
         } catch(...) {
             LOG(fatal, "close_db_env_exception") << "Unable to to close_db_env while handling exception";
         }
-        throw DatabaseEnvironmentException(
-                std::string("Unable to open environment") + e.what());
+        THROW_STACK(DatabaseEnvironmentException(
+                std::string("Unable to open environment") + e.what()));
     }
     try {
         auto txn = dbstl::begin_txn(DB_TXN_SYNC, env_);
@@ -90,8 +91,8 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
         } catch(...) { 
             LOG(fatal, "close_db_exception") << "Unable to to close_db while handling exception";
         }
-        throw InstanceUnitializedException(
-                std::string("Unable to open graph_info database: ") + e.what());
+        THROW_STACK(InstanceUnitializedException(
+                std::string("Unable to open graph_info database: ") + e.what()));
     }
 }
 
@@ -101,10 +102,6 @@ BerkeleyDB::~BerkeleyDB() noexcept
 {
     try {
         LOG(debug9, "dtor") << "destructing BerkeleyDB";
-    } catch(...) { }
-
-    try {
-        graph_map_instances.clear();
     } catch(...) { }
 
     try {
@@ -136,16 +133,18 @@ BerkeleyDB::~BerkeleyDB() noexcept
 bool
 BerkeleyDB::db_put(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string &key, const std::string &value)
 {
+    BOOST_LOG_FUNCTION();
+
     std::string event;
     {
         const char *db_filename;
         const char *db_name;
         map->get_db_handle()->get_dbname(&db_filename, &db_name);
-        event += "db_put."; event += db_name;
-        LOG(debug5, event) << "Writing " << key << " to " << db_name << "(" << db_filename << ")" << " size: " << value.size();
+        event = db_name;
     }
-    event += "_duration";
-    auto timer = log.start_timer(event, key);
+    event = "db_put." + event;
+    auto timer = log.start_timer(event);
+    timer << "key: " << key << "  size: " << value.size();
 
     Db * hdl = map->get_db_handle();
 
@@ -161,7 +160,7 @@ BerkeleyDB::db_put(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string
 
     int ret = hdl->put(dbtxn, &dbkey, &dbdata, 0);
     if(ret != 0) {
-        throw DatabaseEnvironmentException("Unable to write data for " + key);
+        THROW_STACK(DatabaseEnvironmentException("Unable to write data for " + key));
     }
     return true;
 }
@@ -171,16 +170,18 @@ BerkeleyDB::db_put(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string
 std::string
 BerkeleyDB::db_get(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string &key) const
 {
+    BOOST_LOG_FUNCTION();
+
     std::string event;
     {
         const char *db_filename;
         const char *db_name;
         map->get_db_handle()->get_dbname(&db_filename, &db_name);
-        event += "db_get."; event += db_name;
-        LOG(debug5, event) << "Reading " << key << " to " << db_name << "(" << db_filename << ")";
+        event = db_name;
     }
-    event += "_duration";
-    auto timer = log.start_timer(event, key);
+    event += "db_get." + event;
+    auto timer = log.start_timer(event);
+    timer << "key: " << key << " size: ";
 
     Db * hdl = map->get_db_handle();
 
@@ -195,7 +196,7 @@ BerkeleyDB::db_get(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string
     if(ret != 0 && ret != DB_NOTFOUND) {
         std::stringstream s;
         s << "Unable to read data for " << key << " : " << ret;
-        throw DatabaseEnvironmentException(s.str());
+        THROW_STACK(DatabaseEnvironmentException(s.str()));
     }
 
     return std::string(static_cast<char*>(dbdata.get_data()), dbdata.get_size());
@@ -206,6 +207,7 @@ BerkeleyDB::db_get(DbTxn *dbtxn, boost::shared_ptr<map_t> map, const std::string
 void
 BerkeleyDB::s_shutdown()
 {
+    BOOST_LOG_FUNCTION();
     google::protobuf::ShutdownProtobufLibrary();
     dbstl::dbstl_exit();
 }
@@ -215,11 +217,10 @@ BerkeleyDB::s_shutdown()
 void
 BerkeleyDB::init_graph_info()
 {
-    auto timer = log.start_timer("init_graph_info_duration");
+    RANGE_LOG_TIMED_FUNCTION();
 
     if (!graph_info_map) {
-        map_t * map = new map_t(graph_info, env_);
-        graph_info_map = boost::shared_ptr<map_t>(map);
+        graph_info_map = boost::shared_ptr<map_t>(new map_t(graph_info, env_));
     }
 
     for(auto name : listGraphInstances()) {
@@ -233,8 +234,8 @@ BerkeleyDB::init_graph_info()
             graph_map_instances[name] = boost::make_shared<map_t>(graph_db_instances[name], env_);
             
         } catch(dbstl::DbstlException& e) {
-            throw InstanceUnitializedException(
-                    "Unable to open instance: " + name + ": " + e.what());
+            THROW_STACK(InstanceUnitializedException(
+                    "Unable to open instance: " + name + ": " + e.what()));
         }
     }
 }
@@ -244,7 +245,7 @@ BerkeleyDB::init_graph_info()
 std::vector<std::string>
 BerkeleyDB::listGraphInstances() const
 {
-    auto timer = log.start_timer("listGraphInstances_duration");
+    RANGE_LOG_TIMED_FUNCTION();
 
     BerkeleyDBLock lock { const_cast<BerkeleyDB&>(*this), *graph_info_map,
                             false };
@@ -268,7 +269,7 @@ BerkeleyDB::listGraphInstances() const
 //##############################################################################
 void
 BerkeleyDB::add_graph_instance(const std::string& name) {
-    auto timer = log.start_timer("add_graph_instance_duration", name);
+    RANGE_LOG_TIMED_FUNCTION();
 
     BerkeleyDBLock lock { *this, *graph_info_map, true };
 
@@ -283,8 +284,8 @@ BerkeleyDB::add_graph_instance(const std::string& name) {
         graph_map_instances[name] = boost::make_shared<map_t>(graph_db_instances[name], env_);
 
     } catch(dbstl::DbstlException& e) {
-        throw InstanceUnitializedException(
-                "Unable to create instance: " + name + ": " + e.what());
+        THROW_STACK(InstanceUnitializedException(
+                "Unable to create instance: " + name + ": " + e.what()));
     }
 
     GraphList listbuf;
@@ -303,6 +304,7 @@ BerkeleyDB::add_graph_instance(const std::string& name) {
 BerkeleyDB::graph_instance_t
 BerkeleyDB::createGraphInstance(const std::string& name)
 {
+    BOOST_LOG_FUNCTION();
     add_graph_instance(name);
     return getGraphInstance(name);
 }
@@ -312,7 +314,7 @@ BerkeleyDB::createGraphInstance(const std::string& name)
 BerkeleyDB::graph_instance_t
 BerkeleyDB::getGraphInstance(const std::string& name)
 {
-    auto timer = log.start_timer("getGraphInstance_duration", name);
+    RANGE_LOG_TIMED_FUNCTION();
 
     auto iter = graph_db_instances.find(name);
     if (iter != graph_db_instances.end()) {
@@ -328,6 +330,7 @@ BerkeleyDB::getGraphInstance(const std::string& name)
 //##############################################################################
 //##############################################################################
 void shutdown() {
+    BOOST_LOG_FUNCTION();
     BerkeleyDB::s_shutdown();
 }
 

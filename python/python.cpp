@@ -15,9 +15,10 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mutex>
 
-#include <boost/python.hpp>
+#include <boost/python.hpp>                                                     // must be included first
+
+#include <mutex>
 
 #include <dbstl_exception.h>
 

@@ -27,6 +27,8 @@
 #include <dbstl_common.h>
 #include <dbstl_map.h>
 
+#include "../core/log.h"
+
 #include "config_interface.h"
 #include "db_interface.h"
 
@@ -68,6 +70,7 @@ class BerkeleyDBTxn : public range::db::GraphTransaction
         std::unordered_map<std::string, std::string> inflight_;
         std::thread::id id_;
         BerkeleyDBGraph& instance_;
+        range::Emitter log;
 };
 
 

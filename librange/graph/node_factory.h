@@ -20,6 +20,7 @@
 #include <string>
 #include <boost/make_shared.hpp>
 
+#include "../core/log.h"
 #include "../db/db_interface.h"
 
 namespace range {
@@ -47,6 +48,7 @@ struct NodeIfaceConcreteFactory : public NodeIfaceAbstractFactory
     virtual ~NodeIfaceConcreteFactory() = default;
     virtual node_t createNode(const std::string& name, instance_t instance) override
     {
+        BOOST_LOG_FUNCTION();
         return boost::make_shared<T>(name, instance);
     }
 };

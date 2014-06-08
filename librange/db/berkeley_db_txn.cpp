@@ -31,7 +31,7 @@ namespace db {
 //##############################################################################
 //##############################################################################
 BerkeleyDBTxn::BerkeleyDBTxn(std::thread::id id, BerkeleyDBGraph& instance)
-   : id_(id), instance_(instance)
+   : id_(id), instance_(instance), log("BerkeleyDBTxn")
 {
 }
 
@@ -40,6 +40,7 @@ BerkeleyDBTxn::BerkeleyDBTxn(std::thread::id id, BerkeleyDBGraph& instance)
 void
 BerkeleyDBTxn::commit() 
 {
+    BOOST_LOG_FUNCTION();
     instance_.inculcate_change(id_);
     changes_.clear();
     inflight_.clear();
@@ -50,6 +51,7 @@ BerkeleyDBTxn::commit()
 void
 BerkeleyDBTxn::abort()
 {
+    BOOST_LOG_FUNCTION();
     changes_.clear();
     inflight_.clear();
 }
@@ -59,6 +61,7 @@ BerkeleyDBTxn::abort()
 void
 BerkeleyDBTxn::flush()
 {
+    BOOST_LOG_FUNCTION();
     auto filtered_changes = instance_.commit_txn(std::this_thread::get_id());
     changes_ = filtered_changes;
     inflight_.clear();
@@ -68,6 +71,7 @@ BerkeleyDBTxn::flush()
 //##############################################################################
 BerkeleyDBTxn::~BerkeleyDBTxn()
 {
+    BOOST_LOG_FUNCTION();
     if (std::uncaught_exception()) {
         try { 
             abort();
@@ -85,12 +89,14 @@ BerkeleyDBTxn::~BerkeleyDBTxn()
 BerkeleyDBTxn::changelist_t
 BerkeleyDBTxn::changelist() const
 {
+    BOOST_LOG_FUNCTION();
     return changes_;
 }
 
 const std::unordered_map<std::string, std::string>&
 BerkeleyDBTxn::inflight() const
 {
+    BOOST_LOG_FUNCTION();
     return inflight_;
 }
 
@@ -99,6 +105,7 @@ BerkeleyDBTxn::inflight() const
 void
 BerkeleyDBTxn::add_change(change_t change)
 {
+    BOOST_LOG_FUNCTION();
     changes_.push_back(change);
     record_type type;
     std::string object_name;

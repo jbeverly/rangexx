@@ -26,6 +26,8 @@
 #include <google/protobuf/message.h>
 #include <boost/make_shared.hpp>
 
+
+#include "../core/log.h"
 #include "../db/pbuff_node.h"
 #include "../db/db_interface.h"
 #include "../util/crc32.h"
@@ -755,6 +757,7 @@ TEST_F(TestProtobufNode, TestNodeVersionedRemoval) {
 int
 main(int argc, char **argv)
 {
+    range::initialize_logger("/dev/null", 0);
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     ::testing::InitGoogleTest(&argc, argv);
     range::db::ProtobufNode::s_shutdown();

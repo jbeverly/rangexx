@@ -27,10 +27,13 @@ namespace db {
 //##############################################################################
 BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
                                 bool read_write)
-    : backend_(backend), txn_(0), iter_(0), readonly_(!read_write)
+    : backend_(backend), txn_(0), iter_(0), readonly_(!read_write), 
+        log("BerkeleyDBLock")
 {
+    //BOOST_LOG_FUNCTION();
+
     auto rmw = dbstl::ReadModifyWriteOption::no_read_modify_write();
-    int flags = DB_TXN_SYNC; //| DB_TXN_SNAPSHOT;
+    int flags = DB_TXN_SYNC | DB_TXN_SNAPSHOT;
 
     if (read_write) {
         rmw = dbstl::ReadModifyWriteOption::read_modify_write();
@@ -43,7 +46,7 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
         try { 
             dbstl::abort_txn(backend_.env_, txn_);
         } catch(...) { }
-        throw DatabaseLockingException("Cannot begin transaction");
+        THROW_STACK(DatabaseLockingException("Cannot begin transaction"));
     }
 
     try {
@@ -60,7 +63,7 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
         try { 
             dbstl::abort_txn(backend_.env_, txn_);
         } catch(...) { }
-        throw DatabaseLockingException("Cannot begin transaction");
+        THROW_STACK(DatabaseLockingException("Cannot begin transaction"));
     }
 }
 
@@ -69,6 +72,8 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
 void
 BerkeleyDBLock::unlock()
 {
+    BOOST_LOG_FUNCTION();
+
     dbstl::commit_txn(backend_.env_, txn_, 0);
     iter_.close_cursor();
     backend_.graph_bdbgraph_instances.clear();
@@ -86,6 +91,7 @@ BerkeleyDBLock::readonly()
 //##############################################################################
 BerkeleyDBLock::~BerkeleyDBLock()
 {
+    BOOST_LOG_FUNCTION();
     if(std::uncaught_exception()) {                                             // An exception is active, abort txn
         try {
             iter_.close_cursor();

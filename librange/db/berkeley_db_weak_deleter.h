@@ -28,6 +28,8 @@
 #include <dbstl_common.h>
 #include <dbstl_map.h>
 
+#include "../core/log.h"
+
 #include "config_interface.h"
 #include "db_interface.h"
 
@@ -49,6 +51,7 @@ class BerkeleyDBWeakDeleter {
     public:
         void operator()(PtrType * rptr)
         {
+            BOOST_LOG_FUNCTION();
             std::thread::id id = std::this_thread::get_id();
             // This is a bit odd... so the destructor of the pointee will do whatever it is going to do,
             // which, at present, in both cases makes use of the weak_table copy.

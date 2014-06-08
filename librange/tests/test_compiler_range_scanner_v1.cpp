@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "../core/log.h"
 #include "../db/pbuff_node.h"
 #include "../compiler/compiler_types.h"
 #include "../compiler/RangeScanner_v1.h"
@@ -420,6 +421,7 @@ TEST_F(TestScannerV1, test_operators) {
 int
 main(int argc, char **argv)
 {
+    range::initialize_logger("/dev/null", 0);
     ::testing::InitGoogleTest(&argc, argv);
     int rval = RUN_ALL_TESTS();
     range::db::ProtobufNode::s_shutdown();

@@ -22,6 +22,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <google/protobuf/message.h>
+
+#include "../core/log.h"
 #include "../graph/graphdb.h"
 #include "../graph/node_interface.h"
 #include "../graph/graph_interface.h"
@@ -521,6 +523,7 @@ TEST_F(TestGraphDB, test_remove) {
 int
 main(int argc, char **argv)
 {
+    range::initialize_logger("/dev/null", 0);
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     ::testing::InitGoogleTest(&argc, argv);
     range::db::ProtobufNode::s_shutdown();

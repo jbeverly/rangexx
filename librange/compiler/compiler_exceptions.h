@@ -21,10 +21,14 @@
 
 namespace range { namespace compiler {
 
-class InvalidRangeExpression : public ::range::Exception
+//##############################################################################
+//##############################################################################
+struct InvalidRangeExpression : public ::range::Exception
 {
-    public:
-        InvalidRangeExpression(const std::string& s, const std::string &event="compiler.InvalidRangeExpression") : ::range::Exception(s, event) { }
+    InvalidRangeExpression(const std::string& s,
+            const std::string &event="compiler.InvalidRangeExpression")
+    : ::range::Exception(s, event)
+    { }
 };
 
 

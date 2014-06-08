@@ -22,6 +22,8 @@
 #include <unordered_map>
 #include <unistd.h>
 
+#include "log.h"
+
 #include "mq.h"
 #include "store.pb.h"
 #include "config.h"
@@ -49,7 +51,8 @@ class RequestQueueClient : private RequestQueue {
         RequestQueueClient(boost::shared_ptr<Config> cfg)
             : client_id_(CLIENT_ID),
                 sending_queue(CreateMQ<>(request_queue), cfg->stored_request_timeout(), 100),
-                ack_queue(CreateMQ<>(ack_queue_prefix + client_id_), 100, cfg->stored_request_timeout())
+                ack_queue(CreateMQ<>(ack_queue_prefix + client_id_), 100, cfg->stored_request_timeout()),
+                log("RequestQueueClient")
         { }
 
         virtual bool request(const Request& req, Ack& ack);
@@ -58,6 +61,7 @@ class RequestQueueClient : private RequestQueue {
         std::string client_id_;
         MessageQueue<> sending_queue;
         MessageQueue<> ack_queue;
+        range::Emitter log;
 };
 
 //##############################################################################
@@ -65,7 +69,7 @@ class RequestQueueClient : private RequestQueue {
 class RequestQueueListener : private RequestQueue {
     public:
         RequestQueueListener (boost::shared_ptr<Config> cfg)
-            : cfg_(cfg), receiving_queue(CreateMQ<>(request_queue))
+            : cfg_(cfg), receiving_queue(CreateMQ<>(request_queue)), log("RequestQueueListener")
         { }
 
         virtual bool receive(Request& req);
@@ -76,6 +80,7 @@ class RequestQueueListener : private RequestQueue {
         std::string client_id_;
         MessageQueue<> receiving_queue;
         std::unordered_map<std::string, MessageQueue<>> client_queues_;
+        range::Emitter log;
 };
 
 
