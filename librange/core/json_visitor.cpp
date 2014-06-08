@@ -52,11 +52,21 @@ JSONVisitor::make_array(const std::vector<RangeStruct> &values) const
 
     for(auto v : values) {
         add_indent(s, pretty_, cur_indent_);
-        s << boost::apply_visitor(JSONVisitor(pretty_, indent_, level), v);
+        s << boost::apply_visitor(JSONVisitor(pretty_, indent_, level), v) << ",";
         if(pretty_) {
             s << std::endl;
         }
     }
+
+    if(!values.empty()) {
+        if(pretty_) {
+            s.seekp(-2, std::ios_base::cur);
+            s << std::endl;
+        } else {
+            s.seekp(-1, std::ios_base::cur);
+        }
+    }
+
 
     add_indent(s, pretty_, cur_indent_);
     s << "]";
@@ -87,8 +97,16 @@ JSONVisitor::operator()(const RangeObject &obj) const
         auto value = boost::apply_visitor(JSONVisitor(pretty_, indent_, level), v.second);
 
         add_indent(s, pretty_, cur_indent_ + indent_);
-        s << "\"" << key << "\":" << pad << value;
+        s << "\"" << key << "\":" << pad << value << ",";
         if(pretty_) { s << std::endl; }
+    }
+    if(!obj.values.empty()) {
+        if(pretty_) {
+            s.seekp(-2, std::ios_base::cur);
+            s << std::endl;
+        } else {
+            s.seekp(-1, std::ios_base::cur);
+        }
     }
 
     add_indent(s, pretty_, cur_indent_);
