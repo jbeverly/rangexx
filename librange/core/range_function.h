@@ -14,18 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGE_CORE_CONFIG_BUILDER_H
-#define _RANGE_CORE_CONFIG_BUILDER_H
+#ifndef _RANGE_CORE_RANGE_FUNCTION_H
+#define _RANGE_CORE_RANGE_FUNCTION_H
 
-#include <boost/shared_ptr.hpp>
+#include <vector>
+#include <string>
 
-#include "config.h"
+namespace range { 
 
-namespace range {
-
-boost::shared_ptr<Config> config_builder(const std::string& filename); 
-extern boost::shared_ptr<Config> config;
+//##############################################################################
+//##############################################################################
+class RangeFunction {
+    public:
+        virtual ~RangeFunction() = default;
+        virtual std::vector<std::string> operator()(const std::string &env_name,
+                const std::vector<std::vector<std::string>>& args) = 0;
+        virtual size_t n_args() const = 0;
+    protected:
+        RangeFunction() = default;
+};
 
 } /* namespace range */
+
 
 #endif

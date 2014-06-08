@@ -426,7 +426,9 @@ RangeExpandingVisitor::operator()(ast::ASTFunctionArguments& args) const
     for (auto arg_node : args.args) {
         boost::apply_visitor(RangeExpandingVisitor(graph_), arg_node);
         auto children = boost::apply_visitor(FetchChildrenVisitor(), arg_node);
-        args.argument_vecs.push_back(children);
+        if(!children.empty()) {
+            args.argument_vecs.push_back(children);
+        }
     }
 }
 
@@ -436,7 +438,7 @@ void
 RangeExpandingVisitor::operator()(ast::ASTFunction& fn) const
 {
     BOOST_LOG_FUNCTION();
-    (*this)(fn.args_node);
+    (*this)(fn.args_node);                                                      // apply this visitor instance to arguments directly
     fn.children = (*fn.fn)(env_name_, fn.args_node.argument_vecs);
 }
 

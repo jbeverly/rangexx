@@ -21,6 +21,7 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include "compiler_types.h"
+#include "../core/range_function.h"
 
 namespace range {
 namespace compiler {
@@ -37,18 +38,7 @@ class RangeGrammar
         RangeGrammar() = default;
 };
 
-//##############################################################################
-//##############################################################################
-class RangeFunction {
-    public:
-        virtual ~RangeFunction() = default;
-        virtual std::vector<std::string> operator()(const std::string &env_name,
-                const std::vector<std::vector<std::string>>& args) = 0;
-        virtual size_t n_args() const = 0;
-    protected:
-        RangeFunction() = default;
-};
-
+typedef ::range::RangeFunction RangeFunction;
 
 } // namespace compiler
 } // namespace range
