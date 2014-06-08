@@ -8,8 +8,8 @@ AM_CPPFLAGS_G = $(CPPFLAGS)
 AM_LDFLAGS_G = $(LDFLAGS)
 AM_LIBADD_G = $(LIBADD)
 
-AM_CPPFLAGS = @BOOST_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ $(AM_CPPFLAGS_G)
-AM_LDFLAGS  = @BOOST_LDFLAGS@ @DB_CXX_LDFLAGS@  @DB_STL_LDFLAGS@ @PROTOBUF_LDFLAGS@  $(AM_LDFLAGS_G)
+AM_CPPFLAGS = @PYTHON_CPPFLAGS@ @BOOST_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ $(AM_CPPFLAGS_G)
+AM_LDFLAGS  = @PYTHON_LDFLAGS@ -l@BOOST_PYTHON_LIB@ @BOOST_LDFLAGS@ @DB_CXX_LDFLAGS@  @DB_STL_LDFLAGS@ @PROTOBUF_LDFLAGS@  $(AM_LDFLAGS_G)
 AM_LIBADD   = @BOOST_LOG_SETUP_LIB@ @BOOST_SYSTEM_LIB@ @BOOST_DATE_TIME_LIB@ @BOOST_THREAD_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_LOG_LIB@ @BOOST_REGEX_LIB@ @DB_CXX_LIBS@     @DB_STL_LIBS@ @PROTOBUF_LIBS@     $(AM_LIBADD_G)
 
 lib_LTLIBRARIES    = librange.la
@@ -132,7 +132,10 @@ nobase_librange_core_la_include_HEADERS = ./core/api.h \
 										  ./core/stored_config.h \
 										  ./core/stored_message.h \
 										  ./core/store.pb.h \
-										  ./core/log.h
+										  ./core/log.h \
+										  ./core/builtins.h \
+										  ./core/range_function.h
+
 
 librange_core_la_SOURCES = ./core/config_builder.cpp \
 						   ./core/json_visitor.cpp \
@@ -140,7 +143,8 @@ librange_core_la_SOURCES = ./core/config_builder.cpp \
 						   ./core/stored_message.cpp \
 						   ./core/store.pb.cpp \
 						   ./core/write_api.cpp \
-						   ./core/log.cpp
+						   ./core/log.cpp \
+						   ./core/builtins.cpp
 	
 librange_core_la_LIBADD = $(AM_LIBADD)
 
