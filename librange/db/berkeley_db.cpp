@@ -103,27 +103,6 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
 //##############################################################################
 BerkeleyDB::~BerkeleyDB() noexcept
 {
-    try {
-        for(auto dbi : graph_db_instances) {
-            try {
-                dbstl::close_db(dbi.second);
-            } catch(...) { }
-        }
-    } catch(...) { }
-
-    if(graph_info) {
-        try {
-            if (graph_info) {
-                dbstl::close_db(graph_info);
-            }
-        } catch(...) { }
-    }
-
-    if (env_) { 
-        try {
-            dbstl::close_db_env(env_);
-        } catch(...) { }
-    }
 }
 
 
