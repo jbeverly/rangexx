@@ -36,7 +36,12 @@ class APIWrap
 {
     public:
         //######################################################################
-        APIWrap(std::string configfile) : api_(new RangeAPI_v1(configfile)) { }
+        APIWrap(std::string configfile) 
+        {
+            if(!api_) {
+                api_ = boost::make_shared<RangeAPI_v1>(configfile);
+            }
+        }
 
         //######################################################################
         object all_clusters(const std::string &env_name, uint64_t version=-1) const
@@ -344,9 +349,11 @@ class APIWrap
         }
 
     private:
-        boost::shared_ptr<RangeAPI_v1> api_;
+        static boost::shared_ptr<RangeAPI_v1> api_;
 
 };
+
+boost::shared_ptr<RangeAPI_v1> APIWrap::api_;
 
 
 //##############################################################################
