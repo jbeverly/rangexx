@@ -149,7 +149,7 @@ Emitter::Timer::time()
     *extrastream_ptr_ << " completed in " << span.count() << "ms";
 
     std::string extra = extrastream_ptr_->str();
-    Emitter::normalize_event(extra);
+    Emitter::normalize_extra(extra);
 
     log_->writelog(event_, extra, Emitter::logseverity::debug4);
     log_->timetaken(event_, span.count());
@@ -351,7 +351,7 @@ void
 Emitter::timetaken(std::string event, double ms) const
 {
     normalize_event(event);
-    StatsD::get().ms(module_ + '.' + event, ms);
+    StatsD::get().ms("rangexx." + module_ + '.' + event, ms);
 }
 
 //######################################################################
@@ -360,7 +360,7 @@ void
 Emitter::gauge(std::string event, double n) const
 {
     normalize_event(event);
-    StatsD::get().gauge(module_ + '.' + event, n);
+    StatsD::get().gauge("rangexx." + module_ + '.' + event, n);
 }
 
 //######################################################################
@@ -369,7 +369,7 @@ void
 Emitter::count(std::string event, uint64_t n) const
 {
     normalize_event(event);
-    StatsD::get().count(module_ + '.' + event, n);
+    StatsD::get().count("rangexx." + module_ + '.' + event, n);
 }
 
 //######################################################################
