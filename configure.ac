@@ -28,7 +28,7 @@ AC_PROG_MAKE_SET
 AC_CHECK_LIB([rt], [shm_open], [], AC_MSG_ERROR([*** could not find librt]))
 
 AX_CXX_COMPILE_STDCXX_11([ext],[mandatory])
-AX_CHECK_EXT_LIB_CLASS([db_cxx], [<db_cxx.h>], [DbStream], [], [AC_MSG_ERROR([Berkeley db6 is required])])
+#AX_CHECK_EXT_LIB_CLASS([db_cxx], [<db_cxx.h>], [DbStream], [], [AC_MSG_ERROR([Berkeley db6 is required])])
 
 AS_VAR_SET([tmp_stl_LDFLAGS],["$LDFLAGS"])
 AS_VAR_SET([LDFLAGS], ["$LDFLAGS $DB_CXX_LDFLAGS"])

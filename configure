@@ -677,10 +677,6 @@ DB_STL_CPPFLAGS
 DB_STL_LD_LIBRARY_PATH
 DB_STL_LDFLAGS
 DB_STL_LIBS
-DB_CXX_CPPFLAGS
-DB_CXX_LD_LIBRARY_PATH
-DB_CXX_LDFLAGS
-DB_CXX_LIBS
 HAVE_CXX11
 PKG_CONFIG
 AM_BACKSLASH
@@ -813,7 +809,6 @@ with_sysroot
 enable_libtool_lock
 enable_dependency_tracking
 enable_silent_rules
-with_db_cxx
 with_db_stl
 with_evpaxos
 with_protobuf
@@ -1484,8 +1479,6 @@ Optional Packages:
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
   --with-sysroot=DIR Search for dependent libraries within DIR
                         (or the compiler's sysroot if not specified).
-  --with-db_cxx=PATH      specify path to db_cxx library installation
-                          [default=auto]
   --with-db_stl=PATH      specify path to db_stl library installation
                           [default=auto]
   --with-evpaxos=PATH     specify path to evpaxos library installation
@@ -2445,11 +2438,6 @@ $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 $as_echo "$as_me: error: changes in the environment can compromise the build" >&2;}
   as_fn_error $? "run \`make distclean' and/or \`rm $cache_file' and start over" "$LINENO" 5
 fi
-
-
-
-
-
 
 
 
@@ -16044,6 +16032,12 @@ $as_echo "#define HAVE_CXX11 1" >>confdefs.h
 
   fi
 
+#AX_CHECK_EXT_LIB_CLASS([db_cxx], [<db_cxx.h>], [DbStream], [], [AC_MSG_ERROR([Berkeley db6 is required])])
+
+tmp_stl_LDFLAGS="$LDFLAGS"
+LDFLAGS="$LDFLAGS $DB_CXX_LDFLAGS"
+tmp_stl_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $DB_CXX_CPPFLAGS"
 
 
 
@@ -16071,154 +16065,6 @@ fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 
-
-
-
-
-
-# Check whether --with-db_cxx was given.
-if test "${with_db_cxx+set}" = set; then :
-  withval=$with_db_cxx; ax_with_db_cxx=$withval
-else
-  ax_with_db_cxx=auto
-fi
-
-
-
-
-
-
-
-        if test "x$ax_with_db_cxx" = xauto; then :
-  :
-else
-              ax_with_db_cxx=`echo $ax_with_db_cxx | sed -e 's,/$,,'`
-            case "$ax_with_db_cxx" in #(
-  ./*|../*) :
-    ax_with_db_cxx="`pwd`/$ax_with_db_cxx" ;; #(
-  *) :
-     ;;
-esac #''
-            if test -d "${ax_with_db_cxx}/lib"; then :
-  				DB_CXX_LD_LIBRARY_PATH="${ax_with_db_cxx}/lib"
-                DB_CXX_LDFLAGS="-L${ax_with_db_cxx}/lib"
-
-fi
-            if test -d "${ax_with_db_cxx}/lib64"; then :
-  				if test 0`echo $target | grep -c 64` -gt 0; then :
-
-					DB_CXX_LD_LIBRARY_PATH="${ax_with_db_cxx}/lib64"
-                    DB_CXX_LDFLAGS="-L${ax_with_db_cxx}/lib64"
-
-else
-  					if test 0`echo $build | grep -c 64` -gt 0 ; then :
-
-						DB_CXX_LD_LIBRARY_PATH="${ax_with_db_cxx}/lib64"
-						DB_CXX_LDFLAGS="-L${ax_with_db_cxx}/lib64"
-
-fi
-
-fi
-
-fi
-            if test -d "${ax_with_db_cxx}/include"; then :
-                  DB_CXX_CPPFLAGS="-I${ax_with_db_cxx}/include"
-
-fi
-
-fi
-
-
-
-          tmp_LDFLAGS="$LDFLAGS"
-          LDFLAGS="$LDFLAGS $DB_CXX_LDFLAGS"
-          tmp_CPPFLAGS="$CPPFLAGS"
-          CPPFLAGS="$CPPFLAGS $DB_CXX_CPPFLAGS"
-
-
-          cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <db_cxx.h>
-int
-main ()
-{
-typedef DbStream foo;
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"; then :
-
-
-$as_echo "#define HAVE_LIBDB_CXX 1" >>confdefs.h
-
-          DB_CXX_LIBS=-ldb_cxx
-                                 if ${DB_CXX_LIBS+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_cxx flags DB_CXX_LIBS" >&5
-$as_echo_n "checking db_cxx flags DB_CXX_LIBS... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_CXX_LIBS" >&5
-$as_echo "$DB_CXX_LIBS" >&6; }
-
-
-fi
-
-                       if ${DB_CXX_LDFLAGS+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_cxx flags DB_CXX_LDFLAGS" >&5
-$as_echo_n "checking db_cxx flags DB_CXX_LDFLAGS... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_CXX_LDFLAGS" >&5
-$as_echo "$DB_CXX_LDFLAGS" >&6; }
-
-
-fi
-
-                       if ${DB_CXX_LD_LIBRARY_PATH+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_cxx flags DB_CXX_LD_LIBRARY_PATH" >&5
-$as_echo_n "checking db_cxx flags DB_CXX_LD_LIBRARY_PATH... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_CXX_LD_LIBRARY_PATH" >&5
-$as_echo "$DB_CXX_LD_LIBRARY_PATH" >&6; }
-
-
-fi
-
-                       if ${DB_CXX_CPPFLAGS+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_cxx flags DB_CXX_CPPFLAGS" >&5
-$as_echo_n "checking db_cxx flags DB_CXX_CPPFLAGS... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_CXX_CPPFLAGS" >&5
-$as_echo "$DB_CXX_CPPFLAGS" >&6; }
-
-
-fi
-
-
-
-
-else
-  			   DB_CXX_LIBS=-ldb_cxx
-			                          if ${DB_CXX_LIBS+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_cxx flags DB_CXX_LIBS" >&5
-$as_echo_n "checking db_cxx flags DB_CXX_LIBS... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_CXX_LIBS" >&5
-$as_echo "$DB_CXX_LIBS" >&6; }
-
-
-fi
-
-
-               as_fn_error $? "Berkeley db6 is required" "$LINENO" 5
-
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-
-		  LDFLAGS="$tmp_LDFLAGS"
-          CPPFLAGS="$tmp_CPPFLAGS"
-
-
-
-tmp_stl_LDFLAGS="$LDFLAGS"
-LDFLAGS="$LDFLAGS $DB_CXX_LDFLAGS"
-tmp_stl_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $DB_CXX_CPPFLAGS"
 
 
 

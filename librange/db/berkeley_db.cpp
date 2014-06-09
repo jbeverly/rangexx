@@ -67,7 +67,7 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
             THROW_STACK(DatabaseEnvironmentException(
                     std::string("Unable to open environment")));
         }
-    } catch(dbstl::DbstlException& e) {
+    } catch(std::exception &e) {
         try { 
             dbstl::close_db_env(env_);
         } catch(...) {
@@ -83,7 +83,7 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
                 "graph_info");
         dbstl::commit_txn(env_, txn);
         init_graph_info();
-    } catch(dbstl::DbstlException& e) {
+    } catch(std::exception &e) {
         try { 
             dbstl::close_db_env(env_);
         } catch(...) { 
@@ -103,6 +103,26 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
 //##############################################################################
 BerkeleyDB::~BerkeleyDB() noexcept
 {
+    try {
+        for(auto dbi : graph_db_instances) {
+            try {
+                dbstl::close_db(dbi.second);
+            } catch(...) { }
+        }
+    } catch(...) { }
+
+    if(graph_info) {
+        try {
+            if (graph_info) {
+                dbstl::close_db(graph_info);
+            }
+        } catch(...) { }
+    }
+    if (env_) {
+        try {
+            dbstl::close_db_env(env_);
+        } catch(...) { }
+    }
 }
 
 
@@ -318,6 +338,7 @@ BerkeleyDB::getGraphInstance(const std::string& name)
     if (iter != graph_db_instances.end()) {
         auto g_it = graph_bdbgraph_instances.find(name);
         if(g_it == graph_bdbgraph_instances.end()) {
+            LOG(debug9, "create_new_graph_instance") << name;
             graph_bdbgraph_instances[name] = boost::make_shared<BerkeleyDBGraph>(name, *this);
         } 
         return graph_bdbgraph_instances[name];

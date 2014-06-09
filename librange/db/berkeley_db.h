@@ -97,7 +97,7 @@ class BerkeleyDB : public BackendInterface {
         static const uint32_t env_open_flags = DB_CREATE | DB_INIT_MPOOL 
                     | DB_INIT_LOCK | DB_INIT_TXN | DB_RECOVER | DB_REGISTER |
                     DB_MULTIVERSION;
-        static const uint32_t env_set_flags = DB_REGION_INIT | /* DB_DIRECT_DB | */ DB_MULTIVERSION;
+        static const uint32_t env_set_flags = DB_REGION_INIT | DB_MULTIVERSION;
 
         range::Emitter log;
 

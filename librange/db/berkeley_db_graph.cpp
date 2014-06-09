@@ -90,6 +90,7 @@ BerkeleyDBGraph::BerkeleyDBGraph(const std::string& name, BerkeleyDB& backend)
     log("BerkeleyDBGraph")
 
 {
+    LOG(debug9, "new_BerkeleyDBGraph");
     version(); // set current version and establish bdb rmw lock on changelist
                // as early as possible if we're in a rmw transaction.
 }
@@ -222,8 +223,13 @@ BerkeleyDBGraph::n_vertices() const
 
     auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "n_vertices");
-    size_t n = boost::lexical_cast<size_t>((*map_instance)[key]);
-    return n;
+    std::string data = backend_.db_get(nullptr, *map_instance, key);
+    try {
+        return boost::lexical_cast<size_t>(data);
+    } catch(std::exception &e) {
+        LOG(warning, "bad_lexical_cast") << e.what();
+        return 0;
+    }
 }
 
 //##############################################################################
@@ -256,8 +262,13 @@ BerkeleyDBGraph::n_edges() const
 
     auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "n_edges");
-    size_t n = boost::lexical_cast<size_t>((*map_instance)[key]);
-    return n;
+    std::string data = backend_.db_get(nullptr, *map_instance, key);
+    try {
+        return boost::lexical_cast<size_t>(data);
+    } catch(std::exception &e) {
+        LOG(warning, "bad_lexical_cast") << e.what();
+        return 0;
+    }
 }
 
 //##############################################################################
@@ -289,8 +300,13 @@ BerkeleyDBGraph::n_redges() const
 
     auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "n_redges");
-    size_t n = boost::lexical_cast<size_t>((*map_instance)[key]);
-    return n;
+    std::string data = backend_.db_get(nullptr, *map_instance, key);
+    try {
+        return boost::lexical_cast<size_t>(data);
+    } catch(std::exception &e) {
+        LOG(warning, "bad_lexical_cast") << e.what();
+        return 0;
+    }
 }
 
 //##############################################################################
@@ -298,8 +314,9 @@ BerkeleyDBGraph::n_redges() const
 uint64_t
 BerkeleyDBGraph::version() const
 {
-
+    RANGE_LOG_TIMED_FUNCTION();
     std::thread::id id = std::this_thread::get_id();
+
     auto txn_it = transaction_table.find(id);
     if(txn_it != transaction_table.end()) {
         if(!txn_it->second.lock()->changelist().empty()) {
@@ -311,7 +328,7 @@ BerkeleyDBGraph::version() const
         return (version_pending_) ? current_version_ + 1 : current_version_;
     }
 
-    RANGE_LOG_TIMED_FUNCTION();
+    LOG(debug9, "version.read_version_from_db") << name_;
 
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
@@ -336,7 +353,7 @@ BerkeleyDBGraph::version() const
     auto lock = read_lock(record_type::GRAPH_META, "changelist");
 
     if (map_instance->find(key) != map_instance->end()) {
-        changes.ParseFromString((*map_instance)[key]);
+        changes.ParseFromString(backend_.db_get(nullptr, *map_instance, key));
     }
 /*    if(changes.current_version() == 0) {
         return 1;
@@ -517,7 +534,7 @@ BerkeleyDBGraph::get_change_history() const
     auto key = key_name(record_type::GRAPH_META, "changelist");
     ChangeList changes;
     if (map_instance->find(key) != map_instance->end()) {
-        changes.ParseFromString((*map_instance)[key]);
+        changes.ParseFromString(backend_.db_get(nullptr, *map_instance, key));
     }
 
     for (int v = 0; v < changes.change_size(); ++v) {

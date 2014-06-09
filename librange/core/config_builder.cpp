@@ -52,9 +52,11 @@ config_builder(const std::string& filename)
     Config * cfg = new Config();
     
     auto db_conf = db::ConfigIface("/var/lib/rangexx", 67108864);
-    auto db = new range::db::BerkeleyDB { db_conf };
+    auto db = boost::make_shared<range::db::BerkeleyDB>( db_conf );
+    //auto db = new range::db::BerkeleyDB { db_conf };
 
-    cfg->db_backend(boost::shared_ptr<range::db::BerkeleyDB>(db));
+    //cfg->db_backend(boost::shared_ptr<range::db::BerkeleyDB>(db));
+    cfg->db_backend(db);
     cfg->graph_factory(boost::make_shared<graph::GraphdbConcreteFactory<graph::GraphDB>>());
     cfg->node_factory(boost::make_shared<graph::NodeIfaceConcreteFactory<db::ProtobufNode>>()); 
     cfg->range_symbol_table(build_symtable());
