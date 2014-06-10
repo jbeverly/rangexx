@@ -142,17 +142,19 @@ catch(std::exception &e) {
 void
 Emitter::Timer::time()
 {
-    using namespace std::chrono;
-    high_resolution_clock::time_point end = high_resolution_clock::now();
-    std::chrono::milliseconds span = duration_cast<std::chrono::milliseconds>(end - s_time);
+    if(log_) { 
+        using namespace std::chrono;
+        high_resolution_clock::time_point end = high_resolution_clock::now();
+        std::chrono::milliseconds span = duration_cast<std::chrono::milliseconds>(end - s_time);
 
-    *extrastream_ptr_ << " completed in " << span.count() << "ms";
+        *extrastream_ptr_ << " completed in " << span.count() << "ms";
 
-    std::string extra = extrastream_ptr_->str();
-    Emitter::normalize_extra(extra);
+        std::string extra = extrastream_ptr_->str();
+        Emitter::normalize_extra(extra);
 
-    log_->writelog(event_, extra, Emitter::logseverity::debug4);
-    log_->timetaken(event_, span.count());
+        log_->writelog(event_, extra, Emitter::logseverity::debug4);
+        log_->timetaken(event_, span.count());
+    }
 }
 
 //##############################################################################
@@ -211,8 +213,8 @@ Emitter::writelog(const std::string &event, const std::string &extra,
 void
 Emitter::emit(std::string event, std::string extra, logseverity s) const
 {
-    normalize_event(event);
     normalize_extra(extra);
+    normalize_event(event);
     writelog(event, extra, s);
     count(event, 1);
 }
@@ -308,40 +310,50 @@ Emitter::debug4(const std::string &event, const std::string &extra) const
 //######################################################################
 //######################################################################
 void
-Emitter::debug5(const std::string &event, const std::string &extra) const
+Emitter::debug5(std::string event, std::string extra) const
 {
-    emit(event, extra, logseverity::debug5);
+    normalize_extra(extra);
+    normalize_event(event);
+    writelog(event, extra, logseverity::debug5);
 }
 
 //######################################################################
 //######################################################################
 void
-Emitter::debug6(const std::string &event, const std::string &extra) const
+Emitter::debug6(std::string event, std::string extra) const
 {
-    emit(event, extra, logseverity::debug6);
+    normalize_extra(extra);
+    normalize_event(event);
+    writelog(event, extra, logseverity::debug6);
 }
 
 //######################################################################
 //######################################################################
 void
-Emitter::debug7(const std::string &event, const std::string &extra) const
+Emitter::debug7(std::string event, std::string extra) const
 {
-    emit(event, extra, logseverity::debug7);
+    normalize_extra(extra);
+    normalize_event(event);
+    writelog(event, extra, logseverity::debug7);
 }
 
 //######################################################################
 //######################################################################
 void
-Emitter::debug8(const std::string &event, const std::string &extra) const
+Emitter::debug8(std::string event, std::string extra) const
 {
+    normalize_extra(extra);
+    normalize_event(event);
     emit(event, extra, logseverity::debug8);
 }
 
 //######################################################################
 //######################################################################
 void
-Emitter::debug9(const std::string &event, const std::string &extra) const
+Emitter::debug9(std::string event, std::string extra) const
 {
+    normalize_extra(extra);
+    normalize_event(event);
     emit(event, extra, logseverity::debug9);
 }
 
@@ -388,7 +400,8 @@ Emitter::start_timer(std::string event, std::string extra) const
 // Free functions
 //##############################################################################
 //##############################################################################
-//
+
+Emitter::logseverity Emitter::loglevel_;
 //##############################################################################
 //##############################################################################
 void initialize_logger(const std::string &filename, uint8_t sev)
@@ -396,6 +409,7 @@ void initialize_logger(const std::string &filename, uint8_t sev)
     using namespace boost::log;
 
     StatsD::initialize("127.0.0.1", "8125");
+    Emitter::loglevel_ = Emitter::logseverity(sev);
 
     add_common_attributes();
     core::get()->add_global_attribute("Scope", attributes::named_scope());

@@ -69,13 +69,48 @@
 namespace range {
     namespace graph { class GraphTxn; }
 
+//##############################################################################
+/// StatsD emitter class Singleton
+/// call initialize with hostname and port of statsd aggregator.
+/// defaults to localhost:8125 (I recommend running statsite, which has such a 
+/// small footprint, running on localhost consumes virtually no resources, and
+/// and your network will thank you for the local event aggregation)
 class StatsD {
     public:
+        //######################################################################
+        /// Call before using StatsD to set hostname and port
+        /// Because port will likely come from a config file, it is taken as a string
+        /// @param hostname name of host running statsd aggregator
+        /// @param port service name or port number
         static void initialize(std::string hostname, std::string port);
+        
+        //######################################################################
+        /// StatsD is a singleton, call get() for the global instance
+        /// @return the global singleton instance
         static inline const StatsD& get();
+        
+        //######################################################################
+        /// emit a timing event
+        /// @param event name of event
+        /// @param ms milliseconds to report
         void ms(const std::string &event, double ms) const;
+        
+        //######################################################################
+        /// emit a gauge event
+        /// @param event name of event
+        /// @param val value of gauge
         void gauge(const std::string &event, double val) const;
+        
+        //######################################################################
+        /// emit a count event
+        /// @param event name of event
+        /// @param val value of count
         void count(const std::string &event, int64_t val) const;
+        
+        //######################################################################
+        /// emit a key/value event
+        /// @param event name of event
+        /// @param val value 
         void kv(const std::string &event, const std::string &val) const;
     
     //##########################################################################
@@ -97,22 +132,73 @@ class StatsD {
 
 
 //##############################################################################
-//##############################################################################
+/// A class for emitting information about the application. Most easily used
+/// with the macro LOG, which assumes you have a member variable named 'log',
+/// and uses that member variable to emit metrics.
+/// Example:
+/// @code{.cpp}
+///     class Foo {
+///         Emitter log;
+///         public: 
+///             Foo() : log("Foo") { }
+///             void something() {
+///                 LOG(debug0, "hello_event") << "Hello world!";
+///             }
+///     }; 
+/// @endcode
+/// All emitted events at or below debug4 are sent to the logger, and
+/// emitted as statsd metrics. Events emitted at debug5 or higher are
+/// not emitted to statsd, but will log if the loglevel is high enough.
 class Emitter {
-    friend range::graph::GraphTxn;
-
+    public:
     //######################################################################
-    //######################################################################
+    /// Timer is an RAII object that will capture the start time when it is
+    /// created, and emit an event and message when it is destructed.
+    /// You do not create this yourself, but instead create it from
+    /// Emitter e.g.:
+    /// @code{.cpp}
+    ///     Timer foo = log.start_timer("someevent") << "Some message";
+    /// @endcode
+    /// or, if you are timing a function, you may more easily time it
+    /// with the RANGE_LOG_TIME_FUNCTION() macro, e.g.:
+    /// @code{.cpp}
+    ///     void foo(std::string arg1, int arg2) {
+    ///         RANGE_LOG_TIME_FUNCTION() << arg1 << ":" << arg2;
+    ///         /* ... */
+    ///     }
+    /// @endcode
     class Timer {
         public:
-            Timer(const Emitter * log, const std::string &event, const std::string &extra);
+            //##################################################################
+            /// Called by destructor; or whenever you want to emit time since 
+            /// object was constructed
             void time();
+            
+            //##################################################################
+            /// dtor
             ~Timer();
+            
+            //##################################################################
+            /// Overload which proxies to internal stringstream, allowing you 
+            /// to << into the timer;
             template <typename T>
             Timer& operator<<(const T &rhs) { (*extrastream_ptr_) << rhs; return *this; }
+
+            //##################################################################
+            /// Overload which proxies to internal stringstream, allowing you 
+            /// to << into the timer;
             template <typename T>
             const Timer& operator<<(const T &rhs) const { (*extrastream_ptr_) << rhs; return *this; }
         private:
+            friend Emitter;
+
+            //##################################################################
+            /// ctor
+            /// @param[in] log the emitter to emit to
+            /// @param[in] event the name of the event being timed
+            /// @param[in] extra a message to write to the log
+            Timer(const Emitter * log, const std::string &event, const std::string &extra);
+
             const Emitter * log_;
             std::string event_;
             //std::string extra_;
@@ -122,24 +208,23 @@ class Emitter {
 
     public:
         //######################################################################
-        //######################################################################
-        enum class logseverity {
-            fatal,
-            critical,
-            error,
-            warning,
-            info,
-            notice,
-            debug0,
-            debug1,
-            debug2,
-            debug3,
-            debug4,
-            debug5,
-            debug6,
-            debug7,
-            debug8,
-            debug9,
+        enum class logseverity : uint8_t {
+            fatal,                                                              /// Error which will likely crash the app
+            critical,                                                           /// Something the user should know about
+            error,                                                              /// An error has occurred, generally recoverable
+            warning,                                                            /// Something less than good happened
+            info,                                                               /// information, not an error
+            notice,                                                             /// troubleshooting notices
+            debug0,                                                             /// sent to both statsd and log
+            debug1,                                                             /// sent to both statsd and log 
+            debug2,                                                             /// sent to both statsd and log 
+            debug3,                                                             /// sent to both statsd and log 
+            debug4,                                                             /// sent to both statsd and log 
+            debug5,                                                             /// sent only to log 
+            debug6,                                                             /// sent only to log 
+            debug7,                                                             /// sent only to log 
+            debug8,                                                             /// sent only to log 
+            debug9,                                                             /// sent only to log 
         };
 
         const char logseverity_strings[20][10] = {
@@ -163,9 +248,16 @@ class Emitter {
 
 
         //######################################################################
-        //######################################################################
+        /// @param module Name of module this logging instance is for. 
         explicit Emitter(std::string module) ;
+        
+        //######################################################################
+        /// replace all invalid metric-name characters with underscores
+        /// @param[in,out] event 
         static void normalize_event(std::string &event);
+        //######################################################################
+        /// replace all non-printing -name characters with underscores
+        /// @param[in,out] event 
         static void normalize_extra(std::string &extra);
         //######################################################################
         void writelog(const std::string &event, const std::string &extra,
@@ -182,23 +274,27 @@ class Emitter {
         void debug2(const std::string &event, const std::string &extra) const;
         void debug3(const std::string &event, const std::string &extra) const;
         void debug4(const std::string &event, const std::string &extra) const;
-        void debug5(const std::string &event, const std::string &extra) const;
-        void debug6(const std::string &event, const std::string &extra) const;
-        void debug7(const std::string &event, const std::string &extra) const;
-        void debug8(const std::string &event, const std::string &extra) const;
-        void debug9(const std::string &event, const std::string &extra) const;
+        void debug5(std::string event, std::string extra) const;
+        void debug6(std::string event, std::string extra) const;
+        void debug7(std::string event, std::string extra) const;
+        void debug8(std::string event, std::string extra) const;
+        void debug9(std::string event, std::string extra) const;
         void timetaken(std::string event, double ms) const;
         void gauge(std::string event, double n) const;
         void count(std::string event, uint64_t n) const;
         Timer start_timer(std::string event, std::string extra="") const;
 
+        static inline logseverity loglevel() { return loglevel_; }
+
     private:
+        friend void initialize_logger(const std::string &, uint8_t);
         typedef boost::log::sources::severity_channel_logger<
                 logseverity, std::string
             > logger_mt;
 
         std::string module_;
         mutable logger_mt log;
+        static logseverity loglevel_;
 };
 
 
