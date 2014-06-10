@@ -392,6 +392,12 @@ TEST_F(TestGraphDB, test_create) {
     ASSERT_NE(nullptr, a);
 }
 
+//##############################################################################
+////##############################################################################
+MATCHER_P(WeakPtrEquals, value, "value.get() to match arg.get()")
+{
+    return value.lock().get() == arg.get();
+}
 
 //##############################################################################
 //##############################################################################
@@ -429,20 +435,26 @@ TEST_F(TestGraphDB, test_remove) {
    
         if ( i % 3 == 0 ) { 
             thisnode_forwardedges.push_back(node);
-            EXPECT_CALL(*node, remove_reverse_edge(Matcher<range::graph::NodeIface::node_t>(thisnode), false))
+            EXPECT_CALL(*node, remove_reverse_edge(WeakPtrEquals(boost::weak_ptr<range::graph::NodeIface>(thisnode)), true))
+            //EXPECT_CALL(*node, remove_reverse_edge(Matcher<range::graph::NodeIface::node_t>(thisnode), true))
                 .Times(AtLeast(1))
                 .WillRepeatedly(Return(true));
         }
 
         if ( i != 0 && i % 4 == 0 ) { 
             thisnode_reverseedges.push_back(node);
-            EXPECT_CALL(*node, remove_forward_edge(Matcher<range::graph::NodeIface::node_t>(thisnode), false))
+            EXPECT_CALL(*node, remove_forward_edge(WeakPtrEquals(boost::weak_ptr<range::graph::NodeIface>(thisnode)), true))
+            //EXPECT_CALL(*node, remove_forward_edge(Matcher<range::graph::NodeIface::node_t>(thisnode), true))
                 .Times(AtLeast(1))
                 .WillRepeatedly(Return(true));
         }
 
         MockNodes.push_back(node);
     }
+
+    EXPECT_CALL(*thisnode, add_forward_edge(WeakPtrEquals(boost::weak_ptr<range::graph::NodeIface>(thisnode)), true))
+        .Times(1)
+        .WillOnce(Return(true));
 
     EXPECT_CALL(*thisnode, forward_edges())
         .Times(1)
@@ -502,8 +514,9 @@ TEST_F(TestGraphDB, test_remove) {
     range::graph::GraphDB gdb { "primary", inst, range::graph::GraphDB::node_factory_t(new range::graph::NodeIfaceConcreteFactory<MockNode>()) };
     gdb.remove(thisnode);
 
-    std::for_each(std::begin(MockNodes), std::end(MockNodes), [](boost::shared_ptr<range::graph::NodeIface> p) { Mock::VerifyAndClearExpectations(p.get()); });
-    Mock::VerifyAndClearExpectations(thisnode.get());
+    //std::for_each(std::begin(MockNodes), std::end(MockNodes), [](boost::shared_ptr<range::graph::NodeIface> p) { Mock::VerifyAndClearExpectations(p.get()); });
+    //Mock::VerifyAndClearExpectations(thisnode.get());
+    //Mock::VerifyAndClearExpectations(thisnode.get());
 }
 
 

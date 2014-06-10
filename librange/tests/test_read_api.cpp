@@ -37,6 +37,7 @@ using namespace ::testing;
 #include "mock_cursor.h"
 #include "mock_config.h"
 #include "mock_graphdb_factory.h"
+#include "mock_backend.h"
 
 //##############################################################################
 //##############################################################################
@@ -51,10 +52,14 @@ class TestRangeReadAPI : public ::testing::Test {
     //##########################################################################
     public:
         void SetUp() override {
+            backend = boost::make_shared<MockBackend>();
             primary = boost::make_shared<MockGraph>();
             dependency = boost::make_shared<MockGraph>();
             auto factory = boost::make_shared<MockGraphFactory>();
             cfg = boost::make_shared<MockConfig>();
+
+            EXPECT_CALL(*backend, register_thread())
+                .Times(AnyNumber());
 
             EXPECT_CALL(*factory, createGraphdb("primary", _, _, _))
                 .Times(AnyNumber())
@@ -74,7 +79,7 @@ class TestRangeReadAPI : public ::testing::Test {
 
             EXPECT_CALL(*cfg, db_backend())
                 .Times(AnyNumber())
-                .WillRepeatedly(Return(nullptr));
+                .WillRepeatedly(Return(backend));
 
             EXPECT_CALL(*cfg, range_symbol_table())
                 .Times(AnyNumber())
@@ -410,6 +415,7 @@ class TestRangeReadAPI : public ::testing::Test {
 
         std::unordered_map<std::string, boost::shared_ptr<MockNode>> node_map;
         std::vector<boost::shared_ptr<MockNode>> all_nodes;
+        boost::shared_ptr<MockBackend> backend;
         boost::shared_ptr<MockGraph> primary;
         boost::shared_ptr<MockGraph> dependency;
         boost::shared_ptr<MockConfig> cfg;

@@ -33,6 +33,7 @@ using namespace ::testing;
 #include "mock_node.h"
 #include "mock_graph.h"
 #include "mock_config.h"
+#include "mock_backend.h"
 #include "mock_graphdb_factory.h"
 
 //##############################################################################
@@ -41,6 +42,7 @@ class TestRangeWriteAPI : public ::testing::Test {
     //##########################################################################
     public:
         void SetUp() override {
+            backend = boost::make_shared<MockBackend>();
             primary = boost::make_shared<MockGraph>();
             dependency = boost::make_shared<MockGraph>();
             auto factory = boost::make_shared<MockGraphFactory>();
@@ -62,9 +64,12 @@ class TestRangeWriteAPI : public ::testing::Test {
                 .Times(AtLeast(0))
                 .WillRepeatedly(Return(nullptr));
 
+            EXPECT_CALL(*backend, register_thread())
+                .Times(AnyNumber());
+
             EXPECT_CALL(*cfg, db_backend())
                 .Times(AtLeast(0))
-                .WillRepeatedly(Return(nullptr));
+                .WillRepeatedly(Return(backend));
 
             EXPECT_CALL(*primary, start_txn())
                 .Times(AnyNumber())
@@ -80,6 +85,7 @@ class TestRangeWriteAPI : public ::testing::Test {
         void TearDown() override {
         }
 
+        boost::shared_ptr<MockBackend> backend;
         boost::shared_ptr<MockGraph> primary;
         boost::shared_ptr<MockGraph> dependency;
         boost::shared_ptr<MockConfig> cfg;
