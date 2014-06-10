@@ -37,6 +37,9 @@ namespace db {
 
 static const char stupid_ordinal[] = "\xFF\x01\x02\x03\x04\x05\xFF";
 
+bool BerkeleyDB::dbstl_started_ = false;
+std::mutex BerkeleyDB::startlock_;
+
 //##############################################################################
 //##############################################################################
 BerkeleyDB::BerkeleyDB(const ConfigIface& config) 
@@ -45,63 +48,73 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
         graph_db_instances(), graph_map_instances(), log("BerkeleyDB")
 { 
     RANGE_LOG_TIMED_FUNCTION();
-    /* try { 
-        dbstl::dbstl_startup();
-    } catch(dbstl::DbstlException& e) {
-        throw DatabaseEnvironmentException(
-                std::string("Unable to start dbstl: ") + e.what());
-    } */
+    {
+        std::lock_guard<std::mutex> guard { startlock_ };
+        if(!dbstl_started_) {
+            dbstl_started_ = true;
+            try { 
+                dbstl::dbstl_startup();
+            } catch(dbstl::DbstlException& e) {
+                dbstl_started_ = false;
+                throw DatabaseEnvironmentException(
+                        std::string("Unable to start dbstl: ") + e.what());
+            }
 
-    try {
-        env_ = dbstl::open_env(conf_.db_home().c_str(), env_set_flags,
-                env_open_flags, conf_.cache_size(), 0664, 0);
-        if(!env_) {
-            THROW_STACK(DatabaseEnvironmentException(
-                    std::string("Unable to open environment")));
-        }
+            try {
+                env_ = dbstl::open_env(conf_.db_home().c_str(), env_set_flags,
+                        env_open_flags, conf_.cache_size(), 0664, 0);
+                if(!env_) {
+                    dbstl_started_ = false;
+                    THROW_STACK(DatabaseEnvironmentException(
+                            std::string("Unable to open environment")));
+                }
 
-        const char * home;
-        env_->get_home(&home);
+                const char * home;
+                env_->get_home(&home);
 
-        if(strncmp(home, conf_.db_home().c_str(), conf_.db_home().size()) != 0) {
-            THROW_STACK(DatabaseEnvironmentException(
-                    std::string("Unable to open environment")));
+                if(strncmp(home, conf_.db_home().c_str(), conf_.db_home().size()) != 0) {
+                    THROW_STACK(DatabaseEnvironmentException(
+                            std::string("Unable to open environment")));
+                }
+            } catch(std::exception &e) {
+                dbstl_started_ = false;
+                try { 
+                    dbstl::close_db_env(env_);
+                } catch(...) {
+                    LOG(fatal, "close_db_env_exception") << "Unable to to close_db_env while handling exception";
+                }
+                THROW_STACK(DatabaseEnvironmentException(
+                        std::string("Unable to open environment") + e.what()));
+            }
+            DbTxn * txn = nullptr;
+            try {
+                txn = dbstl::begin_txn(DB_TXN_SYNC, env_);
+                graph_info = dbstl::open_db(env_, "graph_info", DB_HASH,
+                        DB_CREATE | DB_MULTIVERSION, DB_CHKSUM, 0664, txn, 0,
+                        "graph_info");
+                dbstl::commit_txn(env_, txn);
+                init_graph_info();
+            } catch(std::exception &e) {
+                dbstl_started_ = false;
+                try { 
+                    dbstl::close_db_env(env_);
+                } catch(...) { 
+                    LOG(fatal, "close_db_env_exception") << "Unable to to close_db_env while handling exception";
+                }
+                try { 
+                    dbstl::close_db(graph_info);
+                } catch(...) { 
+                    LOG(fatal, "close_db_exception") << "Unable to to close_db while handling exception";
+                }
+                try {
+                    dbstl::abort_txn(env_, txn);
+                } catch(...) {
+                    LOG(fatal, "abort_txn") << "Unable to to abort_txn while handling exception";
+                }
+                THROW_STACK(InstanceUnitializedException(
+                        std::string("Unable to open graph_info database: ") + e.what()));
+            }
         }
-    } catch(std::exception &e) {
-        try { 
-            dbstl::close_db_env(env_);
-        } catch(...) {
-            LOG(fatal, "close_db_env_exception") << "Unable to to close_db_env while handling exception";
-        }
-        THROW_STACK(DatabaseEnvironmentException(
-                std::string("Unable to open environment") + e.what()));
-    }
-    DbTxn * txn = nullptr;
-    try {
-        txn = dbstl::begin_txn(DB_TXN_SYNC, env_);
-        graph_info = dbstl::open_db(env_, "graph_info", DB_HASH,
-                DB_CREATE | DB_MULTIVERSION, DB_CHKSUM, 0664, txn, 0,
-                "graph_info");
-        dbstl::commit_txn(env_, txn);
-        init_graph_info();
-    } catch(std::exception &e) {
-        try { 
-            dbstl::close_db_env(env_);
-        } catch(...) { 
-            LOG(fatal, "close_db_env_exception") << "Unable to to close_db_env while handling exception";
-        }
-        try { 
-            dbstl::close_db(graph_info);
-        } catch(...) { 
-            LOG(fatal, "close_db_exception") << "Unable to to close_db while handling exception";
-        }
-        try {
-            dbstl::abort_txn(env_, txn);
-        } catch(...) {
-            LOG(fatal, "abort_txn") << "Unable to to abort_txn while handling exception";
-        }
-        THROW_STACK(InstanceUnitializedException(
-                std::string("Unable to open graph_info database: ") + e.what()));
     }
 }
 
@@ -109,25 +122,29 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
 //##############################################################################
 BerkeleyDB::~BerkeleyDB() noexcept
 {
-    try {
-        for(auto dbi : graph_db_instances) {
-            try {
-                dbstl::close_db(dbi.second);
-            } catch(...) { }
-        }
-    } catch(...) { }
-
-    if(graph_info) {
+    {
+        std::lock_guard<std::mutex> guard { startlock_ };
+        dbstl_started_ = false;
         try {
-            if (graph_info) {
-                dbstl::close_db(graph_info);
+            for(auto dbi : graph_db_instances) {
+                try {
+                    dbstl::close_db(dbi.second);
+                } catch(...) { }
             }
         } catch(...) { }
-    }
-    if (env_) {
-        try {
-            dbstl::close_db_env(env_);
-        } catch(...) { }
+
+        if(graph_info) {
+            try {
+                if (graph_info) {
+                    dbstl::close_db(graph_info);
+                }
+            } catch(...) { }
+        }
+        if (env_) {
+            try {
+                dbstl::close_db_env(env_);
+            } catch(...) { }
+        }
     }
 }
 
@@ -241,10 +258,12 @@ void
 BerkeleyDB::init_graph_info()
 {
     RANGE_LOG_TIMED_FUNCTION();
+    //register_thread();
 
     if (!graph_info_map) {
         map_t *map = new map_t(graph_info, env_);
         graph_info_map = std::move(std::unique_ptr<map_t>(map));
+        dbstl::register_db(graph_info_map->get_db_handle());
     }
 
     for(auto name : listGraphInstances()) {
@@ -276,7 +295,9 @@ std::vector<std::string>
 BerkeleyDB::listGraphInstances() const
 {
     RANGE_LOG_TIMED_FUNCTION();
+    //register_thread();
 
+    dbstl::register_db(graph_info_map->get_db_handle());
     BerkeleyDBLock lock { const_cast<BerkeleyDB&>(*this), *graph_info_map,
                             false };
     GraphList listbuf;
@@ -300,7 +321,9 @@ BerkeleyDB::listGraphInstances() const
 void
 BerkeleyDB::add_graph_instance(const std::string& name) {
     RANGE_LOG_TIMED_FUNCTION();
+    //register_thread();
 
+    dbstl::register_db(graph_info_map->get_db_handle());
     BerkeleyDBLock lock { *this, *graph_info_map, true };
 
     auto g = getGraphInstance(name);
@@ -345,18 +368,34 @@ BerkeleyDB::graph_instance_t
 BerkeleyDB::getGraphInstance(const std::string& name)
 {
     RANGE_LOG_TIMED_FUNCTION();
+    register_thread();
 
     auto iter = graph_db_instances.find(name);
     if (iter != graph_db_instances.end()) {
         auto g_it = graph_bdbgraph_instances.find(name);
         if(g_it == graph_bdbgraph_instances.end()) {
-            LOG(debug9, "create_new_graph_instance") << name;
+            LOG(debug4, "create_new_graph_instance") << name;
             graph_bdbgraph_instances[name] = boost::make_shared<BerkeleyDBGraph>(name, *this);
         } 
+        auto db_it = graph_db_instances.find(name);
+        if(db_it == graph_db_instances.end()) {
+            THROW_STACK(InstanceUnitializedException("db not initialized correctly"));
+        }
+        dbstl::register_db(db_it->second);
         return graph_bdbgraph_instances[name];
     }
     return nullptr;
 }
+
+//##############################################################################
+//##############################################################################
+void
+BerkeleyDB::register_thread() const
+{
+    dbstl::register_db_env(env_);
+}
+
+
 
 //##############################################################################
 //##############################################################################

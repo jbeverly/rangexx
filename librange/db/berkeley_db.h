@@ -19,6 +19,7 @@
 
 #include <unordered_map>
 #include <thread>
+#include <mutex>
 
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/weak_ptr.hpp>
@@ -68,6 +69,7 @@ class BerkeleyDB : public BackendInterface {
             createGraphInstance(const std::string& name) override;
         virtual std::vector<std::string> listGraphInstances() const override;
         virtual void shutdown() override { s_shutdown(); }
+        virtual void register_thread() const override;
 
         static void s_shutdown();
 
@@ -105,6 +107,8 @@ class BerkeleyDB : public BackendInterface {
         void add_graph_instance(const std::string& name);
         bool db_put(DbTxn *dbtxn, map_t &map, const std::string &key, const std::string &value);
         std::string db_get(DbTxn *dbtxn, map_t &map, const std::string &key) const;
+        static bool dbstl_started_;
+        static std::mutex startlock_;
 };
 
 } // namespace db
