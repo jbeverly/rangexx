@@ -179,6 +179,11 @@ class BackendInterface {
         virtual graph_instance_t getGraphInstance(const std::string& name) = 0;
         virtual graph_instance_t createGraphInstance(const std::string& name) = 0;
         virtual std::vector<std::string> listGraphInstances() const = 0;
+        //######################################################################
+        //######################################################################
+        /// register the current thread to access shared db handles 
+        virtual void register_thread() const = 0;
+
         virtual void shutdown() = 0;
 
     //##########################################################################

@@ -47,20 +47,26 @@ class RangeAPI_v1
         typedef ::range::graph::NodeIface::node_type node_type;
         //######################################################################
         explicit RangeAPI_v1(boost::shared_ptr<Config> cfg)
-            try : cfg_(cfg), log("RangeAPI_v1")
+            try : log("RangeAPI_v1"), cfg_(cfg) 
         {
+            cfg_->db_backend()->register_thread();
         } 
         catch(range::Exception &e) {
-            LOGBACKTRACE(e);
+            try { 
+                LOGBACKTRACE(e);
+            } catch(...) {  }
         }
         
         //######################################################################
         explicit RangeAPI_v1(const std::string &cfg_file) 
-            try : cfg_(config_builder(cfg_file)), log("RangeAPI_v1")
+            try : log("RangeAPI_v1"), cfg_(config_builder(cfg_file))
         {
+            cfg_->db_backend()->register_thread();
         }
         catch(range::Exception &e) {
-            LOGBACKTRACE(e);
+            try {
+                LOGBACKTRACE(e);
+            } catch(...) { }
         }
         
         //######################################################################
@@ -547,8 +553,8 @@ class RangeAPI_v1
 
 
     private:
-        boost::shared_ptr<Config> cfg_;
         range::Emitter log;
+        boost::shared_ptr<Config> cfg_;
 
         boost::shared_ptr<graph::GraphInterface> graphdb(const std::string &name, uint64_t version) const;
         std::string env_prefix(const std::string &env_name) const;

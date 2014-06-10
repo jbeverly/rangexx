@@ -41,6 +41,7 @@ class APIWrap
             if(!api_) {
                 api_ = boost::make_shared<RangeAPI_v1>(configfile);
             }
+            range::config->db_backend()->register_thread();
         }
 
         //######################################################################

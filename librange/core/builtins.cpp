@@ -82,8 +82,10 @@ class ExpandHostsVisitor : public boost::static_visitor<void>
 
             if(obj.values.empty()) { return; }
 
-            /*RangeStruct top = obj;
-            LOG(debug9,"expand_hosts_visitor.object") << boost::apply_visitor(::range::JSONVisitor(), top); */
+            if(log.loglevel() > Emitter::logseverity::debug8) {
+                RangeStruct top = obj;
+                LOG(debug9,"expand_hosts_visitor.object") << boost::apply_visitor(::range::JSONVisitor(), top);
+            }
 
             const std::string &type = boost::get<range::RangeString>(obj.values.find("type")->second).value;
             const std::string &name = boost::get<range::RangeString>(obj.values.find("name")->second).value;

@@ -90,7 +90,7 @@ BerkeleyDBGraph::BerkeleyDBGraph(const std::string& name, BerkeleyDB& backend)
     log("BerkeleyDBGraph")
 
 {
-    LOG(debug9, "new_BerkeleyDBGraph");
+    LOG(debug4, "new_BerkeleyDBGraph");
     version(); // set current version and establish bdb rmw lock on changelist
                // as early as possible if we're in a rmw transaction.
 }
@@ -314,7 +314,6 @@ BerkeleyDBGraph::n_redges() const
 uint64_t
 BerkeleyDBGraph::version() const
 {
-    RANGE_LOG_TIMED_FUNCTION();
     std::thread::id id = std::this_thread::get_id();
 
     auto txn_it = transaction_table.find(id);
@@ -328,7 +327,8 @@ BerkeleyDBGraph::version() const
         return (version_pending_) ? current_version_ + 1 : current_version_;
     }
 
-    LOG(debug9, "version.read_version_from_db") << name_;
+    RANGE_LOG_TIMED_FUNCTION();
+    LOG(debug4, "version.read_version_from_db") << name_;
 
     auto it = backend_.graph_map_instances.find(name_);
     if (it == backend_.graph_map_instances.end()) {
@@ -352,7 +352,7 @@ BerkeleyDBGraph::version() const
 
     auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "changelist");
-    LOG(debug9, "locked_changelist");
+    LOG(debug5, "locked_changelist");
 
     if (map_instance->find(key) != map_instance->end()) {
         changes.ParseFromString(backend_.db_get(nullptr, *map_instance, key));
@@ -423,7 +423,7 @@ BerkeleyDBGraph::read_lock(record_type type, const std::string& key) const
     std::thread::id id = std::this_thread::get_id();
     auto lock_it = backend_.lock_table.find(id);
     if (lock_it != backend_.lock_table.end()) {
-        LOG(debug9, "has_existing_lock") << std::this_thread::get_id();
+        LOG(debug5, "has_existing_lock") << std::this_thread::get_id();
         return lock_it->second.lock();
     }
 
@@ -491,10 +491,10 @@ BerkeleyDBGraph::start_txn()
 
     auto txn = transaction_table.find(id);
     if (txn != transaction_table.end()) {
-        LOG(debug9, "existing_txn") << "Transaction already exists, reusing";
+        LOG(debug5, "existing_txn") << "Transaction already exists, reusing";
         return txn->second.lock();
     }
-    LOG(debug9, "new_txn") << "Creating new transaction";
+    LOG(debug4, "new_txn") << "Creating new transaction";
 
     boost::shared_ptr<BerkeleyDBTxn> txn_ptr {
                 new BerkeleyDBTxn(id, *this),

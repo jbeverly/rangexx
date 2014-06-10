@@ -40,7 +40,7 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
     int flags = DB_TXN_SYNC | DB_TXN_SNAPSHOT;
 
     if (read_write) {
-        LOG(debug9, "rmw_lock");
+        LOG(debug4, "rmw_lock");
         rmw = dbstl::ReadModifyWriteOption::read_modify_write();
         flags = DB_TXN_SYNC;
     }
@@ -78,7 +78,7 @@ void
 BerkeleyDBLock::unlock()
 {
     BOOST_LOG_FUNCTION();
-    LOG(debug9, "unlock");
+    LOG(debug4, "unlock");
 
     iter_.close_cursor();
     dbstl::commit_txn(backend_.env_, txn_, 0);
@@ -98,7 +98,7 @@ BerkeleyDBLock::readonly()
 BerkeleyDBLock::~BerkeleyDBLock()
 {
     BOOST_LOG_FUNCTION();
-    LOG(debug9, "dtor");
+    LOG(debug5, "dtor");
     if(std::uncaught_exception()) {                                             // An exception is active, abort txn
         try {
             iter_.close_cursor();
