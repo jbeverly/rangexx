@@ -48,8 +48,10 @@ class GraphTxn : public GraphTxnIface
                 lock(inst->write_lock(db::GraphInstanceInterface::record_type::UNKNOWN,"")),
                 txn(inst->start_txn()),
                 log("GraphTxn"),
-                timer(log.start_timer("graphdb_transaction"))
+                timer()
         {
+            BOOST_LOG_FUNCTION();
+            timer = boost::make_shared<range::Emitter::Timer>( log.start_timer("graphdb_transaction") );
         }
 
         //######################################################################
@@ -82,7 +84,7 @@ class GraphTxn : public GraphTxnIface
         boost::shared_ptr<db::GraphInstanceLock> lock;
         boost::shared_ptr<db::GraphTransaction> txn;
         range::Emitter log;
-        range::Emitter::Timer timer;
+        boost::shared_ptr<range::Emitter::Timer> timer;
 };
 
 //##############################################################################

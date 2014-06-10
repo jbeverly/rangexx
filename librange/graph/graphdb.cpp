@@ -113,6 +113,7 @@ GraphDB::get_node(const std::string& name) const
     BOOST_LOG_FUNCTION();
     auto n = get_cursor()->fetch(name);
     if(!n) {
+        LOG(debug4, "node_not_found") << name;
         return nullptr;
     }
 
@@ -198,7 +199,7 @@ GraphDB::create(const std::string& name)
     auto txn = instance_->start_txn();
 
     if (node->version() == 0) {
-        LOG(debug9, "creating_node") << name;
+        LOG(debug4, "creating_node") << name;
         node->commit();
     }
     node->add_graph_version(this->version());
@@ -282,10 +283,10 @@ GraphDB::set_wanted_version(uint64_t ver)
         uint64_t v = version();
 
         if (changehistory.size() != v) {
-            std::string msg { "changehistory inconsistent with graph version" };
-            msg += ", found: " + boost::lexical_cast<std::string>(changehistory.size()); 
-            msg += ", expected: " + boost::lexical_cast<std::string>(v);
-            THROW_STACK(db::DatabaseVersioningError(msg));
+            std::stringstream s;
+            s << "changehistory inconsistent with graph version, found: "
+                << changehistory.size() << ", expected " << v;
+            THROW_STACK(db::DatabaseVersioningError(s.str()));
         }
 
         auto it = changehistory.rbegin();
@@ -337,13 +338,14 @@ GraphDB::remove(node_t node)
     }
 
     auto txn = instance_->start_txn();
-
-    for (auto affected : node->reverse_edges()) {
-        affected->remove_forward_edge(node, false);
+    node->add_forward_edge(node, true);                                         // In order to ensure node is updated, even if it has no children, 
+                                                                                // we must commit something. This adds a self-loop, which then
+    for (auto affected : node->reverse_edges()) {                               // gets removed here.
+        affected->remove_forward_edge(node, true);
     }
 
     for (auto affected: node->forward_edges()) {
-        affected->remove_reverse_edge(node, false);
+        affected->remove_reverse_edge(node, true);
     }
 
     removed_nodes.push_back(node);
