@@ -33,7 +33,7 @@ boost::shared_ptr<Config> config;
 
 //##############################################################################
 //##############################################################################
-static boost::shared_ptr<compiler::functor_map_t>
+boost::shared_ptr<compiler::functor_map_t>
 build_symtable() {
     auto symtable = boost::make_shared<compiler::functor_map_t>();
 

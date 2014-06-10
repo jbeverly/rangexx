@@ -30,12 +30,17 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
     : backend_(backend), txn_(0), iter_(0), readonly_(!read_write), 
         log("BerkeleyDBLock")
 {
-    //BOOST_LOG_FUNCTION();
+    RANGE_LOG_TIMED_FUNCTION();
+    auto lit = backend_.lock_table.find(std::this_thread::get_id());
+    if(lit != backend_.lock_table.end()) {
+        THROW_STACK(DatabaseLockingException("acquired new lock when old lock existed"));
+    }
 
     auto rmw = dbstl::ReadModifyWriteOption::no_read_modify_write();
     int flags = DB_TXN_SYNC | DB_TXN_SNAPSHOT;
 
     if (read_write) {
+        LOG(debug9, "rmw_lock");
         rmw = dbstl::ReadModifyWriteOption::read_modify_write();
         flags = DB_TXN_SYNC;
     }
@@ -73,6 +78,7 @@ void
 BerkeleyDBLock::unlock()
 {
     BOOST_LOG_FUNCTION();
+    LOG(debug9, "unlock");
 
     iter_.close_cursor();
     dbstl::commit_txn(backend_.env_, txn_, 0);
@@ -92,6 +98,7 @@ BerkeleyDBLock::readonly()
 BerkeleyDBLock::~BerkeleyDBLock()
 {
     BOOST_LOG_FUNCTION();
+    LOG(debug9, "dtor");
     if(std::uncaught_exception()) {                                             // An exception is active, abort txn
         try {
             iter_.close_cursor();

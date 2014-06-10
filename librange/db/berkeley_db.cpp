@@ -76,8 +76,9 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
         THROW_STACK(DatabaseEnvironmentException(
                 std::string("Unable to open environment") + e.what()));
     }
+    DbTxn * txn = nullptr;
     try {
-        auto txn = dbstl::begin_txn(DB_TXN_SYNC, env_);
+        txn = dbstl::begin_txn(DB_TXN_SYNC, env_);
         graph_info = dbstl::open_db(env_, "graph_info", DB_HASH,
                 DB_CREATE | DB_MULTIVERSION, DB_CHKSUM, 0664, txn, 0,
                 "graph_info");
@@ -93,6 +94,11 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
             dbstl::close_db(graph_info);
         } catch(...) { 
             LOG(fatal, "close_db_exception") << "Unable to to close_db while handling exception";
+        }
+        try {
+            dbstl::abort_txn(env_, txn);
+        } catch(...) {
+            LOG(fatal, "abort_txn") << "Unable to to abort_txn while handling exception";
         }
         THROW_STACK(InstanceUnitializedException(
                 std::string("Unable to open graph_info database: ") + e.what()));
@@ -242,8 +248,9 @@ BerkeleyDB::init_graph_info()
     }
 
     for(auto name : listGraphInstances()) {
+        DbTxn * txn = nullptr;
         try {
-            auto txn = dbstl::begin_txn(DB_TXN_SYNC, env_);
+            txn = dbstl::begin_txn(DB_TXN_SYNC, env_);
             graph_db_instances[name] = dbstl::open_db(env_, name.c_str(), DB_HASH,
                     DB_CREATE | DB_MULTIVERSION, DB_CHKSUM, 0664, txn, 0,
                     name.c_str());
@@ -252,6 +259,11 @@ BerkeleyDB::init_graph_info()
             graph_map_instances[name] = boost::make_shared<map_t>(graph_db_instances[name], env_);
             
         } catch(dbstl::DbstlException& e) {
+            try {
+                dbstl::abort_txn(env_, txn);
+            } catch(...) {
+                LOG(fatal, "abort_txn_failed") << "unable to abort_txn while handling " << e.what();
+            }
             THROW_STACK(InstanceUnitializedException(
                     "Unable to open instance: " + name + ": " + e.what()));
         }

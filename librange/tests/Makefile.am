@@ -8,7 +8,8 @@ LIBADD = $(top_builddir)/librange/librange.la
 
 AM_DEFAULT_SOURCE_EXT = .cpp
 
-check_PROGRAMS = test_graph_iterator \
+check_PROGRAMS = test_integration \
+				 test_graph_iterator \
 				 test_pbuff_node \
 				 test_db \
 				 test_graphdb \

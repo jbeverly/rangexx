@@ -338,6 +338,7 @@ BerkeleyDBGraph::version() const
     ChangeList changes;
     auto key = key_name(record_type::GRAPH_META, "changelist");
 
+    /*
     if (txn_it != transaction_table.end()) {
         auto txn = txn_it->second.lock();
         auto inflight = boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->inflight();
@@ -347,10 +348,11 @@ BerkeleyDBGraph::version() const
             changes.ParseFromString(inflight_it->second);
             return changes.current_version();
         } 
-    }
+    } */
 
     auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "changelist");
+    LOG(debug9, "locked_changelist");
 
     if (map_instance->find(key) != map_instance->end()) {
         changes.ParseFromString(backend_.db_get(nullptr, *map_instance, key));
@@ -416,16 +418,17 @@ BerkeleyDBGraph::get_record(record_type type, const std::string& key) const
 BerkeleyDBGraph::lock_t
 BerkeleyDBGraph::read_lock(record_type type, const std::string& key) const
 {
-    BOOST_LOG_FUNCTION();
+    RANGE_LOG_TIMED_FUNCTION() << key;
 
     std::thread::id id = std::this_thread::get_id();
     auto lock_it = backend_.lock_table.find(id);
     if (lock_it != backend_.lock_table.end()) {
+        LOG(debug9, "has_existing_lock") << std::this_thread::get_id();
         return lock_it->second.lock();
     }
 
     UNUSED(type);
-    UNUSED(key);
+    //UNUSED(key);
 
     //std::string lookup = key_name(type, key);                                   // UNUSED, no record-level locking for DB_HASH
 

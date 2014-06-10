@@ -27,6 +27,7 @@
 #include <dbstl_common.h>
 #include <dbstl_map.h>
 
+#include "../core/log.h"
 #include "config_interface.h"
 //#include "berkeley_db.h"
 #include "berkeley_db_types.h"
@@ -46,7 +47,8 @@ class BerkeleyDBLock : public GraphInstanceLock {
         //######################################################################
         BerkeleyDBLock(BerkeleyDBLock&& other)
             : backend_(other.backend_), txn_(std::move(other.txn_)),
-            iter_(std::move(other.iter_)), readonly_(true), log("BerkeleyDBLock")
+            refcount_(0), iter_(std::move(other.iter_)), readonly_(true),
+            log("BerkeleyDBLock")
         {
         }
         
@@ -67,6 +69,7 @@ class BerkeleyDBLock : public GraphInstanceLock {
         //######################################################################
         BerkeleyDB& backend_;
         DbTxn * txn_;
+        size_t refcount_;
         ::range::db::map_t::iterator iter_;
         bool readonly_;
         range::Emitter log;

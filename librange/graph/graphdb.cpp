@@ -187,16 +187,18 @@ GraphDB::cend() const
 GraphDB::node_t
 GraphDB::create(const std::string& name)
 {
-    BOOST_LOG_FUNCTION();
+    RANGE_LOG_TIMED_FUNCTION();
     auto lock = instance_->write_lock(db::GraphInstanceInterface::record_type::NODE, name);
     auto node = this->node_factory_->createNode(name, instance_);
 
     if(has_version_or_higher(this->version(), node)) {
+        LOG(debug9, "node_exists") << name;
         return nullptr;
     }
     auto txn = instance_->start_txn();
 
     if (node->version() == 0) {
+        LOG(debug9, "creating_node") << name;
         node->commit();
     }
     node->add_graph_version(this->version());
@@ -212,12 +214,15 @@ GraphDB::has_version_or_higher(uint64_t wanted_version, node_t node)
     auto vers = node->graph_versions();
     for (uint64_t node_version : boost::adaptors::reverse(vers)) {
         if(node_version > wanted_version) {
+            LOG(debug9, "node_greater_than_wanted_version") << node_version << " " << wanted_version;
             return true;
         }
         if (node_version == wanted_version) {
+            LOG(debug9, "node_equal_to_wanted_version") << node_version << " " << wanted_version;
             return true;
         }
         if (node_version < wanted_version) {
+            LOG(debug9, "node_less_than_wanted_version") << node_version << " " << wanted_version;
             return false;
         }
     }
