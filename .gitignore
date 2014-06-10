@@ -24,3 +24,5 @@ rangexxstored/tests/test_*
 !rangexxstored/tests/test_*.h
 rangexxstored/stored
 docs
+*.pyc
+virtenv

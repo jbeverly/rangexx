@@ -341,11 +341,13 @@ GraphDB::remove(node_t node)
     node->add_forward_edge(node, true);                                         // In order to ensure node is updated, even if it has no children, 
                                                                                 // we must commit something. This adds a self-loop, which then
     for (auto affected : node->reverse_edges()) {                               // gets removed here.
-        affected->remove_forward_edge(node, true);
+        LOG(debug9, "removing affected reverse edge") << affected->name();
+        node->remove_reverse_edge(affected, true);
     }
 
     for (auto affected: node->forward_edges()) {
-        affected->remove_reverse_edge(node, true);
+        LOG(debug9, "removing affected forward edge") << affected->name();
+        node->remove_forward_edge(affected, true);
     }
 
     removed_nodes.push_back(node);

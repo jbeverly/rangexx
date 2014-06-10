@@ -91,6 +91,7 @@ class ExpandHostsVisitor : public boost::static_visitor<void>
             const std::string &name = boost::get<range::RangeString>(obj.values.find("name")->second).value;
             const range::RangeObject &children = boost::get<range::RangeObject>(obj.values.find("children")->second);
 
+
             if (type == "HOST") {
                 hosts.push_back(std::string(name));
             } else {

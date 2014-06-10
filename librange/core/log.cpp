@@ -409,6 +409,9 @@ void initialize_logger(const std::string &filename, uint8_t sev)
     using namespace boost::log;
 
     StatsD::initialize("127.0.0.1", "8125");
+    if (sev > static_cast<uint8_t>(Emitter::logseverity::debug9)) {
+        sev = static_cast<uint8_t>(Emitter::logseverity::debug9);
+    }
     Emitter::loglevel_ = Emitter::logseverity(sev);
 
     add_common_attributes();

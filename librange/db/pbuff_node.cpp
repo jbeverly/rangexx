@@ -374,18 +374,27 @@ ProtobufNode::add_edge(const NodeInfo_Edges &direction,
     auto lock = info_lock(true);
     auto txn = instance_->start_txn();
 
-    for (int edge_idx = 0; edge_idx < direction.edges_size(); ++edge_idx) {
-        if (other->name() == direction.edges(edge_idx).id()) {
-            return false;
-        }
-    }
-
     uint64_t cmp_version = info.list_version();
     uint64_t new_version = cmp_version + 1;
 
+    int edge_idx;
+    for (edge_idx = 0; edge_idx < direction.edges_size(); ++edge_idx) {
+        if (other->name() == direction.edges(edge_idx).id()) {
+            auto edge = direction.edges(edge_idx);
+            for (int vv_idx = edge.versions_size() - 1; vv_idx >= 0; --vv_idx) {
+                if (cmp_version == edge.versions(vv_idx)) { return false; }
+                if (cmp_version < edge.versions(vv_idx)) { break; }
+            }
+        }
+    }
 
-    auto edge = mutable_direction->add_edges();
-    edge->set_id(other->name());
+    NodeInfo_Adjacency * edge;
+    if(edge_idx == direction.edges_size()) {
+        edge = mutable_direction->add_edges();
+        edge->set_id(other->name());
+    } else {
+        edge = mutable_direction->mutable_edges(edge_idx);
+    }
     edge->add_versions(new_version);
 
     update_all_edge_versions(info, cmp_version, new_version);
@@ -531,7 +540,7 @@ ProtobufNode::remove_reverse_edge(node_t other, bool update_other_forward_edge)
     }
 
     if (update_other_forward_edge) {
-        other->remove_reverse_edge(shared_from_this(), false);
+        other->remove_forward_edge(shared_from_this(), false);
     }
 
     return true;
@@ -540,6 +549,7 @@ ProtobufNode::remove_reverse_edge(node_t other, bool update_other_forward_edge)
 
 //##############################################################################
 // FIXME: doing more than one thing; refactor
+// FIXME: does not correctly add back an previously removed key, regardless of value
 //##############################################################################
 bool
 ProtobufNode::update_tag(const std::string& key, const std::vector<std::string>& values)
@@ -621,6 +631,7 @@ ProtobufNode::delete_tag(const std::string& key)
     info.set_list_version(new_version);
 
     update_tag_versions(info, cmp_version, new_version);
+    update_all_edge_versions(info, cmp_version, new_version);
     info.mutable_tags()->mutable_keys(key_idx)->mutable_versions()->RemoveLast();
 
     if(!write_record(name_, info, instance_)) {

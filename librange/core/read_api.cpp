@@ -109,6 +109,10 @@ RangeAPI_v1::get_node(boost::shared_ptr<graph::GraphInterface> graph,
     BOOST_LOG_FUNCTION();
     auto n = graph->get_node(prefixed_node_name(env_name, node_name));
     if(!n) { 
+        n = graph->get_node(env_name);
+        if(n && n->type() == node_type::ENVIRONMENT) {
+            return n;
+        }
         n = graph->get_node(node_name);
         if(n && n->type() != node_type::ENVIRONMENT && n->type() != node_type::HOST) {
             THROW_STACK(graph::NodeNotFoundException(
@@ -260,7 +264,11 @@ RangeAPI_v1::simple_expand(const std::string &env_name,
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
     const auto primary = graphdb("primary", version);
-    auto n = primary->get_node(prefixed_node_name(env_name, node_name));
+    auto n = get_node(primary, env_name, node_name);
+
+    if(!n) {
+        THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node_name)));
+    }
 
     if (type != node_type::UNKNOWN) {
         if (n->type() != type) {
@@ -314,7 +322,8 @@ RangeAPI_v1::get_keys(const std::string &env_name, const std::string &node_name,
 
     const auto primary = graphdb("primary", version);
 
-    auto n = primary->get_node(prefixed_node_name(env_name, node_name));
+    auto n = get_node(primary, env_name, node_name);
+    //auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(n) {
         RangeArray found;
         for(auto kv : n->tags()) {
@@ -336,7 +345,8 @@ RangeAPI_v1::fetch_key(const std::string &env_name, const std::string &node_name
         << node_name << " key: " << key << " version: " << version;
 
     const auto primary = graphdb("primary", version);
-    auto n = primary->get_node(prefixed_node_name(env_name, node_name));
+    auto n = get_node(primary, env_name, node_name);
+    //auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(n) {
         auto tags = n->tags();
         auto it = tags.find(key);
@@ -359,7 +369,8 @@ RangeAPI_v1::fetch_all_keys(const std::string &env_name,
         << node_name << " version: " << version;
 
     const auto primary = graphdb("primary", version);
-    auto n = primary->get_node(prefixed_node_name(env_name, node_name));
+    auto n = get_node(primary, env_name, node_name);
+    //auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(n) {
         RangeObject obj;
         for (auto t : n->tags()) {
