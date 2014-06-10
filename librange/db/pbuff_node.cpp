@@ -35,6 +35,7 @@ static inline bool
 write_record(const std::string& name, NodeInfo& info,
         ProtobufNode::instance_t instance, rectype_t rectype = rectype_t::NODE)
 {
+    auto log = range::Emitter("ProtobufNode");
     BOOST_LOG_FUNCTION();
 
     info.set_crc32(0);
@@ -53,12 +54,15 @@ template <typename Type>
 static inline void
 add_unique_new_version(Type item, uint64_t new_version)
 {
+    auto log = range::Emitter("ProtobufNode");
     BOOST_LOG_FUNCTION();
     for(int vv_idx = item->versions_size() - 1; vv_idx >= 0; --vv_idx) {
         if (new_version == item->versions(vv_idx)) {
+            LOG(debug9, "version_found") << " already has new version: " << new_version;
             return;
         }
     }
+    LOG(debug9, "adding_version") << "adding " << new_version;
     item->add_versions(new_version);
 }
 
@@ -69,9 +73,11 @@ template <typename Type>
 static inline void
 update_unique_new_version(Type item, uint64_t cmp_version, uint64_t new_version)
 {
+    auto log = range::Emitter("ProtobufNode");
     BOOST_LOG_FUNCTION();
     for(int vv_idx = item->versions_size() - 1; vv_idx >= 0; --vv_idx) {
         if (new_version == item->versions(vv_idx)) {
+            LOG(debug9, "version_found") << "already has new version: " << new_version;
             return;
         }
         if (cmp_version == item->versions(vv_idx)) {
@@ -86,6 +92,7 @@ update_unique_new_version(Type item, uint64_t cmp_version, uint64_t new_version)
 static inline range::db::NodeInfo_Tags_KeyValue_Values *
 find_value(const std::string& value, NodeInfo_Tags_KeyValue * kv)
 {
+    auto log = range::Emitter("ProtobufNode");
     BOOST_LOG_FUNCTION();
     for (int val_idx = 0; val_idx < kv->values_size(); ++val_idx) {
         if (value == kv->values(val_idx).data() ) {
@@ -101,6 +108,7 @@ find_value(const std::string& value, NodeInfo_Tags_KeyValue * kv)
 //##############################################################################
 static inline void
 update_tag_versions(range::db::NodeInfo& info, uint64_t cmp_version, uint64_t new_version) {
+    auto log = range::Emitter("ProtobufNode");
     BOOST_LOG_FUNCTION();
     int keys_size = info.tags().keys_size();
     for (int key_idx = 0; key_idx < keys_size; ++key_idx) {
@@ -114,6 +122,7 @@ update_tag_versions(range::db::NodeInfo& info, uint64_t cmp_version, uint64_t ne
 static inline void
 init_default_nodeinfo(NodeInfo& info) //, uint64_t graph_version)
 {
+    auto log = range::Emitter("ProtobufNode");
     BOOST_LOG_FUNCTION();
     info.set_node_type(static_cast<int>(graph::NodeIface::node_type::UNKNOWN));
     info.set_list_version(0);
@@ -132,6 +141,7 @@ init_default_nodeinfo(NodeInfo& info) //, uint64_t graph_version)
 static inline void
 update_all_edge_versions(NodeInfo& info, uint64_t cmp_version, uint64_t new_version)
 {
+    auto log = range::Emitter("ProtobufNode");
     BOOST_LOG_FUNCTION();
     for (auto direction : { info.mutable_forward(), info.mutable_reverse() }) {
         for (int i = 0; i < direction->edges_size(); ++i) {
@@ -146,6 +156,7 @@ update_all_edge_versions(NodeInfo& info, uint64_t cmp_version, uint64_t new_vers
 static inline std::vector<std::string>
 get_map_value(uint64_t cmp_version, const NodeInfo_Tags_KeyValue& key) 
 {
+    auto log = range::Emitter("ProtobufNode");
     BOOST_LOG_FUNCTION();
     std::vector<std::string> values;
 
@@ -356,35 +367,49 @@ ProtobufNode::tags() const
 //##############################################################################
 //##############################################################################
 bool
-ProtobufNode::add_forward_edge(node_t other, bool update_other_reverse_edge)
+ProtobufNode::add_edge(const NodeInfo_Edges &direction,
+        NodeInfo_Edges *mutable_direction, node_t other)
 {
-    {
-        RANGE_LOG_TIMED_FUNCTION() << "name: " << name_ << " to: " << other->name();
-        auto lock = info_lock(true);
-        auto txn = instance_->start_txn();
+    RANGE_LOG_TIMED_FUNCTION() << "name: " << name_ << " other: " << other->name();
+    auto lock = info_lock(true);
+    auto txn = instance_->start_txn();
 
-        for (int edge_idx = 0; edge_idx < info.forward().edges_size(); ++edge_idx) {
-            if (other->name() == info.forward().edges(edge_idx).id()) {
-                return false;
-            }
-        }
-
-        uint64_t cmp_version = info.list_version();
-        uint64_t new_version = cmp_version + 1;
-
-        info.set_list_version(new_version);
-
-        auto edge = info.mutable_forward()->add_edges();
-        edge->set_id(other->name());
-        edge->add_versions(new_version);
-
-        update_all_edge_versions(info, cmp_version, new_version);
-        update_tag_versions(info, cmp_version, new_version);
-
-        if(!write_record(name_, info, instance_)) {
-            LOG(error, "add_forward_edge_failed") << name_ << " to " << other->name();
+    for (int edge_idx = 0; edge_idx < direction.edges_size(); ++edge_idx) {
+        if (other->name() == direction.edges(edge_idx).id()) {
             return false;
         }
+    }
+
+    uint64_t cmp_version = info.list_version();
+    uint64_t new_version = cmp_version + 1;
+
+
+    auto edge = mutable_direction->add_edges();
+    edge->set_id(other->name());
+    edge->add_versions(new_version);
+
+    update_all_edge_versions(info, cmp_version, new_version);
+    update_tag_versions(info, cmp_version, new_version);
+
+    info.set_list_version(new_version);
+
+    if(!write_record(name_, info, instance_)) {
+        LOG(error, "add_edge_failed") << name_ << " other: " << other->name();
+        return false;
+    }
+    return true;
+}
+
+
+//##############################################################################
+//##############################################################################
+bool
+ProtobufNode::add_forward_edge(node_t other, bool update_other_reverse_edge)
+{
+    BOOST_LOG_FUNCTION();
+    LOG(debug9, "add_forward_edge") << name_ << " " << other->name();
+    if(! add_edge(info.forward(), info.mutable_forward(), other)) {
+        return false;
     }
 
     if (update_other_reverse_edge) {
@@ -399,37 +424,77 @@ ProtobufNode::add_forward_edge(node_t other, bool update_other_reverse_edge)
 bool
 ProtobufNode::add_reverse_edge(node_t other, bool update_other_forward_edge)
 {
-    {
-        RANGE_LOG_TIMED_FUNCTION() << "name: " << name_ << " from: " << other->name();
-        auto lock = info_lock(true);
-        auto txn = instance_->start_txn();
+    BOOST_LOG_FUNCTION();
+    LOG(debug9, "add_reverse_edge") << name_ << " " << other->name();
+    if(! add_edge(info.reverse(), info.mutable_reverse(), other)) {
+        return false;
+    }
+    
+    if (update_other_forward_edge) { 
+        other->add_forward_edge(shared_from_this(), false);
+    }
+    return true;
+}
 
-        for (int edge_idx = 0; edge_idx < info.reverse().edges_size(); ++edge_idx) {
-            if (other->name() == info.reverse().edges(edge_idx).id()) {
-                return false;
-            }
+//##############################################################################
+//##############################################################################
+inline bool
+ProtobufNode::remove_edge( const NodeInfo_Edges &direction,
+        NodeInfo_Edges *mutable_direction, node_t other)
+{
+    RANGE_LOG_TIMED_FUNCTION() << "name: " << name_ << " other: "
+        << other->name();
+
+    auto lock = info_lock(true);
+    auto txn = instance_->start_txn();
+
+    int edge_idx;
+    for (edge_idx = 0; edge_idx < direction.edges_size(); ++edge_idx) {
+        if (other->name() == direction.edges(edge_idx).id()) {
+            break;
         }
+    }
+    if(edge_idx == direction.edges_size()) {
+        return false;
+    }
 
-        uint64_t cmp_version = info.list_version();
-        uint64_t new_version = cmp_version + 1;
+    const NodeInfo_Adjacency &edge = direction.edges(edge_idx);
+    assert(other->name() == edge.id());
 
-        info.set_list_version(new_version);
+    uint64_t cmp_version = info.list_version();
+    uint64_t new_version = cmp_version + 1;
 
-        auto edge = info.mutable_reverse()->add_edges();
-        edge->set_id(other->name());
-        edge->add_versions(new_version);
+    for (int vv_idx = edge.versions_size() - 1; vv_idx >= 0; --vv_idx) {
+        if (cmp_version == edge.versions(vv_idx)) { break; }
+        if (cmp_version < edge.versions(vv_idx)) { return false; }
+    }
 
-        update_all_edge_versions(info, cmp_version, new_version);
-        update_tag_versions(info, cmp_version, new_version);
-
-        if(!write_record(name_, info, instance_)) {
-            LOG(error, "add_reverse_edge_failed") << name_ << " from " << other->name();
-            return false;
+    if(log.loglevel() > range::Emitter::logseverity::debug8) {
+        for (int n = 0; n < edge.versions_size(); ++n) {
+            LOG(debug9, "before version") << edge.versions(n);
         }
     }
 
-    if (update_other_forward_edge) { 
-        other->add_forward_edge(shared_from_this(), false);
+    int start_versions = edge.versions_size(); 
+    update_all_edge_versions(info, cmp_version, new_version);
+    update_tag_versions(info, cmp_version, new_version);
+    info.set_list_version(new_version);
+
+    
+    if(log.loglevel() > range::Emitter::logseverity::debug8) {
+        for (int n = 0; n < edge.versions_size(); ++n) {
+            LOG(debug9, "after version") << edge.versions(n);
+        }
+    }
+
+    if(start_versions < edge.versions_size()) {                                 // This edge may not have been in this version
+        auto mutable_edge = mutable_direction->mutable_edges(edge_idx);
+        mutable_edge->mutable_versions()->RemoveLast();                         // We can safely assume that the last element is new_version, because we
+    }                                                                           // just added it in update_all_edge_versions
+
+    if(!write_record(name_, info, instance_)) {
+        LOG(error, "remove_edge_failed") << name_ << " to " << other->name();
+        return false;
     }
     return true;
 }
@@ -440,52 +505,10 @@ ProtobufNode::add_reverse_edge(node_t other, bool update_other_forward_edge)
 bool
 ProtobufNode::remove_forward_edge(node_t other, bool update_other_reverse_edge)
 {
-    {
-        RANGE_LOG_TIMED_FUNCTION() << "name: " << name_ << " from: " << other->name();
-        auto lock = info_lock(true);
-        auto txn = instance_->start_txn();
-
-        int edge_idx = 0;
-        for (edge_idx = 0; edge_idx < info.forward().edges_size(); ++edge_idx) {
-            if (other->name() == info.forward().edges(edge_idx).id()) {
-                break;
-            }
-        }
-        if (edge_idx == info.forward().edges_size()) {
-            return false;
-        }
-
-        uint64_t cmp_version = info.list_version();
-        uint64_t new_version = cmp_version + 1;
-
-        int last_ver = info.forward().edges(edge_idx).versions_size();
-        // FIXME: this loop and the check below it don't seem to do anything;
-        // why is this code here, and what was it supposed to do?
-        int ver_idx;
-        for (ver_idx = last_ver - 1; ver_idx >= 0; --ver_idx) {
-            if (cmp_version == info.forward().edges(edge_idx).versions(ver_idx)) {
-                break;
-            }
-        }
-        if (ver_idx == last_ver) {
-            LOG(debug1, "impossible_remove_forward_edge_failure");
-            return false;
-        }
-
-        info.set_list_version(new_version);
-        update_all_edge_versions(info, cmp_version, new_version);
-
-        // FIXME: should NOT remove history information for any reason
-        info.mutable_forward()->mutable_edges(edge_idx)->mutable_versions()->RemoveLast(); // We can safely assume that the last element is new_version, because we
-                                                                                           // aleady determined that this element was in the current version (we would
-                                                                                           // have returned false earlier otherwise
-
-        if(!write_record(name_, info, instance_)) {
-            LOG(error, "remove_forward_edge_failed") << name_ << " from " << other->name();
-            return false;
-        }
-
-        update_tag_versions(info, cmp_version, new_version);
+    BOOST_LOG_FUNCTION();
+    LOG(debug9, "remove_forward_edge") << name_ << " " << other->name();
+    if (! remove_edge(info.forward(), info.mutable_forward(), other)) {
+        return false;
     }
 
     if (update_other_reverse_edge) {
@@ -501,58 +524,16 @@ ProtobufNode::remove_forward_edge(node_t other, bool update_other_reverse_edge)
 bool
 ProtobufNode::remove_reverse_edge(node_t other, bool update_other_forward_edge)
 {
-    {
-        RANGE_LOG_TIMED_FUNCTION() << "name: " << name_ << " to: " << other->name();
-        auto lock = info_lock(true);
-        auto txn = instance_->start_txn();
-
-        int edge_idx = 0;
-        for (edge_idx = 0; edge_idx < info.reverse().edges_size(); ++edge_idx) {
-            if (other->name() == info.reverse().edges(edge_idx).id()) {
-                break;
-            }
-        }
-        if (edge_idx == info.reverse().edges_size()) {
-            LOG(debug1, "edge_not_found");
-            return false;
-        }
-
-        uint64_t cmp_version = info.list_version();
-        uint64_t new_version = cmp_version + 1;
-
-        int last_ver = info.reverse().edges(edge_idx).versions_size();
-
-        // FIXME: this loop and the check below it don't seem to do anything;
-        // why is this code here, and what was it supposed to do?
-        int ver_idx;
-        for (ver_idx = last_ver - 1; ver_idx >= 0; --ver_idx) {
-            if (cmp_version == info.reverse().edges(edge_idx).versions(ver_idx)) {
-                break;
-            }
-        }
-        if (ver_idx == last_ver) {
-            LOG(debug1, "impossible_remove_reverse_edge_failure");
-            return false;
-        }
-
-        info.set_list_version(new_version);
-        update_all_edge_versions(info, cmp_version, new_version);
-
-        // FIXME: should NOT remove history information for any reason
-        info.mutable_reverse()->mutable_edges(edge_idx)->mutable_versions()->RemoveLast(); // We can safely assume that the last element is new_version, because we
-                                                                                           // aleady determined that this element was in the current version (we would
-                                                                                           // have returned false earlier otherwise
-        if(!write_record(name_, info, instance_)) {
-            LOG(error, "remove_reverse_edge_failed") << name_ << " from " << other->name();
-            return false;
-        }
-
-        update_tag_versions(info, cmp_version, new_version);
+    BOOST_LOG_FUNCTION();
+    LOG(debug9, "remove_reverse_edge") << name_ << " " << other->name();
+    if (! remove_edge(info.reverse(), info.mutable_reverse(), other)) {
+        return false;
     }
 
     if (update_other_forward_edge) {
-        other->remove_forward_edge(shared_from_this(), false);
+        other->remove_reverse_edge(shared_from_this(), false);
     }
+
     return true;
 }
 

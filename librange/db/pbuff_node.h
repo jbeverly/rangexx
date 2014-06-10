@@ -129,7 +129,8 @@ class ProtobufNode : public graph::NodeIface, public boost::enable_shared_from_t
         inline void init_info() const;
         inline GraphInstanceInterface::lock_t info_lock(bool writable = false);
         inline std::vector<node_t> get_edges(const NodeInfo_Edges& edges) const;
-
+        inline bool add_edge(const NodeInfo_Edges &direction, NodeInfo_Edges *mutable_direction, node_t other);
+        inline bool remove_edge(const NodeInfo_Edges &direction, NodeInfo_Edges *mutable_direction, node_t other);
 };
 
 
