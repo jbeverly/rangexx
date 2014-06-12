@@ -191,8 +191,9 @@ RangeExpandingVisitor::operator()(ast::ASTSequence& seq) const
     uint32_t lnum = 0, rnum = 0, p = 0;
     bool p1ok = false, p2ok = false;
 
-    auto rev_it = std::find_if(lword.rbegin(), lword.rend(), [&lnum, &p](char c) {
-            if (std::isdigit(c)) { lnum += (c - '0') * std::pow(10, p++); return false;
+    uint32_t lpad = 0;
+    auto rev_it = std::find_if(lword.rbegin(), lword.rend(), [&lpad, &lnum, &p](char c) {
+            if (std::isdigit(c)) { ++lpad; lnum += (c - '0') * std::pow(10, p++); return false;
             } else { return true; }
         });
 
@@ -205,6 +206,7 @@ RangeExpandingVisitor::operator()(ast::ASTSequence& seq) const
     }
 
     auto it = std::find_if(rword.begin(), rword.end(), [](char c) { return isalpha(c); });
+    uint32_t rpad = it - rword.begin();
     try {
         rnum = boost::lexical_cast<uint32_t>(std::string(rword.begin(), it));
     } catch(boost::bad_lexical_cast &e) {
@@ -238,8 +240,8 @@ RangeExpandingVisitor::operator()(ast::ASTSequence& seq) const
 
     if (rnum < lnum) rnum += lnum;
 
-    uint32_t lpad = std::floor(std::log10(lnum)) + 1;
-    uint32_t rpad = std::floor(std::log10(rnum)) + 1;
+    //uint32_t lpad = std::floor(std::log10(lnum)) + 1;
+    //uint32_t rpad = std::floor(std::log10(rnum)) + 1;
     uint32_t pad = std::max(lpad, rpad);
 
 

@@ -309,6 +309,22 @@ TEST_F(TestCompiler, test_sequence_rprefix_with_suffix)
     EXPECT_EQ("asdf1000foobar", children[999]);
 }
 
+//##############################################################################
+//##############################################################################
+TEST_F(TestCompiler, test_sequence_zero_padding)
+{
+    ast::ASTNode top = ast::ASTSequence { ast::ASTWord("asdf1"), ast::ASTWord("asdf0020") };
+
+    boost::apply_visitor(c::RangeExpandingVisitor(graph_), top);
+    auto children = boost::apply_visitor(c::FetchChildrenVisitor(), top);
+
+    ASSERT_EQ(20, children.size());
+    EXPECT_EQ("asdf0001", children[0]);
+    EXPECT_EQ("asdf0010", children[9]);
+    EXPECT_EQ("asdf0020", children[19]);
+}
+
+
 
 
 //##############################################################################
