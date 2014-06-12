@@ -435,16 +435,14 @@ TEST_F(TestGraphDB, test_remove) {
    
         if ( i % 3 == 0 ) { 
             thisnode_forwardedges.push_back(node);
-            EXPECT_CALL(*node, remove_reverse_edge(WeakPtrEquals(boost::weak_ptr<range::graph::NodeIface>(thisnode)), true))
-            //EXPECT_CALL(*node, remove_reverse_edge(Matcher<range::graph::NodeIface::node_t>(thisnode), true))
+            EXPECT_CALL(*thisnode, remove_forward_edge(WeakPtrEquals(boost::weak_ptr<range::graph::NodeIface>(node)), true))
                 .Times(AtLeast(1))
                 .WillRepeatedly(Return(true));
         }
 
         if ( i != 0 && i % 4 == 0 ) { 
             thisnode_reverseedges.push_back(node);
-            EXPECT_CALL(*node, remove_forward_edge(WeakPtrEquals(boost::weak_ptr<range::graph::NodeIface>(thisnode)), true))
-            //EXPECT_CALL(*node, remove_forward_edge(Matcher<range::graph::NodeIface::node_t>(thisnode), true))
+            EXPECT_CALL(*thisnode, remove_reverse_edge(WeakPtrEquals(boost::weak_ptr<range::graph::NodeIface>(node)), true))
                 .Times(AtLeast(1))
                 .WillRepeatedly(Return(true));
         }
