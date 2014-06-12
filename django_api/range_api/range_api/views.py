@@ -172,6 +172,8 @@ class ClusterDetail(views.APIView):
 
 
 ################################################################################
+# This has to be the ugliest thing I have written in months... 
+# ... maybe years... 
 ################################################################################
 class ClusterInfo(object):
     def post(self, req, env, cluster, parent=None):
@@ -588,8 +590,19 @@ class HostsDetail(views.APIView):
 ################################################################################
 ################################################################################
 class ExpressionView(views.APIView):
+    ############################################################################
+    ############################################################################
     def get(self, req, env="", format=None):
         expr = str(req.META.get('QUERY_STRING', ''))
+        try:
+            return Response(r.expand_range_expression(str(env), expr))
+        except RuntimeError:
+            return Response("invalid range expression", status=status.HTTP_400_BAD_REQUEST)
+
+    ############################################################################
+    ############################################################################
+    def post(self, req, env=""):
+        expr = str(req.DATA)
         try:
             return Response(r.expand_range_expression(str(env), expr))
         except RuntimeError:
@@ -672,6 +685,7 @@ class DotRender(object):
         self._name = name
         self.graph = pydot.Dot(self._name, graph_type='digraph')
         self.graph.set_prog('dot')
+        self.graph.set_simplify("true")
         return
 
     def gendfs_(self, node):
@@ -697,6 +711,36 @@ class DotRender(object):
 
         return self.graph
 
+    def genclusterdfs_(self, node, count=0):
+        if len(node['children']) > 0 or node['type'] == 'CLUSTER':
+            sub = pydot.Subgraph(graph_name='cluster_' + node['name'])
+            sub.set_label(node['name'])
+
+            nodenum = 0
+            for cname, child in node['children'].items():
+                childnode = self.genclusterdfs_(child, nodenum)
+                nodenum += 1
+                if isinstance(childnode,pydot.Subgraph):
+                    sub.add_subgraph(childnode)
+                else:
+                    sub.add_node(childnode)
+        else:
+            sub = pydot.Node(node['name'])
+            sub.set_shape('record')
+            if(count % 2 != 0):
+                sub.set_pos('0,0!')
+        return sub
+
+
+    def genclusterdfs(self, node):
+        childnode = self.genclusterdfs_(node)
+        if isinstance(childnode,pydot.Subgraph):
+            self.graph.add_subgraph(childnode)
+        else:
+            self.graph.add_node(childnode)
+        self.graph.set_rankdir('TB')
+        return
+
     def dot(self):
         return self.graph.to_string()
 
@@ -714,7 +758,10 @@ class DotEnvView(views.APIView):
             return Response("environment not found: %s" % env, status=status.HTTP_404_NOT_FOUND)
 
         rend = DotRender(env)
-        rend.gendfs(g)
+        if str(req.QUERY_PARAMS.get('cluster',False)) == 'true':
+            rend.genclusterdfs(g)
+        else:
+            rend.gendfs(g)
 
         if str(req.QUERY_PARAMS.get('dot', False)) == 'true':
             return HttpResponse(rend.dot(), content_type='text/plain')
@@ -733,15 +780,24 @@ class DotClusterView(views.APIView):
             return Response("host not found", status=status.HTTP_404_NOT_FOUND)
 
         rend = DotRender(env)
-        rend.gendfs(g)
+        if str(req.QUERY_PARAMS.get('cluster',False)) == 'true':
+            rend.getclusterdfs(g)
+        else:
+            rend.gendfs(g)
+
         if str(req.QUERY_PARAMS.get('dot', False)) == 'true':
             return HttpResponse(rend.dot(), content_type='text/plain')
         return HttpResponse(rend.render(), content_type='image/svg+xml')
 
+
+################################################################################
+################################################################################
 class DotDependencyView(views.APIView):
     def get(self, req, env, format=None):
         pass
 
+################################################################################
+################################################################################
 class DotDependencyClusterView(views.APIView):
     def get(self, req, env, cluster, format=None):
         pass
