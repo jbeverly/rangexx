@@ -31,8 +31,11 @@
 #include <unordered_map>
 #include <thread>
 
+#include <boost/variant/apply_visitor.hpp>
+
 #include "api.h"
 #include "log.h"
+#include "json_visitor.h"
 
 #include "../compiler/expanding_visitor.h"
 #include "../compiler/RangeParser_v1.h"
@@ -107,17 +110,50 @@ RangeAPI_v1::get_node(boost::shared_ptr<graph::GraphInterface> graph,
                       const std::string &env_name, const std::string &node_name) const
 {
     BOOST_LOG_FUNCTION();
-    auto n = graph->get_node(prefixed_node_name(env_name, node_name));
-    if(!n) { 
+    if(node_name.empty() && env_name.empty()) { return nullptr; }
+
+    graph::NodeIface::node_t n;
+
+    // if we're looking for just an env, don't bother prefixing the node
+    if(node_name.empty() ) {
         n = graph->get_node(env_name);
         if(n && n->type() == node_type::ENVIRONMENT) {
             return n;
         }
-        n = graph->get_node(node_name);
-        if(n && n->type() != node_type::ENVIRONMENT && n->type() != node_type::HOST) {
-            THROW_STACK(graph::NodeNotFoundException(
+        THROW_STACK(graph::NodeNotFoundException(
                         prefixed_node_name(env_name, node_name)));
+    }
+
+    // conversely, if we're just looking for a node, don't bother prefixing 
+    // with an env
+    if(env_name.empty()) {
+        n = graph->get_node(node_name);
+        if(n && (n->type() == node_type::STRING || n->type() == node_type::HOST)) {
+            return n;
         }
+        THROW_STACK(graph::NodeNotFoundException(
+                        prefixed_node_name(env_name, node_name)));
+    }
+
+    // Try prefixing the node, if we find it, great, if not
+    n = graph->get_node(prefixed_node_name(env_name, node_name));
+    if(n) return n;
+
+    // try the node_first, so we get hosts unambigiously
+    n = graph->get_node(node_name);                                                 
+    if(n && n->type() != node_type::HOST) {
+        THROW_STACK(graph::NodeNotFoundException(
+                    prefixed_node_name(env_name, node_name)));
+    }
+    if(n) return n;
+
+    // failing that, try the env_name, for cases where we call:
+    //      expand('env1','env1')
+    // (which makes the rest API easier to write)
+    n = graph->get_node(env_name);
+    if(!n || (n && n->type() != node_type::ENVIRONMENT)) {
+        THROW_STACK(graph::NodeNotFoundException(
+                    prefixed_node_name(env_name, node_name)));
     }
     return n;
 }
@@ -668,14 +704,26 @@ RangeAPI_v1::dfs_search_parents_for_first_key(const std::string &env_name,
 struct BFSNodeWrapper
 {
     public:
+        BFSNodeWrapper() : v(nullptr), depth(0) {}
         BFSNodeWrapper(graph::NodeIface::node_t n) : v(n), depth(0) { }
         BFSNodeWrapper(graph::NodeIface::node_t n, size_t d) : v(n), depth(d) { }
+        bool operator==(const BFSNodeWrapper &other) { return this->v == other.v; }
+        template <typename T>
+        bool operator==(const T &other) { return this->v == other; }
+        operator bool() { return v != nullptr; }
         graph::NodeIface::node_t v;
         size_t depth;
 };
 
 
 //##############################################################################
+// TODO: it might be usefl to have this function return all common ancestors
+// found at the same distance, which would require appending found ancestors to
+// an RangeArray when the distance is == to the min_distance, and when the distance
+// is < the min_distance, clearing the RangeArray, and appending the nodes found
+// at that new distance; when done, this would eliminate the nead to return
+// a tuple, as the clients of the API could just check if the returned 
+// RangeArray is empty
 //##############################################################################
 //bool
 RangeStruct
@@ -699,7 +747,6 @@ RangeAPI_v1::nearest_common_ancestor(//std::string &ancestor,
     size_t min_distance = std::numeric_limits<size_t>::max();
 
     auto n1 = get_node(primary, env_name, node1_name);
-
     if(!n1) {
         THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node1_name)));
     }
@@ -711,55 +758,69 @@ RangeAPI_v1::nearest_common_ancestor(//std::string &ancestor,
     }
     q2.push(n2);
 
-    while(!q1.empty() && !q2.empty()) {
-        auto v1 = q1.front(); q1.pop();
-        auto v2 = q2.front(); q2.pop();
+    while(!q1.empty() || !q2.empty()) {
+        BFSNodeWrapper v1, v2;
+        if(!q1.empty()) {
+            v1 = q1.front(); q1.pop();
+        }
+        if(!q2.empty()) {
+            v2 = q2.front(); q2.pop();
+        }
 
-        auto v2it = visited2.find(v1.v->name());
-        if(v2it != visited2.end()) {
-            size_t distance = v2it->second + v1.depth;
-            if(distance < min_distance) {
-                ancestor = unprefix_node_name(env_name, v1.v->name());
-                min_distance = distance;
+        if(v1) {
+            auto v2it = visited2.find(v1.v->name());
+            LOG(debug9, "v1_name") << v1.v->name();
+            if(v2it != visited2.end()) {
+                size_t distance = v2it->second + v1.depth;
+                LOG(debug9, "v1_ancestor_name") << v1.v->name() << " depth: " << v1.depth << " distance: " << distance;
+                if(distance < min_distance) {
+                    ancestor = unprefix_node_name(env_name, v1.v->name());
+                    min_distance = distance;
+                }
+            }
+
+            if (visited1.find(v1.v->name()) == visited1.end()) {
+                visited1[v1.v->name()] = v1.depth;
+
+                auto edges = v1.v->reverse_edges();
+                for (auto e: edges) {
+                    q1.push({e, v1.depth + 1});
+                }
             }
         }
 
-        auto v1it = visited1.find(v2.v->name());
-        if(v1it != visited1.end()) {
-            size_t distance = v1it->second + v2.depth;
-            if(distance < min_distance) {
-                ancestor = unprefix_node_name(env_name, v2.v->name());
-                min_distance = distance;
+        if(v2) {
+            auto v1it = visited1.find(v2.v->name());
+            LOG(debug9, "v2_name") << v2.v->name();
+            if(v1it != visited1.end()) {
+                size_t distance = v1it->second + v2.depth;
+                LOG(debug9, "v2_ancestor_name") << v2.v->name() << " depth: " << v2.depth << " distance: " << distance;
+                if(distance < min_distance) {
+                    ancestor = unprefix_node_name(env_name, v2.v->name());
+                    min_distance = distance;
+                }
+            }
+
+            if (visited2.find(v2.v->name()) == visited2.end()) {
+                visited2[v2.v->name()] = v2.depth;
+
+                auto edges = v2.v->reverse_edges();
+                for (auto e: edges) {
+                    q2.push({e, v2.depth + 1});
+                }
             }
         }
 
-        if (v1.depth + v2.depth > (min_distance * 2) + 1) {
-            return RangeTuple(std::make_pair(RangeTrue(), RangeString(ancestor)));
-            //return true;
-        }
-
-        if (visited1.find(v1.v->name()) == visited1.end()) {
-            visited1[v1.v->name()] = v1.depth;
-
-            auto edges = v1.v->reverse_edges();
-            for (auto e: edges) {
-                q1.push({e, v1.depth + 1});
-            }
-        }
-
-        if (visited2.find(v2.v->name()) == visited2.end()) {
-            visited2[v2.v->name()] = v2.depth;
-
-            auto edges = v2.v->reverse_edges();
-            for (auto e: edges) {
-                q2.push({e, v2.depth + 1});
-            }
+        
+        if(min_distance < std::numeric_limits<size_t>::max()) {
+            if(v1 && v1.depth > (min_distance * 2))  break;
+            if(v2 && v2.depth > (min_distance * 2))  break;
         }
     }
 
+        
     if (min_distance < std::numeric_limits<size_t>::max()) {
         return RangeTuple(std::make_pair(RangeTrue(), RangeString(ancestor)));
-        //return true;
     }
     return RangeTuple({RangeFalse()});
 }

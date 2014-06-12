@@ -29,6 +29,7 @@
 #include "../core/log.h"
 #include "../core/api.h"
 #include "../db/pbuff_node.h"
+#include "../util/demangle.h"
 
 using namespace ::testing;
 
@@ -891,11 +892,26 @@ TEST_F(TestRangeReadAPI, test_dfs_search_parents_for_first_key) {
 //##############################################################################
 TEST_F(TestRangeReadAPI, test_nearest_common_ancestor) {
     auto a = api->nearest_common_ancestor("env1", "thirdcluster3", "host4410.example.com");
-    ASSERT_EQ(typeid(range::RangeTuple), a.type());
-    ASSERT_EQ(typeid(range::RangeTrue), boost::get<range::RangeTuple>(a).values[0].type());
+    ASSERT_EQ(range::util::demangle(typeid(range::RangeTuple).name()), range::util::demangle((a.type().name())));
+    ASSERT_EQ(range::util::demangle(typeid(range::RangeTrue).name()), range::util::demangle(boost::get<range::RangeTuple>(a).values[0].type().name()));
 
     std::string ancestor { boost::get<range::RangeString>(boost::get<range::RangeTuple>(a).values[1]).value };
     EXPECT_EQ("secondcluster00", ancestor);
+
+    a = api->nearest_common_ancestor("env1", "host1142.example.com", "host3422.example.com");
+    ASSERT_EQ(range::util::demangle(typeid(range::RangeTuple).name()), range::util::demangle((a.type().name())));
+    ASSERT_EQ(range::util::demangle(typeid(range::RangeTrue).name()), range::util::demangle(boost::get<range::RangeTuple>(a).values[0].type().name()));
+
+    ancestor = boost::get<range::RangeString>(boost::get<range::RangeTuple>(a).values[1]).value;
+    EXPECT_EQ("secondcluster00", ancestor);
+
+    a = api->nearest_common_ancestor("env1", "secondcluster01", "host3422.example.com");
+    ASSERT_EQ(range::util::demangle(typeid(range::RangeTuple).name()), range::util::demangle((a.type().name())));
+    ASSERT_EQ(range::util::demangle(typeid(range::RangeTrue).name()), range::util::demangle(boost::get<range::RangeTuple>(a).values[0].type().name()));
+
+    ancestor = boost::get<range::RangeString>(boost::get<range::RangeTuple>(a).values[1]).value;
+    EXPECT_EQ("topcluster0", ancestor);
+
 }
 
 //##############################################################################
@@ -1005,7 +1021,8 @@ TEST_F(TestRangeReadAPI, test_find_orphaned_nodes) {
 int
 main(int argc, char **argv)
 {
-    range::initialize_logger("/dev/null", 0);
+    unlink("test_read_api.debug.log");
+    range::initialize_logger("test_read_api.debug.log", 99);
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     ::testing::InitGoogleTest(&argc, argv);
     range::db::ProtobufNode::s_shutdown();
