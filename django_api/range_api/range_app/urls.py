@@ -20,6 +20,8 @@ from range_api.views import DotClusterView
 from range_api.views import DotDependencyView
 from range_api.views import DotDependencyClusterView
 from range_api.views import TopView
+from range_api.views import LegacyExpandView
+from range_api.views import LegacyListView
 
 
 
@@ -56,6 +58,9 @@ urlpatterns = patterns('',
         url(r'^range/api/v1/graph/bfs_search_parents_for_first_key/?$', GraphBFSParents.as_view()),
         url(r'^range/api/v1/graph/dfs_search_parents_for_first_key/?$', GraphDFSParents.as_view()),
         url(r'^range/api/v1/graph/environment_topological_sort/?$', GraphTopsort.as_view()),
+
+        url(r'^range/list/?$', LegacyListView.as_view()),
+        url(r'^range/expand/?$', LegacyExpandView.as_view()),
         url(r'^docs/', include('rest_framework_swagger.urls')),
     )
 

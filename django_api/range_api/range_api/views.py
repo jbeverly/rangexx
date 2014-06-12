@@ -803,6 +803,48 @@ class DotDependencyClusterView(views.APIView):
         pass
 
 
+################################################################################
+################################################################################
+class LegacyListView(views.APIView):
+    def get(self, req, format=None):
+        expr = str(req.META.get('QUERY_STRING', ''))
+        res = None
+        try:
+            res = r.expand_range_expression(str(env), expr)
+        except RuntimeError:
+            return HttpResponse('', content_type='text/plain')
+
+        res_text = ""
+        for item in res:
+            res_text += item + '\n'
+
+        return HttpResponse(res_text, content_type='text/plain')
+
+################################################################################
+################################################################################
+class LegacyExpandView(views.APIView):
+    def get(self, req, format=None):
+        expr = str(req.META.get('QUERY_STRING', ''))
+        res = None
+        try:
+            res = r.expand_range_expression(str(env), expr)
+        except RuntimeError:
+            return HttpResponse('', content_type='text/plain')
+
+        res_text = ""
+        first = True
+        for item in res:
+            if not fist:
+                res_text += ','
+            res_text += item 
+
+        return HttpResponse(res_text, content_type='text/plain')
+
+
+
+
+
+
 
 
 
