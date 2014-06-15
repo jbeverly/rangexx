@@ -58,7 +58,7 @@ add_unique_new_version(Type item, uint64_t new_version)
     BOOST_LOG_FUNCTION();
     for(int vv_idx = item->versions_size() - 1; vv_idx >= 0; --vv_idx) {
         if (new_version == item->versions(vv_idx)) {
-            LOG(debug9, "version_found") << " already has new version: " << new_version;
+            LOG(debug9, "add_version_found") << " already has new version: " << new_version;
             return;
         }
     }
@@ -77,7 +77,7 @@ update_unique_new_version(Type item, uint64_t cmp_version, uint64_t new_version)
     BOOST_LOG_FUNCTION();
     for(int vv_idx = item->versions_size() - 1; vv_idx >= 0; --vv_idx) {
         if (new_version == item->versions(vv_idx)) {
-            LOG(debug9, "version_found") << "already has new version: " << new_version;
+            LOG(debug9, "update_version_found") << "already has new version: " << new_version;
             return;
         }
         if (cmp_version == item->versions(vv_idx)) {
@@ -379,12 +379,21 @@ ProtobufNode::add_edge(const NodeInfo_Edges &direction,
 
     int edge_idx;
     for (edge_idx = 0; edge_idx < direction.edges_size(); ++edge_idx) {
+        bool found = false;
         if (other->name() == direction.edges(edge_idx).id()) {
             auto edge = direction.edges(edge_idx);
             for (int vv_idx = edge.versions_size() - 1; vv_idx >= 0; --vv_idx) {
-                if (cmp_version == edge.versions(vv_idx)) { return false; }
-                if (cmp_version < edge.versions(vv_idx)) { break; }
+                if (cmp_version == edge.versions(vv_idx)) { 
+                    LOG(debug8, "edge_already_found") << other->name() << ':' << cmp_version;
+                    return false; 
+                }
+                if (cmp_version > edge.versions(vv_idx)) { 
+                    LOG(debug8, "older_edge_found") << other->name() << ':' << cmp_version;
+                    found=true;
+                    break;
+                }
             }
+            if(found) break;
         }
     }
 
@@ -475,7 +484,7 @@ ProtobufNode::remove_edge( const NodeInfo_Edges &direction,
 
     for (int vv_idx = edge.versions_size() - 1; vv_idx >= 0; --vv_idx) {
         if (cmp_version == edge.versions(vv_idx)) { break; }
-        if (cmp_version < edge.versions(vv_idx)) { return false; }
+        if (cmp_version > edge.versions(vv_idx)) { return false; }
     }
 
     if(log.loglevel() > range::Emitter::logseverity::debug8) {

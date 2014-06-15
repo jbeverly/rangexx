@@ -111,7 +111,7 @@ std::string TestIntegration::path = "";
 
 //##############################################################################
 //##############################################################################
-static std::vector<std::string> get_value_list(range::RangeStruct &vals) {
+static std::vector<std::string> get_value_list(range::RangeStruct &vals, bool sorted=true) {
     EXPECT_EQ(typeid(range::RangeArray), vals.type());
     assert(typeid(range::RangeArray) == vals.type());
 
@@ -123,7 +123,9 @@ static std::vector<std::string> get_value_list(range::RangeStruct &vals) {
         valuelist.push_back(boost::get<range::RangeString>(r).value);
     }
 
-    std::sort(valuelist.begin(), valuelist.end());
+    if(sorted) {
+        std::sort(valuelist.begin(), valuelist.end());
+    }
     return valuelist;
 }
 
@@ -133,52 +135,22 @@ TEST_F(TestIntegration, test_write_create_env) {
     using namespace ::range;
     bool req;
     req = range->create_env("testenv1");
-    EXPECT_EQ(true, req);
+    EXPECT_TRUE(req);
     req = range->create_env("testenv2");
-    EXPECT_EQ(true, req);
+    EXPECT_TRUE(req);
     req = range->create_env("testenv3");
-    EXPECT_EQ(true, req);
+    EXPECT_TRUE(req);
     req = range->create_env("testenv4");
-    EXPECT_EQ(true, req);
+    EXPECT_TRUE(req);
     req = range->create_env("testenv5");
-    EXPECT_EQ(true, req);
+    EXPECT_TRUE(req);
     req = range->create_env("testenv6");
-    EXPECT_EQ(true, req);
+    EXPECT_TRUE(req);
 
     range::RangeStruct result = range->all_environments();
 
-    ASSERT_EQ(typeid(range::RangeArray), result.type());
-
     std::vector<std::string> resultlist = get_value_list(result);
     ASSERT_THAT(resultlist, ElementsAreArray({"testenv1", "testenv2", "testenv3", "testenv4", "testenv5", "testenv6"}));
-}
-
-//##############################################################################
-//##############################################################################
-TEST_F(TestIntegration, test_write_add_clusters_to_env) {
-    using namespace ::range;
-    bool req;
-    req = range->add_cluster_to_env("testenv1", "testcluster1_1");
-    EXPECT_EQ(true, req);
-    req = range->add_cluster_to_env("testenv1", "testcluster1_2");
-    EXPECT_EQ(true, req);
-    req = range->add_cluster_to_env("testenv1", "testcluster1_3");
-    EXPECT_EQ(true, req);
-
-    req = range->add_cluster_to_env("testenv3", "testcluster3_1");
-    EXPECT_EQ(true, req);
-    req = range->add_cluster_to_env("testenv3", "testcluster3_2");
-    EXPECT_EQ(true, req);
-    req = range->add_cluster_to_env("testenv3", "testcluster3_3");
-    EXPECT_EQ(true, req);
-
-    range::RangeStruct result = range->all_clusters("testenv1");
-    std::vector<std::string> resultlist = get_value_list(result);
-    ASSERT_THAT(resultlist, ElementsAre("testcluster1_1", "testcluster1_2", "testcluster1_3"));
-
-    result = range->all_clusters("testenv3");
-    resultlist = get_value_list(result);
-    ASSERT_THAT(resultlist, ElementsAre("testcluster3_1", "testcluster3_2", "testcluster3_3"));
 }
 
 //##############################################################################
@@ -193,13 +165,82 @@ TEST_F(TestIntegration, test_write_remove_env) {
     ASSERT_THAT(resultlist, ElementsAreArray({"testenv1", "testenv2", "testenv3", "testenv4", "testenv5", "testenv6"}));
 
     bool req = range->remove_env("testenv2");
-    EXPECT_EQ(true, req);
+    EXPECT_TRUE(req);
 
     result = range->all_environments();
-    ASSERT_EQ(typeid(range::RangeArray), result.type());
 
     resultlist = get_value_list(result);
     ASSERT_THAT(resultlist, ElementsAreArray({"testenv1", "testenv3", "testenv4", "testenv5", "testenv6"}));
+
+    req = range->remove_env("testenv2");
+    EXPECT_FALSE(req);
+
+    req = range->create_env("testenv2");
+    EXPECT_TRUE(req);
+
+    result = range->all_environments();
+
+    resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAreArray({"testenv1", "testenv2", "testenv3", "testenv4", "testenv5", "testenv6"}));
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_write_add_clusters_to_env) {
+    using namespace ::range;
+    bool req;
+    req = range->add_cluster_to_env("testenv1", "testcluster1_1");
+    EXPECT_TRUE(req);
+    req = range->add_cluster_to_env("testenv1", "testcluster1_2");
+    EXPECT_TRUE(req);
+    req = range->add_cluster_to_env("testenv1", "testcluster1_3");
+    EXPECT_TRUE(req);
+
+    req = range->add_cluster_to_env("testenv3", "testcluster3_1");
+    EXPECT_TRUE(req);
+    req = range->add_cluster_to_env("testenv3", "testcluster3_2");
+    EXPECT_TRUE(req);
+    req = range->add_cluster_to_env("testenv3", "testcluster3_3");
+    EXPECT_TRUE(req);
+
+    req = range->add_cluster_to_env("testenv2", "testcluster2_1");
+    EXPECT_TRUE(req);
+    req = range->add_cluster_to_env("testenv2", "testcluster2_2");
+    EXPECT_TRUE(req);
+    req = range->add_cluster_to_env("testenv2", "testcluster2_3");
+    EXPECT_TRUE(req);
+
+
+    range::RangeStruct result = range->simple_expand_env("testenv1");
+    std::vector<std::string> resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAre("testcluster1_1", "testcluster1_2", "testcluster1_3"));
+
+    result = range->simple_expand_env("testenv3");
+    resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAre("testcluster3_1", "testcluster3_2", "testcluster3_3"));
+
+    result = range->simple_expand_env("testenv2");
+    resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAre("testcluster2_1", "testcluster2_2", "testcluster2_3"));
+}
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_remove_cluster_from_env) {
+    using namespace ::range;
+    bool req;
+
+    req = range->remove_cluster_from_env("testenv2", "testcluster2_2");
+    EXPECT_TRUE(req);
+
+    range::RangeStruct result = range->simple_expand_env("testenv2");
+    std::vector<std::string> resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAre("testcluster2_1", "testcluster2_3"));
+
+    req = range->remove_cluster_from_env("testenv2", "testcluster2_2");
+    EXPECT_FALSE(req);
+
+    req = range->add_cluster_to_env("testenv2", "testcluster2_2");
+    EXPECT_TRUE(req);
 }
 
 //##############################################################################
@@ -213,6 +254,10 @@ TEST_F(TestIntegration, test_write_add_cluster_to_cluster) {
     range->add_cluster_to_cluster("testenv1", "testcluster1_2", "secondcluster1_2_1");
     range->add_cluster_to_cluster("testenv1", "testcluster1_2", "secondcluster1_2_2");
     range->add_cluster_to_cluster("testenv1", "testcluster1_2", "secondcluster1_2_3");
+
+    range->add_cluster_to_cluster("testenv2", "testcluster2_2", "secondcluster2_2_1");
+    range->add_cluster_to_cluster("testenv2", "testcluster2_2", "secondcluster2_2_2");
+    range->add_cluster_to_cluster("testenv2", "testcluster2_2", "secondcluster2_2_3");
 
     range::RangeStruct result = range->all_clusters("testenv1");
     std::vector<std::string> resultlist = get_value_list(result);
@@ -236,6 +281,191 @@ TEST_F(TestIntegration, test_write_add_cluster_to_cluster) {
     resultlist = get_value_list(result);
     ASSERT_THAT(resultlist, ElementsAre("secondcluster1_2_1", "secondcluster1_2_2", "secondcluster1_2_3"));
 }
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_remove_cluster_from_cluster) {
+    using namespace ::range;
+    bool req;
+    range::RangeStruct result;
+    std::vector<std::string> resultlist;
+
+    req = range->remove_cluster_from_cluster("testenv1", "testcluster1_2", "secondcluster1_2_2");
+    EXPECT_TRUE(req);
+
+    result = range->simple_expand("testenv1", "testcluster1_2");
+    resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAre("secondcluster1_2_1", "secondcluster1_2_3"));
+
+    req = range->remove_cluster_from_cluster("testenv1", "testcluster1_2", "secondcluster1_2_2");
+    EXPECT_FALSE(req);
+
+    req = range->add_cluster_to_cluster("testenv1", "testcluster1_2", "secondcluster1_2_2");
+    EXPECT_TRUE(req);
+
+    result = range->simple_expand("testenv1", "testcluster1_2");
+    resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAre("secondcluster1_2_1", "secondcluster1_2_2", "secondcluster1_2_3"));
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_remove_cluster) {
+    using namespace ::range;
+    bool req;
+    range::RangeStruct result;
+    std::vector<std::string> resultlist;
+
+    req = range->remove_cluster("testenv2", "testcluster2_2");
+    EXPECT_TRUE(req);
+
+    result = range->simple_expand_env("testenv2");
+    resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAre("testcluster2_1", "testcluster2_3"));
+
+    req = range->remove_cluster("testenv2", "testcluster2_2");
+    EXPECT_FALSE(req);
+
+    ASSERT_NO_THROW(range->expand_env("testenv2"));
+    ASSERT_THROW(range->expand_cluster("testenv2", "testcluster2_2"), range::graph::NodeNotFoundException);
+
+    req = range->add_cluster_to_env("testenv2", "testcluster2_2");
+    EXPECT_TRUE(req);
+
+    result = range->simple_expand_env("testenv2");
+    resultlist = get_value_list(result, false);
+    ASSERT_THAT(resultlist, ElementsAre("testcluster2_1", "testcluster2_3", "testcluster2_2"));
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_write_add_host_to_cluster) {
+    using namespace ::range;
+    bool req;
+    range::RangeStruct result;
+    std::vector<std::string> resultlist;
+
+    req = range->add_host_to_cluster("testenv1", "secondcluster1_1_2", "host3.example.com");
+    EXPECT_TRUE(req);
+    req = range->add_host_to_cluster("testenv1", "secondcluster1_1_2", "host1.example.com");
+    EXPECT_TRUE(req);
+    req = range->add_host_to_cluster("testenv1", "secondcluster1_1_2", "host2.example.com");
+    EXPECT_TRUE(req);
+
+    req = range->add_host_to_cluster("testenv1", "secondcluster1_1_2", "host2.example.com");
+    EXPECT_FALSE(req);
+
+
+    result = range->simple_expand_cluster("testenv1", "secondcluster1_1_2");
+    resultlist = get_value_list(result, false);
+    ASSERT_THAT(resultlist, ElementsAreArray({
+                "host3.example.com",
+                "host1.example.com",
+                "host2.example.com"
+                }));
+
+    req = range->add_host_to_cluster("testenv2", "secondcluster2_2_2", "host2.example.com");
+    EXPECT_FALSE(req);
+
+    result = range->simple_expand("testenv2", "secondcluster2_2_2");
+    resultlist = get_value_list(result);
+    EXPECT_EQ(0, resultlist.size());
+}
+
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_remove_host_from_cluster) {
+    using namespace ::range;
+    bool req;
+    range::RangeStruct result;
+    std::vector<std::string> resultlist;
+
+    ASSERT_NO_THROW(result = range->expand("", "host1.example.com"));
+    ASSERT_NO_THROW(result = range->expand("testenv1", "host1.example.com"));
+    req = range->remove_host_from_cluster("testenv1", "secondcluster1_1_2", "host1.example.com");
+    EXPECT_TRUE(req);
+    ASSERT_NO_THROW(result = range->expand("", "host1.example.com"));
+    ASSERT_NO_THROW(result = range->expand("testenv2", "host1.example.com"));
+
+    result = range->simple_expand("testenv1", "secondcluster1_1_2");
+    resultlist = get_value_list(result, false);
+    ASSERT_THAT(resultlist, ElementsAreArray({
+                "host3.example.com",
+                "host2.example.com"
+                }));
+
+    req = range->remove_host_from_cluster("testenv1", "secondcluster1_1_2", "host1.example.com");
+    EXPECT_FALSE(req);
+
+    ASSERT_NO_THROW(result = range->expand("", "host1.example.com"));
+    ASSERT_NO_THROW(result = range->expand("testenv2", "host1.example.com"));
+    req = range->add_host_to_cluster("testenv2", "secondcluster2_2_2", "host1.example.com");
+    EXPECT_TRUE(req);
+    ASSERT_NO_THROW(result = range->expand("", "host1.example.com"));
+    ASSERT_NO_THROW(result = range->expand("testenv2", "host1.example.com"));
+
+    result = range->simple_expand("testenv2", "secondcluster2_2_2");
+    resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAreArray({
+                "host1.example.com",
+                }));
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_add_host) {
+    using namespace ::range;
+    bool req;
+    range::RangeStruct result;
+    std::vector<std::string> resultlist;
+
+    req = range->add_host("host42.example.com");
+    EXPECT_TRUE(req);
+
+    req = range->add_host("host42.example.com");
+    EXPECT_FALSE(req);
+
+    ASSERT_NO_THROW(result = range->expand("", "host42.example.com"));
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_remove_host) {
+    using namespace ::range;
+    bool req;
+    range::RangeStruct result;
+    std::vector<std::string> resultlist;
+
+    ASSERT_NO_THROW(result = range->expand("", "host42.example.com"));
+
+    req = range->remove_host("", "host42.example.com");
+    EXPECT_TRUE(req);
+
+    req = range->remove_host("", "host42.example.com");
+    EXPECT_FALSE(req);
+
+    ASSERT_THROW(range->expand("", "host42.example.com"), range::graph::NodeNotFoundException);
+
+    req = range->remove_host("", "host42.example.com");
+    EXPECT_FALSE(req);
+
+    result = range->expand("testenv2", "host1.example.com");
+    //ASSERT_NO_THROW(result = range->expand("testenv2", "host1.example.com"));
+    req = range->remove_host("testenv2", "host1.example.com");
+    EXPECT_TRUE(req);
+
+    ASSERT_THROW(range->expand("testenv1", "host1.example.com"), range::graph::NodeNotFoundException);
+    ASSERT_THROW(range->expand("", "host1.example.com"), range::graph::NodeNotFoundException);
+
+    req = range->add_host_to_cluster("testenv1", "secondcluster1_1_2", "host1.example.com");
+    EXPECT_TRUE(req);
+    ASSERT_NO_THROW(result = range->expand("testenv1", "host1.example.com"));
+}
+
+
+
+
 
 
 

@@ -115,7 +115,8 @@ RangeAPI_v1::get_node(boost::shared_ptr<graph::GraphInterface> graph,
     graph::NodeIface::node_t n;
 
     // if we're looking for just an env, don't bother prefixing the node
-    if(node_name.empty() ) {
+    if(node_name.empty()) {
+        LOG(debug8, "environment_lookup") << env_name;
         n = graph->get_node(env_name);
         if(n && n->type() == node_type::ENVIRONMENT) {
             return n;
@@ -127,6 +128,7 @@ RangeAPI_v1::get_node(boost::shared_ptr<graph::GraphInterface> graph,
     // conversely, if we're just looking for a node, don't bother prefixing 
     // with an env
     if(env_name.empty()) {
+        LOG(debug8, "node_lookup") << node_name;
         n = graph->get_node(node_name);
         if(n && (n->type() == node_type::STRING || n->type() == node_type::HOST)) {
             return n;
@@ -134,26 +136,36 @@ RangeAPI_v1::get_node(boost::shared_ptr<graph::GraphInterface> graph,
         THROW_STACK(graph::NodeNotFoundException(
                         prefixed_node_name(env_name, node_name)));
     }
-
-    // Try prefixing the node, if we find it, great, if not
-    n = graph->get_node(prefixed_node_name(env_name, node_name));
-    if(n) return n;
-
-    // try the node_first, so we get hosts unambigiously
-    n = graph->get_node(node_name);                                                 
-    if(n && n->type() != node_type::HOST) {
-        THROW_STACK(graph::NodeNotFoundException(
-                    prefixed_node_name(env_name, node_name)));
-    }
-    if(n) return n;
-
-    // failing that, try the env_name, for cases where we call:
+    // try the env_name if it equals node_name, for cases where we call:
     //      expand('env1','env1')
     // (which makes the rest API easier to write)
-    n = graph->get_node(env_name);
-    if(!n || (n && n->type() != node_type::ENVIRONMENT)) {
-        THROW_STACK(graph::NodeNotFoundException(
-                    prefixed_node_name(env_name, node_name)));
+    if(env_name == node_name) {
+        LOG(debug8, "environment_as_node_lookup") << env_name << '#' << node_name;
+        n = graph->get_node(env_name);
+        if(!n || (n && n->type() != node_type::ENVIRONMENT)) {
+            THROW_STACK(graph::NodeNotFoundException(
+                        prefixed_node_name(env_name, node_name)));
+        }
+        return n;
+    }
+
+    // Try prefixing the node, if we find it, great, if not
+    LOG(debug8, "prefixed_node_lookup") << env_name << '#' << node_name;
+    n = graph->get_node(prefixed_node_name(env_name, node_name));
+    if(n) {
+        LOG(debug8, "prefixed_node_lookup_found") << env_name << '#' << node_name;
+        return n;
+    }
+
+    // try the node_first, so we get hosts unambigiously
+    LOG(debug8, "bare_node_lookup") << node_name;
+    n = graph->get_node(node_name);                                                 
+    if(n) {
+        LOG(debug8, "bare_node_lookup_found") << node_name;
+        if(n->type() != node_type::HOST) {
+            THROW_STACK(graph::NodeNotFoundException(
+                        prefixed_node_name(env_name, node_name) + ':' + graph::NodeIface::node_type_names.find(n->type())->second));
+        }
     }
     return n;
 }
@@ -318,8 +330,10 @@ RangeAPI_v1::simple_expand(const std::string &env_name,
 
     if (n) {
         RangeArray found;
-        for (auto v : n->forward_edges()) {
-            found.push_back(unprefix_node_name(env_name, v->name()));
+        if(n->type() != node_type::HOST) {
+            for (auto v : n->forward_edges()) {
+                found.push_back(unprefix_node_name(env_name, v->name()));
+            }
         }
         return found;
     }
@@ -471,7 +485,8 @@ RangeAPI_v1::expand(const std::string &env_name, const std::string &node_name,
     auto n = get_node(primary, env_name, node_name);
 
     if(!n) {
-        THROW_STACK(graph::NodeNotFoundException(env_name));
+        std::string errmsg { prefixed_node_name(env_name, node_name) };
+        THROW_STACK(graph::NodeNotFoundException(errmsg));
     }
     
     std::unordered_map<std::string, bool> onstack;

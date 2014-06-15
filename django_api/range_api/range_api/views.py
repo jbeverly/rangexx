@@ -14,6 +14,8 @@ r = Range('')
 CURRENT_VERSION = 2**64 - 1
 MAX_DEPTH = 1000
 
+################################################################################
+################################################################################
 def pretty_node(node, flatten=True):
     pretty = {}
     pretty['dependencies'] = node['dependencies']
@@ -31,6 +33,8 @@ def pretty_node(node, flatten=True):
 
     return pretty
 
+################################################################################
+################################################################################
 class TopView(views.APIView):
     def get(self, req, format=None):
         return Response([

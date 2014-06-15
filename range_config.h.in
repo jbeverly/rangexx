@@ -39,9 +39,6 @@
 /* Define to 1 if you have libdb_stl */
 #undef HAVE_LIBDB_STL
 
-/* Define to 1 if you have libevpaxos */
-#undef HAVE_LIBEVPAXOS
-
 /* Define to 1 if you have libgmock */
 #undef HAVE_LIBGMOCK
 

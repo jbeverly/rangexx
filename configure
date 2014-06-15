@@ -668,11 +668,6 @@ PROTOBUF_CPPFLAGS
 PROTOBUF_LD_LIBRARY_PATH
 PROTOBUF_LDFLAGS
 PROTOBUF_LIBS
-EVPROPOSER_INIT_LIBS
-EVPAXOS_CPPFLAGS
-EVPAXOS_LD_LIBRARY_PATH
-EVPAXOS_LDFLAGS
-EVPAXOS_LIBS
 DB_STL_CPPFLAGS
 DB_STL_LD_LIBRARY_PATH
 DB_STL_LDFLAGS
@@ -810,7 +805,6 @@ enable_libtool_lock
 enable_dependency_tracking
 enable_silent_rules
 with_db_stl
-with_evpaxos
 with_protobuf
 with_gmock
 with_gtest
@@ -1480,8 +1474,6 @@ Optional Packages:
   --with-sysroot=DIR Search for dependent libraries within DIR
                         (or the compiler's sysroot if not specified).
   --with-db_stl=PATH      specify path to db_stl library installation
-                          [default=auto]
-  --with-evpaxos=PATH     specify path to evpaxos library installation
                           [default=auto]
   --with-protobuf=PATH    specify path to protobuf library installation
                           [default=auto]
@@ -2438,11 +2430,6 @@ $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 $as_echo "$as_me: error: changes in the environment can compromise the build" >&2;}
   as_fn_error $? "run \`make distclean' and/or \`rm $cache_file' and start over" "$LINENO" 5
 fi
-
-
-
-
-
 
 
 
@@ -16208,167 +16195,8 @@ rm -f core conftest.err conftest.$ac_objext \
           CPPFLAGS="$tmp_CPPFLAGS"
 
 
-LDFLAGS="$LDFLAGS -ldb"
-
-
-
-
-
-# Check whether --with-evpaxos was given.
-if test "${with_evpaxos+set}" = set; then :
-  withval=$with_evpaxos; ax_with_evpaxos=$withval
-else
-  ax_with_evpaxos=auto
-fi
-
-
-
-
-
-
-
-        if test "x$ax_with_evpaxos" = xauto; then :
-  :
-else
-              ax_with_evpaxos=`echo $ax_with_evpaxos | sed -e 's,/$,,'`
-            case "$ax_with_evpaxos" in #(
-  ./*|../*) :
-    ax_with_evpaxos="`pwd`/$ax_with_evpaxos" ;; #(
-  *) :
-     ;;
-esac #''
-            if test -d "${ax_with_evpaxos}/lib"; then :
-  				EVPAXOS_LD_LIBRARY_PATH="${ax_with_evpaxos}/lib"
-                EVPAXOS_LDFLAGS="-L${ax_with_evpaxos}/lib"
-
-fi
-            if test -d "${ax_with_evpaxos}/lib64"; then :
-  				if test 0`echo $target | grep -c 64` -gt 0; then :
-
-					EVPAXOS_LD_LIBRARY_PATH="${ax_with_evpaxos}/lib64"
-                    EVPAXOS_LDFLAGS="-L${ax_with_evpaxos}/lib64"
-
-else
-  					if test 0`echo $build | grep -c 64` -gt 0 ; then :
-
-						EVPAXOS_LD_LIBRARY_PATH="${ax_with_evpaxos}/lib64"
-						EVPAXOS_LDFLAGS="-L${ax_with_evpaxos}/lib64"
-
-fi
-
-fi
-
-fi
-            if test -d "${ax_with_evpaxos}/include"; then :
-                  EVPAXOS_CPPFLAGS="-I${ax_with_evpaxos}/include"
-
-fi
-
-fi
-
-
-
-          tmp_LDFLAGS="$LDFLAGS"
-          LDFLAGS="$LDFLAGS $EVPAXOS_LDFLAGS"
-          { $as_echo "$as_me:${as_lineno-$LINENO}: checking for evproposer_init in -levpaxos" >&5
-$as_echo_n "checking for evproposer_init in -levpaxos... " >&6; }
-if ${ac_cv_lib_evpaxos_evproposer_init+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-levpaxos  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char evproposer_init ();
-int
-main ()
-{
-return evproposer_init ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"; then :
-  ac_cv_lib_evpaxos_evproposer_init=yes
-else
-  ac_cv_lib_evpaxos_evproposer_init=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_evpaxos_evproposer_init" >&5
-$as_echo "$ac_cv_lib_evpaxos_evproposer_init" >&6; }
-if test "x$ac_cv_lib_evpaxos_evproposer_init" = xyes; then :
-
-
-$as_echo "#define HAVE_LIBEVPAXOS 1" >>confdefs.h
-
-          EVPAXOS_LIBS=-levpaxos
-                                 if ${EVPAXOS_LIBS+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking evpaxos flags EVPAXOS_LIBS" >&5
-$as_echo_n "checking evpaxos flags EVPAXOS_LIBS... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $EVPAXOS_LIBS" >&5
-$as_echo "$EVPAXOS_LIBS" >&6; }
-
-
-fi
-
-                       if ${EVPAXOS_LDFLAGS+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking evpaxos flags EVPAXOS_LDFLAGS" >&5
-$as_echo_n "checking evpaxos flags EVPAXOS_LDFLAGS... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $EVPAXOS_LDFLAGS" >&5
-$as_echo "$EVPAXOS_LDFLAGS" >&6; }
-
-
-fi
-
-                       if ${EVPAXOS_LD_LIBRARY_PATH+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking evpaxos flags EVPAXOS_LD_LIBRARY_PATH" >&5
-$as_echo_n "checking evpaxos flags EVPAXOS_LD_LIBRARY_PATH... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $EVPAXOS_LD_LIBRARY_PATH" >&5
-$as_echo "$EVPAXOS_LD_LIBRARY_PATH" >&6; }
-
-
-fi
-
-                       if ${EVPAXOS_CPPFLAGS+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking evpaxos flags EVPAXOS_CPPFLAGS" >&5
-$as_echo_n "checking evpaxos flags EVPAXOS_CPPFLAGS... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $EVPAXOS_CPPFLAGS" >&5
-$as_echo "$EVPAXOS_CPPFLAGS" >&6; }
-
-
-fi
-
-
-
-
-else
-  			EVPAXOS_LIBS=-levpaxos
-			                       if ${EVPROPOSER_INIT_LIBS+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking evproposer_init flags EVPROPOSER_INIT_LIBS" >&5
-$as_echo_n "checking evproposer_init flags EVPROPOSER_INIT_LIBS... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $EVPROPOSER_INIT_LIBS" >&5
-$as_echo "$EVPROPOSER_INIT_LIBS" >&6; }
-
-
-fi
-
-
-			as_fn_error $? "libevpaxos3 is required" "$LINENO" 5
-
-fi
-
-          LDFLAGS="$tmp_LDFLAGS"
-
+#AS_VAR_SET([LDFLAGS], ["$LDFLAGS -ldb"])
+#AX_CHECK_EXT_LIB([evpaxos], [evproposer_init], [], [AC_MSG_ERROR([libevpaxos3 is required])])
 LDFLAGS="$tmp_stl_LDFLAGS"
 CPPFLAGS="$tmp_stl_CPPFLAGS"
 

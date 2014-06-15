@@ -63,6 +63,11 @@
     auto range_log_timer_ = log.start_timer(__func__); \
     range_log_timer_
 
+#define RANGE_LOG_FUNCTION() \
+    BOOST_LOG_FUNCTION(); \
+    LOG(debug4, __func__) << __FILE__ << ':' << __LINE__; 
+    
+
 #define THROW_STACK(EXE) \
     throw boost::enable_error_info(EXE) << boost::log::current_scope()
 
