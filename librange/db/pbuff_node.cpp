@@ -514,12 +514,12 @@ ProtobufNode::remove_edge( const NodeInfo_Edges &direction,
         return false;
     }
 
-    int start_versions = edge.versions_size(); 
+    //int start_versions = edge.versions_size(); 
     update_all_edge_versions(info, cmp_version, new_version);
     update_tag_versions(info, cmp_version, new_version);
     info.set_list_version(new_version);
 
-    assert(start_versions == edge.versions_size() - 1);
+    //assert(start_versions == edge.versions_size() - 1);
 
     auto mutable_edge = mutable_direction->mutable_edges(edge_idx);
     mutable_edge->mutable_versions()->RemoveLast();                             // We can safely assume that the last element is new_version, because we
@@ -645,6 +645,21 @@ ProtobufNode::delete_tag(const std::string& key)
 
     for (key_idx = 0; key_idx < info.tags().keys_size(); ++key_idx) {
         if (key == info.tags().keys(key_idx).key()) {
+            const auto& this_key = info.tags().keys(key_idx);
+            bool found = false;
+            for (int ver_idx = this_key.versions_size() - 1; ver_idx >= 0; --ver_idx) {
+                uint64_t key_ver = this_key.versions(ver_idx);
+                if (cmp_version == key_ver) {
+                    found = true;
+                    break;
+                }
+                if (cmp_version > key_ver) {
+                    break;
+                }
+            }
+            if(!found) {
+                return false;
+            }
             break;
         }
     }

@@ -529,9 +529,119 @@ TEST_F(TestIntegration, test_remove_host) {
 }
 
 
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_add_node_key_value) {
+    using namespace ::range;
+    bool req;
+    range::RangeStruct result;
+    std::vector<std::string> resultlist;
+
+    req = range->add_node_key_value("testenv1", "host1.example.com", "foobar", "value1");
+    EXPECT_TRUE(req);
+    
+    req = range->add_node_key_value("testenv1", "host1.example.com", "foobar", "value1");
+    EXPECT_FALSE(req);
+
+    req = range->add_node_key_value("testenv1", "host1.example.com", "foobar", "value2");
+    EXPECT_TRUE(req);
+    
+    req = range->add_node_key_value("testenv1", "host1.example.com", "foobar", "value1");
+    EXPECT_FALSE(req);
+
+    req = range->add_node_key_value("testenv1", "host1.example.com", "foobar", "value3");
+    EXPECT_TRUE(req);
+    
+
+    result = range->fetch_key("testenv1", "host1.example.com", "foobar");
+    resultlist = get_value_list(result, false);
+
+    ASSERT_THAT(resultlist, ElementsAreArray({
+                "value1",
+                "value2",
+                "value3",
+                }));
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_remove_node_key_value) {
+    using namespace ::range;
+    bool req;
+    range::RangeStruct result;
+    std::vector<std::string> resultlist;
+
+    req = range->remove_node_key_value("testenv1", "host1.example.com", "foobar", "value2");
+    EXPECT_TRUE(req);
+
+    result = range->fetch_key("testenv1", "host1.example.com", "foobar");
+    resultlist = get_value_list(result, false);
+
+    ASSERT_THAT(resultlist, ElementsAreArray({
+                "value1",
+                "value3",
+                }));
+}
 
 
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_remove_key_from_node) {
+    using namespace ::range;
+    bool req;
+    range::RangeStruct result;
+    std::vector<std::string> resultlist;
 
+    req = range->remove_key_from_node("testenv1", "host1.example.com", "foobar");
+    EXPECT_TRUE(req);
+
+    req = range->remove_key_from_node("testenv1", "host1.example.com", "foobar");
+    EXPECT_FALSE(req);
+
+
+    result = range->get_keys("testenv1", "host1.example.com");
+    resultlist = get_value_list(result, false);
+
+    EXPECT_EQ(0, resultlist.size());
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_add_node_ext_dependency) {
+    using namespace ::range;
+    bool req;
+    range::RangeStruct result;
+    std::vector<std::string> resultlist;
+
+    req = range->add_node_ext_dependency("testenv1", "testcluster1_1", "testenv2", "testcluster2_1");
+
+    result = range->expand_cluster("testenv1", "testcluster1_1");
+
+    range::RangeStruct deps = boost::get<range::RangeObject>(result).values["dependencies"];
+
+    resultlist = get_value_list(deps, false);
+
+    ASSERT_THAT(resultlist, ElementsAre("testenv2#testcluster2_1"));
+}
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_remove_node_ext_dependency) {
+    using namespace ::range;
+    bool req;
+    range::RangeStruct result;
+    std::vector<std::string> resultlist;
+
+    req = range->remove_node_ext_dependency("testenv1", "testcluster1_1", "testenv2", "testcluster2_1");
+
+    result = range->expand_cluster("testenv1", "testcluster1_1");
+
+    range::RangeStruct deps = boost::get<range::RangeObject>(result).values["dependencies"];
+
+    resultlist = get_value_list(deps, false);
+
+    EXPECT_EQ(0, resultlist.size());
+}
 
 
 
