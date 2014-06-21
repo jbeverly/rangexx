@@ -606,7 +606,7 @@ AM_LDFLAGS = @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ @PROTOBUF_LDFLAGS@ @DB_STL_LDFLAGS
 LDADD = $(top_builddir)/librange/librange.la @GTEST_LIBS@ @GMOCK_LIBS@ @DB_STL_LIBS@ @BOOST_REGEX_LIB@
 LIBADD = $(top_builddir)/librange/librange.la
 AM_DEFAULT_SOURCE_EXT = .cpp
-TESTS = $(check_PROGRAMS)
+TESTS = $(check_PROGRAMS) 
 all: all-am
 
 .SUFFIXES:
@@ -1185,10 +1185,10 @@ export LD_LIBRARY_PATH:=@GMOCK_LD_LIBRARY_PATH@:@GTEST_LD_LIBRARY_PATH@:@PROTOBU
 
 .PHONY: valgrind
 
-valgrind: $(TESTS)
+valgrind: $(check_PROGRAMS)
 	for n in $(TESTS); do \
 		LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$(top_builddir)/librange/.libs/" \
-		valgrind -q --tool=memcheck --leak-check=full --leak-resolution=high --track-origins=yes --show-reachable=yes $(builddir)/.libs/$$n; \
+		valgrind -q --tool=memcheck --leak-check=full --leak-resolution=high --track-origins=yes --show-reachable=yes --suppressions=$(top_builddir)/librange/tests/valrind_suppressions.txt $(builddir)/.libs/$$n; \
 	done
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
