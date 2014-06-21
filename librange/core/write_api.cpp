@@ -444,7 +444,8 @@ RangeAPI_v1::add_node_key_value(const std::string &env_name, const std::string &
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
 
-    auto n = primary->get_node(prefixed_node_name(env_name, node_name));
+    auto n = get_node(primary, env_name, node_name);
+    //auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(!n) {
         return false;
     }
@@ -480,7 +481,8 @@ RangeAPI_v1::remove_node_key_value(const std::string &env_name, const std::strin
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
 
-    auto n = primary->get_node(prefixed_node_name(env_name, node_name));
+    auto n = get_node(primary, env_name, node_name);
+    //auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(!n) {
         return false;
     }
@@ -520,7 +522,8 @@ RangeAPI_v1::remove_key_from_node(const std::string &env_name, const std::string
     auto primary = graphdb("primary", -1);
     auto ptxn = primary->start_txn();
 
-    auto n = primary->get_node(prefixed_node_name(env_name, node_name));
+    auto n = get_node(primary, env_name, node_name);
+    //auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(!n) {
         return false;
     }
