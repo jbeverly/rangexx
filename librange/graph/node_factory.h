@@ -45,12 +45,15 @@ class NodeIfaceAbstractFactory {
 template <class T>
 struct NodeIfaceConcreteFactory : public NodeIfaceAbstractFactory
 {
+    NodeIfaceConcreteFactory() : log("NodeIfaceConcreteFactory") {}
     virtual ~NodeIfaceConcreteFactory() = default;
     virtual node_t createNode(const std::string& name, instance_t instance) override
     {
-        BOOST_LOG_FUNCTION();
+        RANGE_LOG_FUNCTION();
         return boost::make_shared<T>(name, instance);
     }
+    private:
+        range::Emitter log;
 };
 
 } // namespace db

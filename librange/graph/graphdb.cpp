@@ -121,28 +121,26 @@ GraphDB::get_node(const std::string& name) const
     uint64_t cmp_version = (static_cast<int64_t>(wanted_version_) == -1)
         ? this_version : wanted_version_;
 
-    uint64_t last_version = -1;
     auto g_versions = n->graph_versions();
 
     for (uint64_t node_version : boost::adaptors::reverse(g_versions)) {
         if (node_version == cmp_version) {
+            LOG(debug8, "found_wanted_version") << name;
             if (cmp_version != this_version) {
                 auto it = node_version_map.find(name);
                 if (it != node_version_map.end()) {
+                    LOG(debug8, "setting_node_wanted_version") << name << ": " << it->second; 
                     n->set_wanted_version(it->second);
                 }
             }
             return n;
         }
         if (node_version < cmp_version) {                                   // we've gone too far back, bail out
-            return nullptr;
+            break;
         }
-        last_version = node_version;
     }
-    if (last_version > cmp_version) {
-        return nullptr;
-    }
-    return n;
+    LOG(debug4, "node_incorrect_version") << name;
+    return nullptr;
 }
 
 //##############################################################################
@@ -215,15 +213,15 @@ GraphDB::has_version_or_higher(uint64_t wanted_version, node_t node)
     auto vers = node->graph_versions();
     for (uint64_t node_version : boost::adaptors::reverse(vers)) {
         if(node_version > wanted_version) {
-            LOG(debug9, "node_greater_than_wanted_version") << node_version << " " << wanted_version;
+            LOG(debug9, "node_greater_than_wanted_version") << node->name() << ": " << node_version << " " << wanted_version;
             return true;
         }
         if (node_version == wanted_version) {
-            LOG(debug9, "node_equal_to_wanted_version") << node_version << " " << wanted_version;
+            LOG(debug9, "node_equal_to_wanted_version") << node->name() << ": " << node_version << " " << wanted_version;
             return true;
         }
         if (node_version < wanted_version) {
-            LOG(debug9, "node_less_than_wanted_version") << node_version << " " << wanted_version;
+            LOG(debug9, "node_less_than_wanted_version") << node->name() << ": " << node_version << " " << wanted_version;
             return false;
         }
     }
@@ -239,22 +237,27 @@ GraphDB::update_versions(uint64_t prior_version)
     RANGE_LOG_TIMED_FUNCTION() << prior_version;
     auto lock = instance_->write_lock(db::GraphInstanceInterface::record_type::NODE_META, "");
     auto txn = instance_->start_txn();
+    std::vector<std::string> nodes_requiring_update;
+
+    // FIXME: the non-const iterator is completely broken; the cursor implementation invalidates the iterator
+    //          if you mutate an element during iteration, making the mutable iterator useless.
+    //          must figure out a way to have a non-const iterator that works
     for (auto &n : *this) {
         if(has_version_or_higher(prior_version, boost::shared_ptr<NodeIface>(&n, [](void *) { return nullptr; }))) {
-            bool removed_node = false;
-            for(auto rn : removed_nodes) {
-                if (rn->name() == n.name()) {
-                    removed_node = true;
-                    break;
-                }
+            auto it = removed_nodes.find(n.name());
+            if(it != removed_nodes.end()) {
+                LOG(debug1, "removed_node") << n.name() << " at version: " << this->version();
+                continue;
             }
-            if(!removed_node) {
-                n.add_graph_version(this->version());
-                n.commit();
-            }
+            nodes_requiring_update.push_back(n.name());
         }
     }
     removed_nodes.clear();
+    for (std::string node_name : nodes_requiring_update) {
+        node_t update_node = this->node_factory_->createNode(node_name, instance_);
+        update_node->add_graph_version(this->version());
+        update_node->commit();
+    }
 }
 
 //##############################################################################
@@ -350,7 +353,7 @@ GraphDB::remove(node_t node)
         node->remove_forward_edge(affected, true);
     }
 
-    removed_nodes.push_back(node);
+    removed_nodes[node->name()] = true;
     return node;
 }
 

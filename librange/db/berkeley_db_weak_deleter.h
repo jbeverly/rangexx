@@ -17,7 +17,6 @@
 #ifndef _RANGE_DB_BERKELEY_DB_WEAK_DELETER_H
 #define _RANGE_DB_BERKELEY_DB_WEAK_DELETER_H
 
-#include <unordered_map>
 #include <thread>
 #include <cassert>
 
@@ -45,13 +44,16 @@ class BerkeleyDBWeakDeleter {
         friend BackendType;
         friend PtrType;
 
+        range::Emitter log;
         BackendType& backend_;
-        BerkeleyDBWeakDeleter(BackendType& backend) : backend_(backend) { }
+        BerkeleyDBWeakDeleter(BackendType& backend) : log("BerkeleyDBWeakDeleter"), backend_(backend) { }
 
     public:
+        //BerkeleyDBWeakDeleter() : log("BerkeleyDBWeakDeleter") { }
+
         void operator()(PtrType * rptr)
         {
-            BOOST_LOG_FUNCTION();
+            RANGE_LOG_FUNCTION();
             std::thread::id id = std::this_thread::get_id();
             // This is a bit odd... so the destructor of the pointee will do whatever it is going to do,
             // which, at present, in both cases makes use of the weak_table copy.

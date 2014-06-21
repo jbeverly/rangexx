@@ -29,6 +29,7 @@
 #include <stack>
 #include <queue>
 #include <unordered_map>
+#include <map>
 #include <thread>
 
 #include <boost/variant/apply_visitor.hpp>
@@ -308,8 +309,6 @@ RangeAPI_v1::simple_expand(const std::string &env_name,
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: "
         << node_name << " version: " << version << " type: " 
         << graph::NodeIface::node_type_names.find(type)->second;
-
-    std::this_thread::sleep_for(std::chrono::seconds(1));
 
     const auto primary = graphdb("primary", version);
     auto n = get_node(primary, env_name, node_name);

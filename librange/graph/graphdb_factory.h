@@ -50,19 +50,22 @@ template <class T>
 class GraphdbConcreteFactory : public GraphdbAbstractFactory
 {
     public:
+        GraphdbConcreteFactory() : log("GraphdbConcreteFactory") { }
         virtual ~GraphdbConcreteFactory() = default;
         virtual graphdb_t createGraphdb(const std::string& name,
                                         backend_t backend,
                                         node_factory_t node_factory,
                                         uint64_t wanted_version=-1) override
         {
-            BOOST_LOG_FUNCTION();
+            RANGE_LOG_FUNCTION();
             auto g = boost::make_shared<T>(name, backend->getGraphInstance(name), node_factory);
             if(wanted_version != static_cast<uint64_t>(-1)) {
                 g->set_wanted_version(wanted_version);
             }
             return g;
         }
+    private:
+        range::Emitter log;
 };
 
 } /* namespace graph */ } /* namespace range*/

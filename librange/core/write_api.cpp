@@ -17,6 +17,7 @@
 #include <iostream>
 #include <stack>
 #include <unordered_map>
+#include <map>
 
 #include "api.h"
 
@@ -259,18 +260,35 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
 
     auto parent = primary->get_node(prefixed_node_name(env_name, parent_cluster));
     if(!parent) {
+        LOG(debug4, "parent_not_found") << hostname;
         return false;
     }
 
     auto n = primary->get_node(hostname);
 
     if(parent->type() != node_type::CLUSTER || (n && n->type() != node_type::HOST)) {
+        LOG(debug4, "invalid_parent_type") << hostname;
         return false;
     }
 
     if(n) {
-        std::stack<graph::NodeIface::node_t> st;
-        std::unordered_map<std::string, bool> visited;
+        LOG(debug9, "found_host_being_added") << hostname;
+        /* Doing this via DFS breaks if the parent cluster is an orphan;
+         * it should be ok to add a host to an orphan cluster, it just makes the
+         * host an orphan too.
+         * but we might wish to add the orphaned cluster to the tree somewhere else
+         * and we'd expect the host to be on it */
+        for(auto v : n->reverse_edges()) {
+            if (v->type() == node_type::CLUSTER) {
+                if (v->name().substr(0, env_name.size() + 1) != (env_name + '#')) {
+                    LOG(debug4, "host_belongs_to_another_environment") << hostname;
+                    return false;
+                }
+            }
+        }
+
+        /* std::stack<graph::NodeIface::node_t> st;
+        //std::unordered_map<std::string, bool> visited;
 
         st.push(n);
 
@@ -289,19 +307,23 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
                     st.push(e);
                 }
             }
-        }
+        } */
     }
-
-    if (!n) {
+    else {
+        LOG(debug4, "creating_new_host") << hostname;
         n = primary->create(hostname);
         if(n) {
             n->set_type(node_type::HOST);
         } else {
+            LOG(error, "creating_new_host_failed") << hostname;
             return false;
         }
     }
 
-    parent->add_forward_edge(n, true);
+    if(!parent->add_forward_edge(n, true)) {
+        LOG(debug4, "host_already_in_cluster") << hostname;
+        return false;
+    }
 
     n = dependency->get_node(hostname);
     if(!n) {

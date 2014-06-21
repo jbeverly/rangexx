@@ -450,10 +450,18 @@ void cleanup_logger()
         log::attributes::named_scope::pop_scope();
     }
     auto global_attr = log::core::get()->get_global_attributes();
-    auto thread_attr = log::core::get()->get_thread_attributes();
     for (auto it = global_attr.begin(); it != global_attr.end(); ++it) {
         log::core::get()->remove_global_attribute(it);
-    }
+    } 
+    global_attr = log::core::get()->get_global_attributes();
+    for (auto it = global_attr.begin(); it != global_attr.end(); ++it) {
+        log::core::get()->remove_global_attribute(it);
+    } 
+    auto thread_attr = log::core::get()->get_thread_attributes();
+    for (auto it = thread_attr.begin(); it != thread_attr.end(); ++it) {
+        log::core::get()->remove_thread_attribute(it);
+    } 
+    thread_attr = log::core::get()->get_thread_attributes();
     for (auto it = thread_attr.begin(); it != thread_attr.end(); ++it) {
         log::core::get()->remove_thread_attribute(it);
     } 

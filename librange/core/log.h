@@ -45,7 +45,7 @@
 
 
 #define LOG(LEVEL, EVENT) \
-    for(std::stringstream range_logmsg_; range_logmsg_.str().empty(); log.LEVEL(EVENT, range_logmsg_.str().substr(1))) range_logmsg_ << ":"
+    for(std::stringstream range_logmsg_; range_logmsg_.str().empty(); log.LEVEL(std::string(__func__) + "." + EVENT, range_logmsg_.str().substr(1))) range_logmsg_ << ":"
 
 #define LOGBACKTRACE(EXE) \
        do { \
@@ -65,7 +65,9 @@
 
 #define RANGE_LOG_FUNCTION() \
     BOOST_LOG_FUNCTION(); \
-    LOG(debug4, __func__) << __FILE__ << ':' << __LINE__; 
+    LOG(debug4, "start"); 
+
+//<< __FILE__ << ":" << __LINE__ << ":" ; 
     
 
 #define THROW_STACK(EXE) \

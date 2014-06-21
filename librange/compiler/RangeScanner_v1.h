@@ -46,7 +46,7 @@ class RangeScanner_v1: public RangeScanner_v1Base
         //######################################################################
         //######################################################################
         explicit RangeScanner_v1(std::istream& in, std::ostream& out, functor_map_sp_t(symtable))
-            : RangeScanner_v1Base(in, out), function_st_(symtable)
+            : RangeScanner_v1Base(in, out), log("RangeScanner_v1"), function_st_(symtable)
         {
         }
 
@@ -54,7 +54,7 @@ class RangeScanner_v1: public RangeScanner_v1Base
         //######################################################################
         explicit RangeScanner_v1(boost::shared_ptr<std::istream> in, boost::shared_ptr<std::ostream> out,
                 functor_map_sp_t symtable)
-            : RangeScanner_v1Base(*in, *out), function_st_(symtable), in_(in), out_(out)
+            : RangeScanner_v1Base(*in, *out), log("RangeScanner_v1"), function_st_(symtable), in_(in), out_(out)
         {
         }
 
@@ -66,7 +66,7 @@ class RangeScanner_v1: public RangeScanner_v1Base
         //######################################################################
         c::range_function_sp_t function(const std::string& name) const 
         {
-            BOOST_LOG_FUNCTION();
+            RANGE_LOG_FUNCTION();
             auto it = function_st_->find(name);
             if (it != function_st_->end()) {
                 return it->second;
@@ -88,6 +88,7 @@ class RangeScanner_v1: public RangeScanner_v1Base
         virtual std::string matched() const { return RangeScanner_v1Base::matched(); }
 #endif
     private:
+        range::Emitter log;
         std::stack<StartCondition__> statestack;
         functor_map_sp_t function_st_;
         boost::shared_ptr<std::istream> in_;
@@ -134,7 +135,8 @@ inline void RangeScanner_v1::print()
 }
 
 inline boost::shared_ptr<RangeScanner_v1> make_string_scanner_v1(const std::string& s, RangeScanner_v1::functor_map_sp_t symtable) {
-    BOOST_LOG_FUNCTION();
+    range::Emitter log {"make_string_scanner_v1"};
+    RANGE_LOG_FUNCTION();
     auto null = boost::make_shared<std::ofstream>("/dev/null");
     auto stringstream = boost::make_shared<std::istringstream>(s);
 

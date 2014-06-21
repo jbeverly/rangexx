@@ -174,8 +174,8 @@ BerkeleyDBGraph::inculcate_change(std::thread::id id)
             std::string object_name;
             uint64_t object_version;
             std::string data;
-            LOG(debug9, "inculcating record") << object_name << " size: " << data.size();
             std::tie(type, object_name, object_version, data) = change;
+            LOG(debug9, "inculcating record") << object_name << " size: " << data.size();
 
             auto item = c->add_items();
             item->set_key( key_name(type, object_name) );

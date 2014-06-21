@@ -50,7 +50,7 @@ class GraphTxn : public GraphTxnIface
                 log("GraphTxn"),
                 timer()
         {
-            BOOST_LOG_FUNCTION();
+            RANGE_LOG_FUNCTION();
             timer = boost::make_shared<range::Emitter::Timer>( log.start_timer("graphdb_transaction") );
         }
 
@@ -58,7 +58,7 @@ class GraphTxn : public GraphTxnIface
         //######################################################################
         ~GraphTxn() {
             try {
-                BOOST_LOG_FUNCTION();
+                RANGE_LOG_FUNCTION();
                 if(graphdb_->version() > s_version) {
                     LOG(debug1, "graph_transaction_pushing_update") 
                         << "graphdb version: " << graphdb_->version()
@@ -184,7 +184,8 @@ class GraphDB
         node_factory_t node_factory_;
         std::unordered_map<std::string, uint64_t> node_version_map;
         bool has_version_or_higher(uint64_t wanted_version, node_t node);
-        std::vector<boost::shared_ptr<graph::NodeIface>> removed_nodes;
+        std::unordered_map<std::string, bool> removed_nodes;
+        //std::vector<boost::shared_ptr<graph::NodeIface>> removed_nodes;
         range::Emitter log;
 
         //######################################################################

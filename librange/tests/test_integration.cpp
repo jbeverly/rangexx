@@ -49,6 +49,10 @@ using namespace ::testing;
 class TestIntegration : public ::testing::Test {
     public:
         static void SetUpTestCase() {
+            unlink("test_integration.debug.log");
+            ::range::initialize_logger("test_integration.debug.log", 99);
+            std::cerr << "Starting testcase" << std::endl;
+
             using namespace ::range;
             char p[] = "/tmp/db_test_env.XXXXXXXXXX"; 
             if(!mkdtemp(p)) {
@@ -331,6 +335,7 @@ TEST_F(TestIntegration, test_remove_cluster) {
 
     req = range->add_cluster_to_env("testenv2", "testcluster2_2");
     EXPECT_TRUE(req);
+    ASSERT_NO_THROW(range->expand_cluster("testenv2", "testcluster2_2"));
 
     result = range->simple_expand_env("testenv2");
     resultlist = get_value_list(result, false);
@@ -381,6 +386,52 @@ TEST_F(TestIntegration, test_remove_host_from_cluster) {
     range::RangeStruct result;
     std::vector<std::string> resultlist;
 
+    /*
+    range->create_env("testenv1");
+    range->add_cluster_to_env("testenv1", "testcluster1_1");
+    range->add_cluster_to_cluster("testenv1", "testcluster1_1", "secondcluster1_1_2");
+
+    range->create_env("testenv2");
+    range->add_cluster_to_env("testenv2", "testcluster2_2");
+    range->add_cluster_to_cluster("testenv2", "testcluster2_2", "secondcluster2_2_2");
+    */
+    /*
+    result = range->simple_expand_cluster("testenv1", "secondcluster1_1_2");
+    resultlist = get_value_list(result, false);
+    EXPECT_EQ(0, resultlist.size());
+    */
+/*
+    req = range->add_host_to_cluster("testenv1", "secondcluster1_1_2", "host3.example.com");
+    //EXPECT_TRUE(req);
+    req = range->add_host_to_cluster("testenv1", "secondcluster1_1_2", "host1.example.com");
+    //EXPECT_TRUE(req);
+    req = range->add_host_to_cluster("testenv1", "secondcluster1_1_2", "host2.example.com");
+    //EXPECT_TRUE(req);
+
+    
+    result = range->simple_expand_cluster("testenv1", "secondcluster1_1_2");
+    resultlist = get_value_list(result, false);
+    ASSERT_THAT(resultlist, ElementsAreArray({
+                "host3.example.com",
+                "host1.example.com",
+                "host2.example.com"
+                }));
+   
+
+    range->remove_cluster("testenv2", "testcluster2_2");
+    range->add_cluster_to_env("testenv2", "testcluster2_2");
+    range->remove_cluster("testenv2", "testcluster2_2");
+    range->add_cluster_to_env("testenv2", "testcluster2_2");
+    range->remove_cluster("testenv2", "testcluster2_2");
+    range->add_cluster_to_env("testenv2", "testcluster2_2");
+    range->remove_cluster("testenv2", "testcluster2_2");
+    range->add_cluster_to_env("testenv2", "testcluster2_2");
+    range->remove_cluster("testenv2", "testcluster2_2");
+    range->add_cluster_to_env("testenv2", "testcluster2_2");
+    range->remove_cluster_from_cluster("testenv1", "testcluster1_1", "secondcluster1_1_2");
+    range->add_cluster_to_cluster("testenv1", "testcluster1_1", "secondcluster1_1_2");
+*/
+
     ASSERT_NO_THROW(result = range->expand("", "host1.example.com"));
     ASSERT_NO_THROW(result = range->expand("testenv1", "host1.example.com"));
     req = range->remove_host_from_cluster("testenv1", "secondcluster1_1_2", "host1.example.com");
@@ -410,6 +461,20 @@ TEST_F(TestIntegration, test_remove_host_from_cluster) {
     ASSERT_THAT(resultlist, ElementsAreArray({
                 "host1.example.com",
                 }));
+
+    ASSERT_NO_THROW(result = range->expand("", "host1.example.com"));
+    ASSERT_NO_THROW(result = range->expand("testenv2", "host1.example.com"));
+    req = range->remove_host_from_cluster("testenv2", "secondcluster2_2_2", "host1.example.com");
+    EXPECT_TRUE(req);
+
+    ASSERT_NO_THROW(result = range->expand("", "host1.example.com"));
+    ASSERT_NO_THROW(result = range->expand("testenv2", "host1.example.com"));
+
+    req = range->add_host_to_cluster("testenv2", "secondcluster2_2_2", "host1.example.com");
+    EXPECT_TRUE(req);
+    ASSERT_NO_THROW(result = range->expand("", "host1.example.com"));
+    ASSERT_NO_THROW(result = range->expand("testenv2", "host1.example.com"));
+
 }
 
 //##############################################################################
@@ -451,7 +516,7 @@ TEST_F(TestIntegration, test_remove_host) {
     EXPECT_FALSE(req);
 
     result = range->expand("testenv2", "host1.example.com");
-    //ASSERT_NO_THROW(result = range->expand("testenv2", "host1.example.com"));
+    ASSERT_NO_THROW(result = range->expand("testenv2", "host1.example.com"));
     req = range->remove_host("testenv2", "host1.example.com");
     EXPECT_TRUE(req);
 
@@ -470,14 +535,11 @@ TEST_F(TestIntegration, test_remove_host) {
 
 
 
-
 //##############################################################################
 //##############################################################################
 int
 main(int argc, char **argv)
 {
-    unlink("test_integration.debug.log");
-    ::range::initialize_logger("test_integration.debug.log", 99);
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     ::testing::InitGoogleTest(&argc, argv);
     int rval = RUN_ALL_TESTS();

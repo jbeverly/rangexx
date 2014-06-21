@@ -487,23 +487,23 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster_existing_same_env) {
         .WillOnce(Return(bazcluster));
 
     EXPECT_CALL(*fooenv, type())
-        .Times(1)
+        .Times(0)
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::ENVIRONMENT));
 
     EXPECT_CALL(*fooenv, name())
-        .Times(3)
+        .Times(0)
         .WillRepeatedly(Return("foobar"));
 
     EXPECT_CALL(*fooparent1, type())
-        .Times(1)
+        .Times(0)
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::CLUSTER));
 
     EXPECT_CALL(*fooparent1, name())
-        .Times(2)
+        .Times(0)
         .WillRepeatedly(Return("foobar#parent1"));
 
     EXPECT_CALL(*fooparent1, reverse_edges())
-        .Times(1)
+        .Times(0)
         .WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({fooenv})));
 
     EXPECT_CALL(*foocluster1, type())
@@ -511,11 +511,11 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster_existing_same_env) {
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::CLUSTER));
 
     EXPECT_CALL(*foocluster1, name())
-        .Times(2)
+        .Times(1)
         .WillRepeatedly(Return("foobar#cluster1"));
 
     EXPECT_CALL(*foocluster1, reverse_edges())
-        .Times(1)
+        .Times(0)
         .WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({fooparent1})));
 
     EXPECT_CALL(*host, reverse_edges())
@@ -523,11 +523,11 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster_existing_same_env) {
         .WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({foocluster1})));
 
     EXPECT_CALL(*host, type())
-        .Times(2)
+        .Times(1)
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::HOST));
 
     EXPECT_CALL(*host, name())
-        .Times(2)
+        .Times(0)
         .WillRepeatedly(Return("somehost.example.com"));
 
     EXPECT_CALL(*primary, get_node("somehost.example.com"))
@@ -563,23 +563,23 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster_existing_diff_env) {
         .WillOnce(Return(bazcluster));
 
     EXPECT_CALL(*fooenv, type())
-        .Times(1)
+        .Times(0)
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::ENVIRONMENT));
 
     EXPECT_CALL(*fooenv, name())
-        .Times(3)
+        .Times(0)
         .WillRepeatedly(Return("other"));
 
     EXPECT_CALL(*fooparent1, type())
-        .Times(1)
+        .Times(0)
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::CLUSTER));
 
     EXPECT_CALL(*fooparent1, name())
-        .Times(2)
+        .Times(0)
         .WillRepeatedly(Return("other#parent1"));
 
     EXPECT_CALL(*fooparent1, reverse_edges())
-        .Times(1)
+        .Times(0)
         .WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({fooenv})));
 
     EXPECT_CALL(*foocluster1, type())
@@ -587,11 +587,11 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster_existing_diff_env) {
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::CLUSTER));
 
     EXPECT_CALL(*foocluster1, name())
-        .Times(2)
+        .Times(1)
         .WillRepeatedly(Return("other#cluster1"));
 
     EXPECT_CALL(*foocluster1, reverse_edges())
-        .Times(1)
+        .Times(0)
         .WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({fooparent1})));
 
     EXPECT_CALL(*host, reverse_edges())
@@ -599,11 +599,11 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster_existing_diff_env) {
         .WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({foocluster1})));
 
     EXPECT_CALL(*host, type())
-        .Times(2)
+        .Times(1)
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::HOST));
 
     EXPECT_CALL(*host, name())
-        .Times(2)
+        .Times(0)
         .WillRepeatedly(Return("somehost.example.com"));
 
     EXPECT_CALL(*primary, get_node("somehost.example.com"))

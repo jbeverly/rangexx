@@ -54,7 +54,7 @@ template <typename Type>
 static inline void
 add_unique_new_version(Type item, uint64_t new_version)
 {
-    auto log = range::Emitter("ProtobufNode");
+    range::Emitter log { "ProtobufNode" };
     BOOST_LOG_FUNCTION();
     for(int vv_idx = item->versions_size() - 1; vv_idx >= 0; --vv_idx) {
         if (new_version == item->versions(vv_idx)) {
@@ -73,7 +73,7 @@ template <typename Type>
 static inline void
 update_unique_new_version(Type item, uint64_t cmp_version, uint64_t new_version)
 {
-    auto log = range::Emitter("ProtobufNode");
+    range::Emitter log { "ProtobufNode" };
     BOOST_LOG_FUNCTION();
     for(int vv_idx = item->versions_size() - 1; vv_idx >= 0; --vv_idx) {
         if (new_version == item->versions(vv_idx)) {
@@ -378,8 +378,8 @@ ProtobufNode::add_edge(const NodeInfo_Edges &direction,
     uint64_t new_version = cmp_version + 1;
 
     int edge_idx;
+    bool found = false;
     for (edge_idx = 0; edge_idx < direction.edges_size(); ++edge_idx) {
-        bool found = false;
         if (other->name() == direction.edges(edge_idx).id()) {
             auto edge = direction.edges(edge_idx);
             for (int vv_idx = edge.versions_size() - 1; vv_idx >= 0; --vv_idx) {
@@ -398,17 +398,39 @@ ProtobufNode::add_edge(const NodeInfo_Edges &direction,
     }
 
     NodeInfo_Adjacency * edge;
-    if(edge_idx == direction.edges_size()) {
+    if(!found) { 
         edge = mutable_direction->add_edges();
         edge->set_id(other->name());
     } else {
-        edge = mutable_direction->mutable_edges(edge_idx);
+        // It is important that we be able to remove a node from the list
+        // and append it to the end of the list. Sadly, protobuf's Clear() method
+        // doesn't seem to remove the element, but instead just leaves it unitialized
+        // So we have to construct a new list of edges:
+        std::vector<NodeInfo_Adjacency> prior_edges;                            // To accomplish this, we'll create a temporary list of edges
+        for (int new_edge_idx = 0;                                              
+                new_edge_idx < direction.edges_size(); ++new_edge_idx) {        
+            prior_edges.push_back(                                              
+                    *(mutable_direction->mutable_edges(new_edge_idx)));         // and save off every edge in that new list 
+        }
+        mutable_direction->clear_edges();                                       // remove all edges from the protobuf
+        for (uint32_t new_edge_idx = 0;
+                new_edge_idx < prior_edges.size(); ++new_edge_idx) {
+            if(new_edge_idx == static_cast<uint32_t>(edge_idx)) {               // and add back all the edges, skipping over this edge
+                continue;
+            }
+            edge = mutable_direction->add_edges();
+            *edge = prior_edges[new_edge_idx];
+        }
+        edge = mutable_direction->add_edges();                                  // finally, we'll add this edge to the tail of the list of edges
+        *edge = prior_edges[edge_idx];                                          // NOTE: this preserves the history of the edges, 
+                                                                                // but does not preserve the history of their order; might
+                                                                                // have to rethink that at some point; if you chase the history
+                                                                                // all the way back you can intuit the order at any point, so 
+                                                                                // I'm hopeful it turns out to be sufficient as is.
     }
     edge->add_versions(new_version);
-
     update_all_edge_versions(info, cmp_version, new_version);
     update_tag_versions(info, cmp_version, new_version);
-
     info.set_list_version(new_version);
 
     if(!write_record(name_, info, instance_)) {
@@ -482,15 +504,14 @@ ProtobufNode::remove_edge( const NodeInfo_Edges &direction,
     uint64_t cmp_version = info.list_version();
     uint64_t new_version = cmp_version + 1;
 
+    bool found = false;
     for (int vv_idx = edge.versions_size() - 1; vv_idx >= 0; --vv_idx) {
-        if (cmp_version == edge.versions(vv_idx)) { break; }
+        if (cmp_version == edge.versions(vv_idx)) { found = true; break; }
         if (cmp_version > edge.versions(vv_idx)) { return false; }
     }
 
-    if(log.loglevel() > range::Emitter::logseverity::debug8) {
-        for (int n = 0; n < edge.versions_size(); ++n) {
-            LOG(debug9, "before version") << edge.versions(n);
-        }
+    if (!found) {
+        return false;
     }
 
     int start_versions = edge.versions_size(); 
@@ -498,17 +519,11 @@ ProtobufNode::remove_edge( const NodeInfo_Edges &direction,
     update_tag_versions(info, cmp_version, new_version);
     info.set_list_version(new_version);
 
-    
-    if(log.loglevel() > range::Emitter::logseverity::debug8) {
-        for (int n = 0; n < edge.versions_size(); ++n) {
-            LOG(debug9, "after version") << edge.versions(n);
-        }
-    }
+    assert(start_versions == edge.versions_size() - 1);
 
-    if(start_versions < edge.versions_size()) {                                 // This edge may not have been in this version
-        auto mutable_edge = mutable_direction->mutable_edges(edge_idx);
-        mutable_edge->mutable_versions()->RemoveLast();                         // We can safely assume that the last element is new_version, because we
-    }                                                                           // just added it in update_all_edge_versions
+    auto mutable_edge = mutable_direction->mutable_edges(edge_idx);
+    mutable_edge->mutable_versions()->RemoveLast();                             // We can safely assume that the last element is new_version, because we
+                                                                                // just added it in update_all_edge_versions
 
     if(!write_record(name_, info, instance_)) {
         LOG(error, "remove_edge_failed") << name_ << " to " << other->name();
@@ -714,7 +729,7 @@ ProtobufNode::is_valid() const
 void
 ProtobufNode::add_graph_version(uint64_t version)
 {
-    RANGE_LOG_TIMED_FUNCTION() << version;
+    RANGE_LOG_TIMED_FUNCTION() << name_ << ": " << version;
 
     auto txn = instance_->start_txn();
     auto lock = info_lock(true);

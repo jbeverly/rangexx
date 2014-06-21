@@ -45,7 +45,7 @@ class MessageQueue {
         //######################################################################
         //######################################################################
         MessageQueue(boost::shared_ptr<mqImpl> mq, uint32_t send_timeout=100, uint32_t recv_timeout=100)
-            : q_(mq), send_timeout_(send_timeout), recv_timeout_(recv_timeout) 
+            : log("MessageQueue"), q_(mq), send_timeout_(send_timeout), recv_timeout_(recv_timeout) 
         {
         } 
 
@@ -54,7 +54,7 @@ class MessageQueue {
         std::string
         receive() const
         {
-            BOOST_LOG_FUNCTION();
+            RANGE_LOG_FUNCTION();
 
             char buf[bufsize] = {0};
             std::string msg;
@@ -93,7 +93,7 @@ class MessageQueue {
         bool
         send(const std::string& msg) const
         {
-            BOOST_LOG_FUNCTION();
+            RANGE_LOG_FUNCTION();
             char buf[bufsize] = {0};
             const char * s_ptr = msg.c_str();
             uint32_t bytes = msg.size();
@@ -138,6 +138,7 @@ class MessageQueue {
     //##########################################################################
     //##########################################################################
     private:
+        range::Emitter log;
         boost::shared_ptr<mqImpl> q_;
         uint32_t send_timeout_;
         uint32_t recv_timeout_;
@@ -157,7 +158,8 @@ const uint32_t MessageQueue<mqImpl>::msg_ordinal = 0xAAAAAAAA;
 //##############################################################################
 template <typename T = ipc::message_queue>
 boost::shared_ptr<T> CreateMQ(std::string name, size_t qlen=512) {
-    BOOST_LOG_FUNCTION();
+    range::Emitter log {"CreateMQ"};
+    RANGE_LOG_FUNCTION();
     return boost::make_shared<T>( ipc::open_or_create, name.c_str(), qlen,
                     MessageQueue<T>::bufsize);
 }
