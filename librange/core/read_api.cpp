@@ -51,6 +51,10 @@ RangeAPI_v1::graphdb(const std::string &name, uint64_t version) const
     BOOST_LOG_FUNCTION();
     auto graphdb = cfg_->graph_factory()->createGraphdb(name,
                     cfg_->db_backend(), cfg_->node_factory(), version);
+    if (version != static_cast<uint64_t>(-1)) {
+        cfg_->db_backend()->set_wanted_version(version);
+        graphdb->set_wanted_version(cfg_->db_backend()->get_graph_wanted_version(name));
+    }
     return graphdb;
 }
 
@@ -480,7 +484,7 @@ RangeAPI_v1::expand(const std::string &env_name, const std::string &node_name,
         << node_name << " version: " << version << " depth: " << depth;
 
     const auto primary = graphdb("primary", version);
-    const auto dependency = graphdb("dependency", -1);                          // FIXME: I don't have version coherence for graphs; will treat dependency graph as unversioned for now
+    const auto dependency = graphdb("dependency", version);                          
     auto n = get_node(primary, env_name, node_name);
 
     if(!n) {
@@ -849,7 +853,7 @@ RangeAPI_v1::environment_topological_sort(const std::string &env_name,
         << version;
 
     const auto primary = graphdb("primary", version);
-    const auto dependency = graphdb("dependency", -1);                          // FIXME: I don't have version coherence for graphs; will treat dependency graph as unversioned for now
+    const auto dependency = graphdb("dependency", version);                          
 
     std::vector<graph::NodeIface::node_t> dependency_nodes;
     auto n = primary->get_node(env_name);
