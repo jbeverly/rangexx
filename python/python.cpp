@@ -393,6 +393,24 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(overloads_find_orphaned_nodes, find_orpha
 
 //##############################################################################
 // Exception translation functor
+// So, C++ exceptions can be translated into python exceptions, except those
+// translated exception classes do not derive from Exception, and cause strange
+// errors when used in try/except blocks. Furthermore, you cannot catch a base
+// class of your exception hierarchy, as it will cause a SystemError
+//
+// So, this uses the python interpreter to create native python exception
+// classes in the namespace of librange_python with appropriate base-classes
+// and such. These are real python classes, and so they behave exactly as though
+// they would in python. When an exception occurs, a new instance of the 
+// native python exception is constructed with the same message that the C++
+// exception contained. That instance of the native-python class is what is 
+// set as the PyErr_SetObject. The net result is that you can do
+//  try:
+//      foo
+//  except Exception as e:
+//      print str(e) 
+// and it behaves as it should. You can also except RangeError, and that will
+// catch this entire hierarchy of exceptions.
 //##############################################################################
 class ExceptionTranslator {
     public:
