@@ -73,6 +73,12 @@ AS_VAR_SET([LDFLAGS], ["$LDFLAGS $BOOST_REGEX_LIB"])
 AS_VAR_SET([LDFLAGS], ["$tmp_boost_LDFLAGS"])
 AS_VAR_SET([CPPFLAGS], ["$tmp_boost_CPPFLAGS"])
 
+gl_COMMON
+gl_PARSE_DATETIME
+gl_TM_GMTOFF
+gl_FUNC_GNU_STRFTIME
+gl_EXTERN_INLINE
+
 
 AC_CONFIG_FILES([Makefile
                  librange/Makefile

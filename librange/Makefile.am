@@ -17,7 +17,7 @@ AM_LIBADD   = @BOOST_LOG_SETUP_LIB@ @BOOST_SYSTEM_LIB@ @BOOST_DATE_TIME_LIB@ @BO
 #AM_LIBADD   = @BOOST_LOG_SETUP_LIB@ @BOOST_SYSTEM_LIB@ @BOOST_DATE_TIME_LIB@ @BOOST_THREAD_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_LOG_LIB@ @BOOST_REGEX_LIB@ @DB_CXX_LIBS@     @DB_STL_LIBS@ @PROTOBUF_LIBS@     $(AM_LIBADD_G)
 
 lib_LTLIBRARIES    = librange.la
-noinst_LTLIBRARIES = librange_db.la librange_graph.la librange_compiler.la librange_util.la librange_core.la
+noinst_LTLIBRARIES = librange_db.la librange_graph.la librange_compiler.la librange_util.la librange_core.la librange_gnu.la
 
 core/store.pb.h: core/store.proto
 	    $(PROTOC) -I=core/ --cpp_out=core/ core/store.proto && mv core/store.pb.cc core/store.pb.cpp
@@ -44,6 +44,28 @@ BUILT_SOURCES = db/nodeinfo.pb.h \
 				db/graph_list.pb.h \
 				db/graph_list.pb.cpp \
 				core/store.pb.cpp
+################################################################################
+
+noinst_librange_gnu_la_includedir = $(includedir)/rangexx
+noinst_librange_gnu_la_include_HEADERS = ./gnu/parse-datetime.h \
+										 ./gnu/intprops.h \
+										 ./gnu/verify.h \
+										 ./gnu/timespec.h \
+										 ./gnu/c-ctype.h \
+										 ./gnu/xalloc.h \
+										 ./gnu/xalloc-oversized.h \
+										 ./gnu/exitfail.h \
+										 ./gnu/gettext.h
+
+librange_gnu_la_SOURCES =  	./gnu/timespec.c \
+							./gnu/parse-datetime.c \
+							./gnu/c-ctype.c \
+							./gnu/xalloc-die.c \
+							./gnu/exitfail.c \
+							./gnu/xmalloc.c \
+							./gnu/gettime.c
+
+
 
 ################################################################################
 
@@ -155,7 +177,7 @@ librange_core_la_LIBADD = $(AM_LIBADD)
 
 librange_la_SOURCES = 
 librange_la_LDFLAGS = -version-info $(RANGEXX_LIBRARY_VERSION)
-librange_la_LIBADD = librange_graph.la librange_db.la librange_compiler.la librange_util.la librange_core.la
+librange_la_LIBADD = librange_graph.la librange_db.la librange_compiler.la librange_util.la librange_core.la librange_gnu.la
 
 #nobase_librange_la_include_HEADERS = 
 
