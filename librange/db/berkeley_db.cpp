@@ -415,11 +415,14 @@ BerkeleyDB::get_changelist()
     range_changelist_t changelist;
     for (int c_idx = 0; c_idx < changes.change_size(); ++c_idx) {
         range_change_t c;
+        std::time_t t;
         for (int i_idx = 0; i_idx < changes.change(c_idx).items_size(); ++i_idx) {
             auto item = changes.change(c_idx).items(i_idx);
             c[item.key()] = item.version();
+            auto ts = changes.change(c_idx).timestamp();
+            t = ts.seconds();
         }
-        changelist.push_back(c);
+        changelist.push_back(std::make_tuple(t, c_idx, c));
     }
 
     return changelist;
@@ -482,13 +485,21 @@ BerkeleyDB::add_new_range_version()
         changes.ParseFromString(range_changelist_buf);
     }
 
-    auto c = changes.add_change();
+    ChangeList_Change *c = changes.add_change();
 
     for(auto &verinfo : vermap) {
         auto item = c->add_items();
         item->set_key(verinfo.first);
         item->set_version(verinfo.second);
     }
+
+    struct timeval cur_time;
+    gettimeofday(&cur_time, NULL);
+
+    auto ts = c->mutable_timestamp();
+    ts->set_seconds(cur_time.tv_sec);
+    ts->set_msec(cur_time.tv_usec / 1000);
+    
     changes.set_current_version(changes.current_version() + 1);
     db_put(lock.txn(), *graph_info_map, "range_changelist", changes.SerializeAsString());
 }

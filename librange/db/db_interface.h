@@ -23,6 +23,7 @@
 #include <list>
 #include <boost/shared_ptr.hpp>
 #include <memory>
+#include <ctime>
 
 #include "../graph/node_interface.h"
 #include "../graph/graph_interface.h"
@@ -171,7 +172,7 @@ class BackendInterface {
     //##########################################################################
     public:
         typedef std::map<std::string, uint64_t> range_change_t;
-        typedef std::vector<range_change_t> range_changelist_t;
+        typedef std::vector<std::tuple<std::time_t, uint64_t, range_change_t>> range_changelist_t;
         typedef boost::shared_ptr<GraphInstanceInterface> graph_instance_t;
 
         //######################################################################

@@ -45,6 +45,13 @@ class APIWrap
         }
 
         //######################################################################
+        object get_range_version(const std::string &timespec) const
+        {
+            RangeStruct top = api_->get_range_version(timespec);
+            return boost::apply_visitor(PythonVisitor(), top);
+        }
+
+        //######################################################################
         object all_clusters(const std::string &env_name, uint64_t version=-1) const
         {
             RangeStruct top = api_->all_clusters(env_name, version);
@@ -385,6 +392,7 @@ BOOST_PYTHON_MODULE(librange_python) {
     range::initialize_logger("/tmp/testlog",99);
 
     class_<APIWrap>("Range", init<std::string>())
+        .def("get_range_version", &APIWrap::get_range_version)
         .def("all_clusters", &APIWrap::all_clusters, overloads_all_clusters())
         .def("all_environments", &APIWrap::all_environments, overloads_all_environments())
         .def("all_hosts", &APIWrap::all_hosts, overloads_all_hosts())

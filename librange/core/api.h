@@ -74,6 +74,24 @@ class RangeAPI_v1
         // READ-ONLY API
         //######################################################################
         //######################################################################
+
+        
+        //######################################################################
+        /// Get the version in use at the time specified. Uses GNU parse-datetime
+        /// format, so any string you could pass to gnu 'date' works for the 
+        /// date specification. This includes, but is not limited to:
+        ///     2006-08-07 12:34:56-06:00
+        ///     Thu Mar  3 23:05:25 2005
+        ///     now - 5 days
+        ///     now - 1 week
+        ///     yesterday
+        ///  etc. 
+        /// @param[in] timespec Time specification you wish to determine the
+        ///             range version at
+        /// @return RangeNumber of the range version that was active at the
+        ///         specified time, or RangeNull if there was no range version
+        ///         at the time specified.
+        virtual RangeStruct get_range_version(const std::string &timespec) const;
         
         //######################################################################
         /// Get a list of all clusters connected to an environment

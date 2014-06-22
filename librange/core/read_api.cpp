@@ -40,6 +40,9 @@
 
 #include "../compiler/expanding_visitor.h"
 #include "../compiler/RangeParser_v1.h"
+extern "C" {
+#include "../gnu/parse-datetime.h"
+}
 
 namespace range {
 
@@ -175,6 +178,31 @@ RangeAPI_v1::get_node(boost::shared_ptr<graph::GraphInterface> graph,
     return n;
 }
 
+//##############################################################################
+//##############################################################################
+RangeStruct
+RangeAPI_v1::get_range_version(const std::string &timespec) const
+{
+    struct timespec tm;
+
+    if(parse_datetime(&tm, timespec.c_str(), NULL)) {
+        std::time_t cmp_time = tm.tv_sec;
+        uint64_t found_version = cfg_->db_backend()->range_version();
+        auto changelist = cfg_->db_backend()->get_changelist();
+        for (auto c : changelist) {
+            std::time_t change_time;
+            uint64_t ver;
+            ::range::db::BackendInterface::range_change_t changes;
+            std::tie(change_time, ver, changes) = c;
+
+            if (cmp_time > change_time) {
+                return RangeNumber(found_version);
+            }
+            found_version = ver;
+        }
+    }
+    return RangeNull();
+}
 
 //##############################################################################
 //##############################################################################
