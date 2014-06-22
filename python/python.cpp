@@ -17,7 +17,11 @@
 
 
 #include <boost/python.hpp>                                                     // must be included first
+extern "C" {
+#include <Python.h>
+}
 
+#include <sstream>
 #include <mutex>
 
 #include <dbstl_exception.h>
@@ -387,6 +391,46 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(overloads_nearest_common_ancestor, neares
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(overloads_environment_topological_sort, environment_topological_sort, 1, 2);
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(overloads_find_orphaned_nodes, find_orphaned_nodes, 0, 1);
 
+//##############################################################################
+// Exception translation functor
+//##############################################################################
+class ExceptionTranslator {
+    public:
+        ExceptionTranslator(const std::string &exc_name, const std::string &base, object &origin) 
+            : exc_name_(exc_name), origin_(origin)
+        { 
+            std::stringstream s;
+            s << "class " << exc_name << "(" << base << "): pass\n\n";
+            std::cout << s.str() << std::endl;
+            object locals = import("librange_python").attr("__dict__");
+            object globals = import("__main__").attr("__dict__");
+            exec(s.str().c_str(), globals, locals);
+            object t = locals[exc_name];
+            type_ptr_ = t.ptr();
+        }
+
+        template <typename T>
+        void operator()(T const &e) const {
+            std::stringstream s;
+            s << "range_exception_instance = librange_python." << exc_name_ << "('" << e.what() << "')\n"; 
+            dict locals;
+            object globals = import("__main__").attr("__dict__");
+            object lrp = import("librange_python");
+            globals["librange_python"] = lrp;
+            exec(s.str().c_str(), globals, locals);
+            object exc_inst = locals["range_exception_instance"];
+            PyErr_SetObject(type_ptr_, exc_inst.ptr());
+        }
+    private:
+        std::string exc_name_;
+        object origin_;
+        PyObject * type_ptr_;
+};
+
+
+//##############################################################################
+// Module
+//##############################################################################
 BOOST_PYTHON_MODULE(librange_python) {
 
     range::initialize_logger("/tmp/testlog",99);
@@ -431,5 +475,34 @@ BOOST_PYTHON_MODULE(librange_python) {
         .def("add_node_ext_dependency", &APIWrap::add_node_ext_dependency)
         .def("remove_node_ext_dependency", &APIWrap::remove_node_ext_dependency)
         ;
+
+
+    class_<::range::Exception> RangeError ("RangeError", init<std::string, std::string>());
+    RangeError.def("__str__", &::range::Exception::what);
+    register_exception_translator<::range::Exception>(ExceptionTranslator("RangeError", "RuntimeError", RangeError));
+
+    class_<::range::graph::NodeNotFoundException, bases<::range::Exception>> NodeNotFoundError ("NodeNotFoundError", init<std::string, std::string>());
+    NodeNotFoundError.def("__str__", &::range::graph::NodeNotFoundException::what);
+    register_exception_translator<::range::graph::NodeNotFoundException>(ExceptionTranslator("NodeNotFoundException", "RangeError", NodeNotFoundError));
+
+    class_<::range::graph::IncorrectNodeTypeException, bases<::range::Exception>> IncorrectNodeTypeError ("IncorrectNodeTypeError", init<std::string, std::string>());
+    IncorrectNodeTypeError.def("__str__", &::range::graph::IncorrectNodeTypeException::what);
+    register_exception_translator<::range::graph::IncorrectNodeTypeException>(ExceptionTranslator("IncorrectNodeTypeError", "RangeError", IncorrectNodeTypeError));
+
+    class_<::range::graph::GraphCycleException, bases<::range::Exception>> GraphCycleError ("GraphCycleError", init<std::string, std::string>());
+    GraphCycleError.def("__str__", &::range::graph::GraphCycleException::what);
+    register_exception_translator<::range::graph::GraphCycleException>(ExceptionTranslator("GraphCycleError", "RangeError", GraphCycleError));
+
+    class_<::range::graph::KeyNotFoundException, bases<::range::Exception>> KeyNotFoundError ("KeyNotFoundError", init<std::string, std::string>());
+    KeyNotFoundError.def("__str__", &::range::graph::KeyNotFoundException::what);
+    register_exception_translator<::range::graph::KeyNotFoundException>(ExceptionTranslator("KeyNotFoundError", "RangeError", KeyNotFoundError));
+
+    class_<::range::InvalidTimespecException, bases<::range::Exception>> InvalidTimespecError ("InvalidTimespecError", init<std::string, std::string>());
+    InvalidTimespecError.def("__str__", &::range::InvalidTimespecException::what);
+    register_exception_translator<::range::InvalidTimespecException>(ExceptionTranslator("InvalidTimespecError", "RangeError", InvalidTimespecError));
+
+    class_<::range::compiler::InvalidRangeExpression, bases<::range::Exception>> InvalidRangeExpressionError ("InvalidRangeExpressionError", init<std::string, std::string>());
+    InvalidRangeExpressionError.def("__str__", &::range::compiler::InvalidRangeExpression::what);
+    register_exception_translator<::range::compiler::InvalidRangeExpression>(ExceptionTranslator("InvalidRangeExpressionError", "RangeError", InvalidRangeExpressionError));
 }
 

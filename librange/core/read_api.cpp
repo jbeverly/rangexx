@@ -183,10 +183,12 @@ RangeAPI_v1::get_node(boost::shared_ptr<graph::GraphInterface> graph,
 RangeStruct
 RangeAPI_v1::get_range_version(const std::string &timespec) const
 {
+    RANGE_LOG_TIMED_FUNCTION() << "timespec: " << timespec;
     struct timespec tm;
 
     if(parse_datetime(&tm, timespec.c_str(), NULL)) {
         std::time_t cmp_time = tm.tv_sec;
+        LOG(debug7, "cmp_time") << cmp_time;
         uint64_t found_version = cfg_->db_backend()->range_version();
         auto changelist = cfg_->db_backend()->get_changelist();
         for (auto c : changelist) {
@@ -194,14 +196,16 @@ RangeAPI_v1::get_range_version(const std::string &timespec) const
             uint64_t ver;
             ::range::db::BackendInterface::range_change_t changes;
             std::tie(change_time, ver, changes) = c;
+            LOG(debug7, "change_info") << "change_time: " << change_time << " ver: " << ver;
 
             if (cmp_time > change_time) {
                 return RangeNumber(found_version);
             }
             found_version = ver;
         }
+        return RangeNull();
     }
-    return RangeNull();
+    THROW_STACK(InvalidTimespecException(timespec));
 }
 
 //##############################################################################
