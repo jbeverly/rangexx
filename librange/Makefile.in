@@ -86,9 +86,11 @@ DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(nobase_librange_core_la_include_HEADERS) \
 	$(nobase_librange_db_la_include_HEADERS) \
 	$(nobase_librange_graph_la_include_HEADERS) \
-	$(nobase_librange_util_la_include_HEADERS)
+	$(nobase_librange_util_la_include_HEADERS) \
+	$(noinst_librange_gnu_la_include_HEADERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_boost_base.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/00gnulib.m4 \
+	$(top_srcdir)/m4/ax_boost_base.m4 \
 	$(top_srcdir)/m4/ax_boost_date_time.m4 \
 	$(top_srcdir)/m4/ax_boost_filesystem.m4 \
 	$(top_srcdir)/m4/ax_boost_log.m4 \
@@ -99,12 +101,17 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_boost_base.m4 \
 	$(top_srcdir)/m4/ax_boost_thread.m4 \
 	$(top_srcdir)/m4/ax_check_protoc.m4 \
 	$(top_srcdir)/m4/ax_cxx_compile_stdcxx_11.m4 \
-	$(top_srcdir)/m4/ax_python_devel.m4 \
-	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
-	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/m4_helpers.m4 \
-	$(top_srcdir)/m4/pkg.m4 $(top_srcdir)/m4/with_lib.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/ax_python_devel.m4 $(top_srcdir)/m4/bison.m4 \
+	$(top_srcdir)/m4/clock_time.m4 $(top_srcdir)/m4/extensions.m4 \
+	$(top_srcdir)/m4/extern-inline.m4 \
+	$(top_srcdir)/m4/gnulib-common.m4 $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/m4/m4_helpers.m4 \
+	$(top_srcdir)/m4/parse-datetime.m4 $(top_srcdir)/m4/pkg.m4 \
+	$(top_srcdir)/m4/stdbool.m4 $(top_srcdir)/m4/strftime.m4 \
+	$(top_srcdir)/m4/timespec.m4 $(top_srcdir)/m4/tm_gmtoff.m4 \
+	$(top_srcdir)/m4/with_lib.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -143,10 +150,12 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(librange_core_la_includedir)" \
 	"$(DESTDIR)$(librange_db_la_includedir)" \
 	"$(DESTDIR)$(librange_graph_la_includedir)" \
-	"$(DESTDIR)$(librange_util_la_includedir)"
+	"$(DESTDIR)$(librange_util_la_includedir)" \
+	"$(DESTDIR)$(noinst_librange_gnu_la_includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 librange_la_DEPENDENCIES = librange_graph.la librange_db.la \
-	librange_compiler.la librange_util.la librange_core.la
+	librange_compiler.la librange_util.la librange_core.la \
+	librange_gnu.la
 am_librange_la_OBJECTS =
 librange_la_OBJECTS = $(am_librange_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -175,6 +184,11 @@ am_librange_db_la_OBJECTS = db/pbuff_node.lo db/nodeinfo.pb.lo \
 	db/berkeley_db_lock.lo db/berkeley_db_txn.lo db/berkeley_db.lo \
 	db/graph_list.pb.lo db/changelist.pb.lo
 librange_db_la_OBJECTS = $(am_librange_db_la_OBJECTS)
+librange_gnu_la_LIBADD =
+am_librange_gnu_la_OBJECTS = ./gnu/timespec.lo ./gnu/parse-datetime.lo \
+	./gnu/c-ctype.lo ./gnu/xalloc-die.lo ./gnu/exitfail.lo \
+	./gnu/xmalloc.lo ./gnu/gettime.lo
+librange_gnu_la_OBJECTS = $(am_librange_gnu_la_OBJECTS)
 librange_graph_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_librange_graph_la_OBJECTS = graph/graphdb.lo graph/graph_iter.lo \
 	graph/node_interface.lo
@@ -198,24 +212,6 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
-CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-LTCXXCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) \
-	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
-	$(AM_CXXFLAGS) $(CXXFLAGS)
-AM_V_CXX = $(am__v_CXX_@AM_V@)
-am__v_CXX_ = $(am__v_CXX_@AM_DEFAULT_V@)
-am__v_CXX_0 = @echo "  CXX     " $@;
-am__v_CXX_1 = 
-CXXLD = $(CXX)
-CXXLINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
-	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
-am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
-am__v_CXXLD_0 = @echo "  CXXLD   " $@;
-am__v_CXXLD_1 = 
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -234,12 +230,32 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CXXFLAGS) $(CXXFLAGS)
+AM_V_CXX = $(am__v_CXX_@AM_V@)
+am__v_CXX_ = $(am__v_CXX_@AM_DEFAULT_V@)
+am__v_CXX_0 = @echo "  CXX     " $@;
+am__v_CXX_1 = 
+CXXLD = $(CXX)
+CXXLINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
+am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
+am__v_CXXLD_0 = @echo "  CXXLD   " $@;
+am__v_CXXLD_1 = 
 SOURCES = $(librange_la_SOURCES) $(librange_compiler_la_SOURCES) \
 	$(librange_core_la_SOURCES) $(librange_db_la_SOURCES) \
-	$(librange_graph_la_SOURCES) $(librange_util_la_SOURCES)
+	$(librange_gnu_la_SOURCES) $(librange_graph_la_SOURCES) \
+	$(librange_util_la_SOURCES)
 DIST_SOURCES = $(librange_la_SOURCES) $(librange_compiler_la_SOURCES) \
 	$(librange_core_la_SOURCES) $(librange_db_la_SOURCES) \
-	$(librange_graph_la_SOURCES) $(librange_util_la_SOURCES)
+	$(librange_gnu_la_SOURCES) $(librange_graph_la_SOURCES) \
+	$(librange_util_la_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -257,7 +273,8 @@ HEADERS = $(nobase_librange_compiler_la_include_HEADERS) \
 	$(nobase_librange_core_la_include_HEADERS) \
 	$(nobase_librange_db_la_include_HEADERS) \
 	$(nobase_librange_graph_la_include_HEADERS) \
-	$(nobase_librange_util_la_include_HEADERS)
+	$(nobase_librange_util_la_include_HEADERS) \
+	$(noinst_librange_gnu_la_include_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 am__recursive_targets = \
@@ -364,6 +381,7 @@ GTEST_LDFLAGS = @GTEST_LDFLAGS@
 GTEST_LD_LIBRARY_PATH = @GTEST_LD_LIBRARY_PATH@
 GTEST_LIBS = @GTEST_LIBS@
 HAVE_CXX11 = @HAVE_CXX11@
+HAVE__BOOL = @HAVE__BOOL@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -374,6 +392,7 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIB_CLOCK_GETTIME = @LIB_CLOCK_GETTIME@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
@@ -411,8 +430,11 @@ RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+STDBOOL_H = @STDBOOL_H@
 STRIP = @STRIP@
 VERSION = @VERSION@
+YACC = @YACC@
+YFLAGS = @YFLAGS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -483,12 +505,32 @@ AM_LIBADD = @BOOST_LOG_SETUP_LIB@ @BOOST_SYSTEM_LIB@ @BOOST_DATE_TIME_LIB@ @BOOS
 #AM_LDFLAGS  = @PYTHON_LDFLAGS@ -l@BOOST_PYTHON_LIB@ @BOOST_LDFLAGS@ @DB_CXX_LDFLAGS@  @DB_STL_LDFLAGS@ @PROTOBUF_LDFLAGS@  $(AM_LDFLAGS_G)
 #AM_LIBADD   = @BOOST_LOG_SETUP_LIB@ @BOOST_SYSTEM_LIB@ @BOOST_DATE_TIME_LIB@ @BOOST_THREAD_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_LOG_LIB@ @BOOST_REGEX_LIB@ @DB_CXX_LIBS@     @DB_STL_LIBS@ @PROTOBUF_LIBS@     $(AM_LIBADD_G)
 lib_LTLIBRARIES = librange.la
-noinst_LTLIBRARIES = librange_db.la librange_graph.la librange_compiler.la librange_util.la librange_core.la
+noinst_LTLIBRARIES = librange_db.la librange_graph.la librange_compiler.la librange_util.la librange_core.la librange_gnu.la
 BUILT_SOURCES = db/nodeinfo.pb.h \
 				db/nodeinfo.pb.cpp \
 				db/graph_list.pb.h \
 				db/graph_list.pb.cpp \
 				core/store.pb.cpp
+
+################################################################################
+noinst_librange_gnu_la_includedir = $(includedir)/rangexx
+noinst_librange_gnu_la_include_HEADERS = ./gnu/parse-datetime.h \
+										 ./gnu/intprops.h \
+										 ./gnu/verify.h \
+										 ./gnu/timespec.h \
+										 ./gnu/c-ctype.h \
+										 ./gnu/xalloc.h \
+										 ./gnu/xalloc-oversized.h \
+										 ./gnu/exitfail.h \
+										 ./gnu/gettext.h
+
+librange_gnu_la_SOURCES = ./gnu/timespec.c \
+							./gnu/parse-datetime.c \
+							./gnu/c-ctype.c \
+							./gnu/xalloc-die.c \
+							./gnu/exitfail.c \
+							./gnu/xmalloc.c \
+							./gnu/gettime.c
 
 
 ################################################################################
@@ -594,12 +636,12 @@ librange_core_la_SOURCES = ./core/config_builder.cpp \
 librange_core_la_LIBADD = $(AM_LIBADD)
 librange_la_SOURCES = 
 librange_la_LDFLAGS = -version-info $(RANGEXX_LIBRARY_VERSION)
-librange_la_LIBADD = librange_graph.la librange_db.la librange_compiler.la librange_util.la librange_core.la
+librange_la_LIBADD = librange_graph.la librange_db.la librange_compiler.la librange_util.la librange_core.la librange_gnu.la
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .cpp .lo .o .obj
+.SUFFIXES: .c .cpp .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -739,6 +781,23 @@ db/changelist.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
 
 librange_db.la: $(librange_db_la_OBJECTS) $(librange_db_la_DEPENDENCIES) $(EXTRA_librange_db_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_db_la_OBJECTS) $(librange_db_la_LIBADD) $(LIBS)
+gnu/$(am__dirstamp):
+	@$(MKDIR_P) ./gnu
+	@: > gnu/$(am__dirstamp)
+gnu/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) ./gnu/$(DEPDIR)
+	@: > gnu/$(DEPDIR)/$(am__dirstamp)
+./gnu/timespec.lo: gnu/$(am__dirstamp) gnu/$(DEPDIR)/$(am__dirstamp)
+./gnu/parse-datetime.lo: gnu/$(am__dirstamp) \
+	gnu/$(DEPDIR)/$(am__dirstamp)
+./gnu/c-ctype.lo: gnu/$(am__dirstamp) gnu/$(DEPDIR)/$(am__dirstamp)
+./gnu/xalloc-die.lo: gnu/$(am__dirstamp) gnu/$(DEPDIR)/$(am__dirstamp)
+./gnu/exitfail.lo: gnu/$(am__dirstamp) gnu/$(DEPDIR)/$(am__dirstamp)
+./gnu/xmalloc.lo: gnu/$(am__dirstamp) gnu/$(DEPDIR)/$(am__dirstamp)
+./gnu/gettime.lo: gnu/$(am__dirstamp) gnu/$(DEPDIR)/$(am__dirstamp)
+
+librange_gnu.la: $(librange_gnu_la_OBJECTS) $(librange_gnu_la_DEPENDENCIES) $(EXTRA_librange_gnu_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK)  $(librange_gnu_la_OBJECTS) $(librange_gnu_la_LIBADD) $(LIBS)
 graph/$(am__dirstamp):
 	@$(MKDIR_P) graph
 	@: > graph/$(am__dirstamp)
@@ -771,6 +830,8 @@ mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f ./core/*.$(OBJEXT)
 	-rm -f ./core/*.lo
+	-rm -f ./gnu/*.$(OBJEXT)
+	-rm -f ./gnu/*.lo
 	-rm -f ./util/*.$(OBJEXT)
 	-rm -f ./util/*.lo
 	-rm -f compiler/*.$(OBJEXT)
@@ -793,6 +854,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/store.pb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/stored_message.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/write_api.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./gnu/$(DEPDIR)/c-ctype.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./gnu/$(DEPDIR)/exitfail.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./gnu/$(DEPDIR)/gettime.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./gnu/$(DEPDIR)/parse-datetime.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./gnu/$(DEPDIR)/timespec.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./gnu/$(DEPDIR)/xalloc-die.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./gnu/$(DEPDIR)/xmalloc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./util/$(DEPDIR)/demangle.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeParser_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeScanner_v1.Plo@am__quote@
@@ -810,6 +878,30 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@graph/$(DEPDIR)/graphdb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@graph/$(DEPDIR)/node_interface.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/crc32.Plo@am__quote@
+
+.c.o:
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ $<
+
+.c.obj:
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+.c.lo:
+@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
+@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -841,6 +933,7 @@ mostlyclean-libtool:
 clean-libtool:
 	-rm -rf .libs _libs
 	-rm -rf ./core/.libs ./core/_libs
+	-rm -rf ./gnu/.libs ./gnu/_libs
 	-rm -rf ./util/.libs ./util/_libs
 	-rm -rf compiler/.libs compiler/_libs
 	-rm -rf db/.libs db/_libs
@@ -966,6 +1059,27 @@ uninstall-nobase_librange_util_la_includeHEADERS:
 	@list='$(nobase_librange_util_la_include_HEADERS)'; test -n "$(librange_util_la_includedir)" || list=; \
 	$(am__nobase_strip_setup); files=`$(am__nobase_strip)`; \
 	dir='$(DESTDIR)$(librange_util_la_includedir)'; $(am__uninstall_files_from_dir)
+install-noinst_librange_gnu_la_includeHEADERS: $(noinst_librange_gnu_la_include_HEADERS)
+	@$(NORMAL_INSTALL)
+	@list='$(noinst_librange_gnu_la_include_HEADERS)'; test -n "$(noinst_librange_gnu_la_includedir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(noinst_librange_gnu_la_includedir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(noinst_librange_gnu_la_includedir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(noinst_librange_gnu_la_includedir)'"; \
+	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(noinst_librange_gnu_la_includedir)" || exit $$?; \
+	done
+
+uninstall-noinst_librange_gnu_la_includeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(noinst_librange_gnu_la_include_HEADERS)'; test -n "$(noinst_librange_gnu_la_includedir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(noinst_librange_gnu_la_includedir)'; $(am__uninstall_files_from_dir)
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run 'make' without going through this Makefile.
@@ -1127,7 +1241,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(librange_compiler_la_includedir)" "$(DESTDIR)$(librange_core_la_includedir)" "$(DESTDIR)$(librange_db_la_includedir)" "$(DESTDIR)$(librange_graph_la_includedir)" "$(DESTDIR)$(librange_util_la_includedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(librange_compiler_la_includedir)" "$(DESTDIR)$(librange_core_la_includedir)" "$(DESTDIR)$(librange_db_la_includedir)" "$(DESTDIR)$(librange_graph_la_includedir)" "$(DESTDIR)$(librange_util_la_includedir)" "$(DESTDIR)$(noinst_librange_gnu_la_includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -1163,6 +1277,8 @@ distclean-generic:
 	-rm -f core/$(am__dirstamp)
 	-rm -f db/$(DEPDIR)/$(am__dirstamp)
 	-rm -f db/$(am__dirstamp)
+	-rm -f gnu/$(DEPDIR)/$(am__dirstamp)
+	-rm -f gnu/$(am__dirstamp)
 	-rm -f graph/$(DEPDIR)/$(am__dirstamp)
 	-rm -f graph/$(am__dirstamp)
 	-rm -f util/$(DEPDIR)/$(am__dirstamp)
@@ -1178,7 +1294,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	clean-noinstLTLIBRARIES mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./core/$(DEPDIR) ./util/$(DEPDIR) compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
+	-rm -rf ./core/$(DEPDIR) ./gnu/$(DEPDIR) ./util/$(DEPDIR) compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1199,7 +1315,8 @@ install-data-am: install-nobase_librange_compiler_la_includeHEADERS \
 	install-nobase_librange_core_la_includeHEADERS \
 	install-nobase_librange_db_la_includeHEADERS \
 	install-nobase_librange_graph_la_includeHEADERS \
-	install-nobase_librange_util_la_includeHEADERS
+	install-nobase_librange_util_la_includeHEADERS \
+	install-noinst_librange_gnu_la_includeHEADERS
 
 install-dvi: install-dvi-recursive
 
@@ -1228,7 +1345,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./core/$(DEPDIR) ./util/$(DEPDIR) compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
+	-rm -rf ./core/$(DEPDIR) ./gnu/$(DEPDIR) ./util/$(DEPDIR) compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1250,7 +1367,8 @@ uninstall-am: uninstall-libLTLIBRARIES \
 	uninstall-nobase_librange_core_la_includeHEADERS \
 	uninstall-nobase_librange_db_la_includeHEADERS \
 	uninstall-nobase_librange_graph_la_includeHEADERS \
-	uninstall-nobase_librange_util_la_includeHEADERS
+	uninstall-nobase_librange_util_la_includeHEADERS \
+	uninstall-noinst_librange_gnu_la_includeHEADERS
 
 .MAKE: $(am__recursive_targets) all check install install-am \
 	install-strip
@@ -1268,7 +1386,8 @@ uninstall-am: uninstall-libLTLIBRARIES \
 	install-nobase_librange_core_la_includeHEADERS \
 	install-nobase_librange_db_la_includeHEADERS \
 	install-nobase_librange_graph_la_includeHEADERS \
-	install-nobase_librange_util_la_includeHEADERS install-pdf \
+	install-nobase_librange_util_la_includeHEADERS \
+	install-noinst_librange_gnu_la_includeHEADERS install-pdf \
 	install-pdf-am install-ps install-ps-am install-strip \
 	installcheck installcheck-am installdirs installdirs-am \
 	maintainer-clean maintainer-clean-generic mostlyclean \
@@ -1279,7 +1398,8 @@ uninstall-am: uninstall-libLTLIBRARIES \
 	uninstall-nobase_librange_core_la_includeHEADERS \
 	uninstall-nobase_librange_db_la_includeHEADERS \
 	uninstall-nobase_librange_graph_la_includeHEADERS \
-	uninstall-nobase_librange_util_la_includeHEADERS
+	uninstall-nobase_librange_util_la_includeHEADERS \
+	uninstall-noinst_librange_gnu_la_includeHEADERS
 
 
 core/store.pb.h: core/store.proto
