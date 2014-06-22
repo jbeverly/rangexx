@@ -399,25 +399,25 @@ class ExceptionTranslator {
         ExceptionTranslator(const std::string &exc_name, const std::string &base, object &origin) 
             : exc_name_(exc_name), origin_(origin)
         { 
-            std::stringstream s;
-            s << "class " << exc_name << "(" << base << "): pass\n\n";
-            std::cout << s.str() << std::endl;
+            std::string s { "class " + exc_name + "(" + base + "): pass\n" };
             object locals = import("librange_python").attr("__dict__");
-            object globals = import("__main__").attr("__dict__");
-            exec(s.str().c_str(), globals, locals);
+            object globals = import("librange_python").attr("__dict__");
+            object main = import("__main__");
+            globals["__builtins__"] = main.attr("__builtins__");
+            exec(s.c_str(), globals, locals);
             object t = locals[exc_name];
             type_ptr_ = t.ptr();
         }
 
         template <typename T>
         void operator()(T const &e) const {
-            std::stringstream s;
-            s << "range_exception_instance = librange_python." << exc_name_ << "('" << e.what() << "')\n"; 
-            dict locals;
-            object globals = import("__main__").attr("__dict__");
-            object lrp = import("librange_python");
+            std::string s { "range_exception_instance = librange_python." 
+                + exc_name_ + "('" + e.what() + "')\n" }; 
+            dict globals, locals;
+            object main = import("__main__"), lrp = import("librange_python");
             globals["librange_python"] = lrp;
-            exec(s.str().c_str(), globals, locals);
+            globals["__builtins__"] = main.attr("__builtins__");
+            exec(s.c_str(), globals, locals);
             object exc_inst = locals["range_exception_instance"];
             PyErr_SetObject(type_ptr_, exc_inst.ptr());
         }
