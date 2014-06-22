@@ -32,6 +32,8 @@
 #include "berkeley_db_lock.h"
 #include "berkeley_db_txn.h"
 
+#include "changelist.pb.h"
+
 namespace range {
 namespace db {
 
@@ -122,7 +124,7 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
 //##############################################################################
 BerkeleyDB::~BerkeleyDB() noexcept
 {
-    {
+    try {
         std::lock_guard<std::mutex> guard { startlock_ };
         dbstl_started_ = false;
         try {
@@ -145,7 +147,7 @@ BerkeleyDB::~BerkeleyDB() noexcept
                 dbstl::close_db_env(env_);
             } catch(...) { }
         }
-    }
+    } catch (...) { }
 }
 
 
@@ -171,25 +173,6 @@ BerkeleyDB::db_put(DbTxn *dbtxn, map_t &map, const std::string &key, const std::
     std::string stupid_value = boost::replace_all_copy<std::string>(value, std::string("\0",1), std::string(stupid_ordinal));
     map[stupid_key] = stupid_value;
     return true;
-/*
-    Db * hdl = map.get_db_handle();
-
-    char keybuf[key.size() + 1];
-    std::memset(keybuf, 0, sizeof(keybuf));
-    std::memcpy(keybuf, key.c_str(), key.size());
-
-    char databuf[value.size()];
-    std::memcpy(databuf, value.c_str(), value.size());
-
-    Dbt dbkey { keybuf, static_cast<uint32_t>(sizeof(keybuf)) };
-    Dbt dbdata { databuf, static_cast<uint32_t>(sizeof(databuf)) };
-
-    int ret = hdl->put(dbtxn, &dbkey, &dbdata, 0);
-    if(ret != 0) {
-        THROW_STACK(DatabaseEnvironmentException("Unable to write data for " + key));
-    }
-    return true;
-*/
 }
 
 //##############################################################################
@@ -219,27 +202,6 @@ BerkeleyDB::db_get(DbTxn *dbtxn, map_t &map, const std::string &key) const
     } else {
         return "";
     }
-
-/*
-
-    Db * hdl = map.get_db_handle();
-
-    char keybuf[key.size() + 1];
-    std::memset(keybuf, 0, sizeof(keybuf));
-    std::memcpy(keybuf, key.c_str(), key.size());
-
-    Dbt dbkey { keybuf, static_cast<uint32_t>(sizeof(keybuf)) };
-    Dbt dbdata;
-
-    int ret = hdl->get(dbtxn, &dbkey, &dbdata, 0);
-    if(ret != 0 && ret != DB_NOTFOUND) {
-        std::stringstream s;
-        s << "Unable to read data for " << key << " : " << ret;
-        THROW_STACK(DatabaseEnvironmentException(s.str()));
-    }
-
-    return std::string(static_cast<char*>(dbdata.get_data()), dbdata.get_size());
-*/
 }
 
 //##############################################################################
@@ -258,7 +220,6 @@ void
 BerkeleyDB::init_graph_info()
 {
     RANGE_LOG_TIMED_FUNCTION();
-    //register_thread();
 
     if (!graph_info_map) {
         map_t *map = new map_t(graph_info, env_);
@@ -295,7 +256,6 @@ std::vector<std::string>
 BerkeleyDB::listGraphInstances() const
 {
     RANGE_LOG_TIMED_FUNCTION();
-    //register_thread();
 
     dbstl::register_db(graph_info_map->get_db_handle());
     BerkeleyDBLock lock { const_cast<BerkeleyDB&>(*this), *graph_info_map,
@@ -321,35 +281,38 @@ BerkeleyDB::listGraphInstances() const
 void
 BerkeleyDB::add_graph_instance(const std::string& name) {
     RANGE_LOG_TIMED_FUNCTION();
-    //register_thread();
-
     dbstl::register_db(graph_info_map->get_db_handle());
-    BerkeleyDBLock lock { *this, *graph_info_map, true };
 
-    auto g = getGraphInstance(name);
-    if(g) { return; }
+    {
+        BerkeleyDBLock lock { *this, *graph_info_map, true };
 
-    try {    
-        graph_db_instances[name] = dbstl::open_db(env_, name.c_str(), DB_HASH,
-                DB_CREATE | DB_MULTIVERSION, DB_CHKSUM, 0664, lock.txn(), 0,
-                name.c_str());
+        auto g = getGraphInstance(name);
+        if(g) { return; }
 
-        graph_map_instances[name] = boost::make_shared<map_t>(graph_db_instances[name], env_);
+        try {    
+            graph_db_instances[name] = dbstl::open_db(env_, name.c_str(), DB_HASH,
+                    DB_CREATE | DB_MULTIVERSION, DB_CHKSUM, 0664, lock.txn(), 0,
+                    name.c_str());
 
-    } catch(dbstl::DbstlException& e) {
-        THROW_STACK(InstanceUnitializedException(
-                "Unable to create instance: " + name + ": " + e.what()));
+            graph_map_instances[name] = boost::make_shared<map_t>(graph_db_instances[name], env_);
+
+        } catch(dbstl::DbstlException& e) {
+            THROW_STACK(InstanceUnitializedException(
+                    "Unable to create instance: " + name + ": " + e.what()));
+        }
+
+        GraphList listbuf;
+        std::string graph_list = db_get(lock.txn(), *graph_info_map, "graph_list"); 
+        if (graph_list.size() > 0) {
+            listbuf.ParseFromString(graph_list);
+        } 
+
+        listbuf.add_name()->assign(name);
+
+        db_put(lock.txn(), *graph_info_map, "graph_list", listbuf.SerializeAsString());
     }
 
-    GraphList listbuf;
-    std::string graph_list = db_get(lock.txn(), *graph_info_map, "graph_list"); 
-    if (graph_list.size() > 0) {
-        listbuf.ParseFromString(graph_list);
-    } 
-
-    listbuf.add_name()->assign(name);
-
-    db_put(lock.txn(), *graph_info_map, "graph_list", listbuf.SerializeAsString());
+    add_new_range_version();
 }
 
 //##############################################################################
@@ -360,6 +323,18 @@ BerkeleyDB::createGraphInstance(const std::string& name)
     BOOST_LOG_FUNCTION();
     add_graph_instance(name);
     return getGraphInstance(name);
+}
+
+//##############################################################################
+//##############################################################################
+uint64_t
+BerkeleyDB::get_graph_wanted_version(const std::string& graph_name) const
+{
+    auto it = graph_wanted_version_map.find(graph_name);
+    if(it != graph_wanted_version_map.end()) {
+        return it->second;
+    }
+    return -1;
 }
 
 //##############################################################################
@@ -392,7 +367,130 @@ BerkeleyDB::getGraphInstance(const std::string& name)
 void
 BerkeleyDB::register_thread() const
 {
+    RANGE_LOG_FUNCTION();
     dbstl::register_db_env(env_);
+}
+
+//##############################################################################
+//##############################################################################
+uint64_t
+BerkeleyDB::range_version() const
+{
+    RANGE_LOG_FUNCTION();
+    dbstl::register_db(graph_info_map->get_db_handle());
+    BerkeleyDBLock lock { const_cast<BerkeleyDB&>(*this), *graph_info_map,
+                            false };
+
+    std::string range_changelist_buf = db_get(lock.txn(), *graph_info_map, "range_changelist");
+
+    ChangeList changes;
+    if(!range_changelist_buf.empty()) {
+        changes.ParseFromString(range_changelist_buf);
+        return changes.current_version();
+    }
+    else {
+        return 0;
+    }
+}
+
+//##############################################################################
+//##############################################################################
+BerkeleyDB::range_changelist_t
+BerkeleyDB::get_changelist()
+{
+    RANGE_LOG_FUNCTION();
+    dbstl::register_db(graph_info_map->get_db_handle());
+    BerkeleyDBLock lock { const_cast<BerkeleyDB&>(*this), *graph_info_map,
+                            false };
+
+    std::string range_changelist_buf = db_get(lock.txn(), *graph_info_map, "range_changelist");
+
+    ChangeList changes;
+    if(!range_changelist_buf.empty()) {
+        changes.ParseFromString(range_changelist_buf);
+    } else {
+        return range_changelist_t();
+    }
+
+    range_changelist_t changelist;
+    for (int c_idx = 0; c_idx < changes.change_size(); ++c_idx) {
+        range_change_t c;
+        for (int i_idx = 0; i_idx < changes.change(c_idx).items_size(); ++i_idx) {
+            auto item = changes.change(c_idx).items(i_idx);
+            c[item.key()] = item.version();
+        }
+        changelist.push_back(c);
+    }
+
+    return changelist;
+}
+
+
+//##############################################################################
+//##############################################################################
+void
+BerkeleyDB::set_wanted_version(uint64_t version)
+{
+    RANGE_LOG_FUNCTION();
+    graph_wanted_version_map.clear();
+
+    if(version == static_cast<uint64_t>(-1)) {
+        return;
+    }
+
+    dbstl::register_db(graph_info_map->get_db_handle());
+    BerkeleyDBLock lock { const_cast<BerkeleyDB&>(*this), *graph_info_map,
+                            false };
+
+    std::string range_changelist_buf = 
+        db_get(lock.txn(), *graph_info_map, "range_changelist");
+
+    ChangeList changes;
+    if(!range_changelist_buf.empty()) {
+        changes.ParseFromString(range_changelist_buf);
+    }
+
+
+    for (uint32_t c_idx = changes.change_size() - 1; c_idx >= version; --c_idx) {
+        for (int i_idx = 0; i_idx < changes.change(c_idx).items_size(); ++i_idx) {
+            auto item = changes.change(c_idx).items(i_idx);
+            graph_wanted_version_map[item.key()] = item.version();
+        }
+    }
+}
+
+//##############################################################################
+//##############################################################################
+void
+BerkeleyDB::add_new_range_version()
+{
+    RANGE_LOG_FUNCTION();
+
+    std::unordered_map<std::string, uint64_t> vermap;
+    for (auto &gname : listGraphInstances()) {
+        auto ginst = getGraphInstance(gname);
+        vermap[gname] = ginst->version();
+    }
+
+    BerkeleyDBLock lock { const_cast<BerkeleyDB&>(*this), *graph_info_map,
+                            true };
+
+    std::string range_changelist_buf = db_get(lock.txn(), *graph_info_map, "range_changelist");
+
+    ChangeList changes;
+    if(!range_changelist_buf.empty()) {
+        changes.ParseFromString(range_changelist_buf);
+    }
+
+    auto c = changes.add_change();
+
+    for(auto &verinfo : vermap) {
+        auto item = c->add_items();
+        item->set_key(verinfo.first);
+        item->set_version(verinfo.second);
+    }
+    changes.set_current_version(changes.current_version() + 1);
+    db_put(lock.txn(), *graph_info_map, "range_changelist", changes.SerializeAsString());
 }
 
 
@@ -403,6 +501,8 @@ void shutdown() {
     BOOST_LOG_FUNCTION();
     BerkeleyDB::s_shutdown();
 }
+
+
 
 
 

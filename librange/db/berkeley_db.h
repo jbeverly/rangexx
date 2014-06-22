@@ -71,6 +71,14 @@ class BerkeleyDB : public BackendInterface {
         virtual void shutdown() override { s_shutdown(); }
         virtual void register_thread() const override;
 
+        
+        //######################################################################
+        //######################################################################
+        virtual uint64_t range_version() const override;
+        virtual void set_wanted_version(uint64_t) override;
+        virtual uint64_t get_graph_wanted_version(const std::string &graph_name) const override;
+        virtual range_changelist_t get_changelist() override;
+
         static void s_shutdown();
 
     private:
@@ -89,6 +97,8 @@ class BerkeleyDB : public BackendInterface {
         
         Db * graph_info; 
 
+        std::unordered_map<std::string, uint64_t> graph_wanted_version_map;
+
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBLock>> lock_table; 
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBLock>>& weak_table; 
         std::unique_ptr<map_t> graph_info_map;
@@ -103,12 +113,14 @@ class BerkeleyDB : public BackendInterface {
 
         range::Emitter log;
 
+        static bool dbstl_started_;
+        static std::mutex startlock_;
+
+        void add_new_range_version();
         void init_graph_info();
         void add_graph_instance(const std::string& name);
         bool db_put(DbTxn *dbtxn, map_t &map, const std::string &key, const std::string &value);
         std::string db_get(DbTxn *dbtxn, map_t &map, const std::string &key) const;
-        static bool dbstl_started_;
-        static std::mutex startlock_;
 };
 
 } // namespace db

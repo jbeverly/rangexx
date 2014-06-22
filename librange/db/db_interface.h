@@ -170,6 +170,8 @@ class BackendInterface {
     //##########################################################################
     //##########################################################################
     public:
+        typedef std::map<std::string, uint64_t> range_change_t;
+        typedef std::vector<range_change_t> range_changelist_t;
         typedef boost::shared_ptr<GraphInstanceInterface> graph_instance_t;
 
         //######################################################################
@@ -183,6 +185,12 @@ class BackendInterface {
         //######################################################################
         /// register the current thread to access shared db handles 
         virtual void register_thread() const = 0;
+
+        //######################################################################
+        virtual uint64_t range_version() const = 0;
+        virtual void set_wanted_version(uint64_t) = 0;
+        virtual range_changelist_t get_changelist() = 0;
+        virtual uint64_t get_graph_wanted_version(const std::string &graph_name) const = 0;
 
         virtual void shutdown() = 0;
 
