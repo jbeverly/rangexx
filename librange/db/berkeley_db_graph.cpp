@@ -154,44 +154,50 @@ BerkeleyDBGraph::inculcate_change(std::thread::id id)
         THROW_STACK(InstanceUnitializedException("Map instance not found"));
     }
     auto map_instance = it->second;
+    bool new_version = false;
 
-    auto lock = write_lock(record_type::GRAPH_META, "changelist");
-    auto key = key_name(record_type::GRAPH_META, "changelist");
+    {
+        auto lock = write_lock(record_type::GRAPH_META, "changelist");
+        auto key = key_name(record_type::GRAPH_META, "changelist");
 
-    ChangeList changes;
-    auto data_it = map_instance->find(key);
-    if (data_it != map_instance->end()) {
-        changes.ParseFromString(db_get(key)); //data_it->second);
-    } 
+        ChangeList changes;
+        auto data_it = map_instance->find(key);
+        if (data_it != map_instance->end()) {
+            changes.ParseFromString(db_get(key)); //data_it->second);
+        } 
 
-    auto filtered_changes = commit_txn(id);
-    LOG(debug5, "inculcating changes") << "writing " << filtered_changes.size() << " records";
-    if (!filtered_changes.empty()) { 
-        auto c = changes.add_change();
+        auto filtered_changes = commit_txn(id);
+        LOG(debug5, "inculcating changes") << "writing " << filtered_changes.size() << " records";
+        if (!filtered_changes.empty()) { 
+            auto c = changes.add_change();
 
-        for (auto change : filtered_changes) {
-            record_type type;
-            std::string object_name;
-            uint64_t object_version;
-            std::string data;
-            std::tie(type, object_name, object_version, data) = change;
-            LOG(debug9, "inculcating record") << object_name << " size: " << data.size();
+            for (auto change : filtered_changes) {
+                record_type type;
+                std::string object_name;
+                uint64_t object_version;
+                std::string data;
+                std::tie(type, object_name, object_version, data) = change;
+                LOG(debug9, "inculcating record") << object_name << " size: " << data.size();
 
-            auto item = c->add_items();
-            item->set_key( key_name(type, object_name) );
-            item->set_version( object_version );
+                auto item = c->add_items();
+                item->set_key( key_name(type, object_name) );
+                item->set_version( object_version );
+            }
+
+            struct timeval cur_time;
+            gettimeofday(&cur_time, NULL);
+
+            auto ts = c->mutable_timestamp();
+            ts->set_seconds(cur_time.tv_sec);
+            ts->set_msec(cur_time.tv_usec / 1000);
+
+            version_pending_ = false;
+            changes.set_current_version( ++current_version_ ); //changes.current_version() + 1 );
+            db_put(key, changes.SerializeAsString());
+            new_version = true;
         }
-
-        struct timeval cur_time;
-        gettimeofday(&cur_time, NULL);
-
-        auto ts = c->mutable_timestamp();
-        ts->set_seconds(cur_time.tv_sec);
-        ts->set_msec(cur_time.tv_usec / 1000);
-
-        version_pending_ = false;
-        changes.set_current_version( ++current_version_ ); //changes.current_version() + 1 );
-        db_put(key, changes.SerializeAsString());
+    }
+    if(new_version) {
         backend_.add_new_range_version();
     }
 }
