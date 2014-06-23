@@ -192,6 +192,7 @@ BerkeleyDBGraph::inculcate_change(std::thread::id id)
         version_pending_ = false;
         changes.set_current_version( ++current_version_ ); //changes.current_version() + 1 );
         db_put(key, changes.SerializeAsString());
+        backend_.add_new_range_version();
     }
 }
 
