@@ -83,12 +83,22 @@ AC_DEFUN([AX_BOOST_LOG],
 			BOOSTLIBDIR=`echo $BOOST_LDFLAGS | sed -e 's/@<:@^\/@:>@*//'`
 
 			if test "x$ax_boost_user_log_lib" = "x"; then
-				for libextension in `ls $BOOSTLIBDIR/libboost_log*.so* $BOOSTLIBDIR/libboost_log*.dylib* $BOOSTLIBDIR/libboost_log*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_log.*\)\.so.*$;\1;' -e 's;^lib\(boost_log.*\)\.dylib.*$;\1;' -e 's;^lib\(boost_log.*\)\.a.*$;\1;'` ; do
+				for libextension in `ls $BOOSTLIBDIR/libboost_log*.so* $BOOSTLIBDIR/libboost_log*.dylib* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_log.*\)\.so.*$;\1;' -e 's;^lib\(boost_log.*\)\.dylib.*$;\1;' -e 's;^lib\(boost_log.*\)\.a.*$;\1;'` ; do
 					ax_lib=${libextension}
 					AC_CHECK_LIB($ax_lib, exit,
-						[BOOST_LOG_LIB="-l$ax_lib"; AC_SUBST(BOOST_LOG_LIB) link_log="yes"; break],
+						[BOOST_LOG_LIB="-l$ax_lib"; AC_SUBST(BOOST_LOG_LIB) link_log="yes"; BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_LOG_DYN_LINK"; break],
 					[link_log="no"])
 				done
+				if test "x$link_log" != "xyes"; then
+					for libextension in `$BOOSTLIBDIR/libboost_log*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_log.*\)\.so.*$;\1;' -e 's;^lib\(boost_log.*\)\.dylib.*$;\1;' -e 's;^lib\(boost_log.*\)\.a.*$;\1;'` ; do
+						ax_lib=${libextension}
+						AC_CHECK_LIB($ax_lib, exit,
+							[BOOST_LOG_LIB="-l$ax_lib"; AC_SUBST(BOOST_LOG_LIB) link_log="yes"; break],
+						[link_log="no"])
+					done
+				fi
+
+
 
 				if test "x$link_log" != "xyes"; then
 					for libextension in `ls $BOOSTLIBDIR/boost_log*.dll* $BOOSTLIBDIR/boost_log*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^\(boost_log.*\)\.dll.*$;\1;' -e 's;^\(boost_log.*\)\.a.*$;\1;'` ; do

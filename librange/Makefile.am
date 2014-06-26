@@ -9,12 +9,8 @@ AM_LDFLAGS_G = $(LDFLAGS)
 AM_LIBADD_G = $(LIBADD)
 
 AM_CPPFLAGS = @PYTHON_CPPFLAGS@ @BOOST_CPPFLAGS@ @DB_STL_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ $(AM_CPPFLAGS_G)
-AM_LDFLAGS  = @PYTHON_LDFLAGS@ -l@BOOST_PYTHON_LIB@ @BOOST_LDFLAGS@ @DB_STL_LDFLAGS@ @PROTOBUF_LDFLAGS@  $(AM_LDFLAGS_G)
-AM_LIBADD   = @BOOST_LOG_SETUP_LIB@ @BOOST_SYSTEM_LIB@ @BOOST_DATE_TIME_LIB@ @BOOST_THREAD_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_LOG_LIB@ @BOOST_REGEX_LIB@  @DB_STL_LIBS@ @PROTOBUF_LIBS@     $(AM_LIBADD_G)
-
-#AM_CPPFLAGS = @PYTHON_CPPFLAGS@ @BOOST_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @DB_STL_CPPFLAGS@ @PROTOBUF_CPPFLAGS@ $(AM_CPPFLAGS_G)
-#AM_LDFLAGS  = @PYTHON_LDFLAGS@ -l@BOOST_PYTHON_LIB@ @BOOST_LDFLAGS@ @DB_CXX_LDFLAGS@  @DB_STL_LDFLAGS@ @PROTOBUF_LDFLAGS@  $(AM_LDFLAGS_G)
-#AM_LIBADD   = @BOOST_LOG_SETUP_LIB@ @BOOST_SYSTEM_LIB@ @BOOST_DATE_TIME_LIB@ @BOOST_THREAD_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_LOG_LIB@ @BOOST_REGEX_LIB@ @DB_CXX_LIBS@     @DB_STL_LIBS@ @PROTOBUF_LIBS@     $(AM_LIBADD_G)
+AM_LDFLAGS  = @PYTHON_LDFLAGS@ @BOOST_LDFLAGS@ @DB_STL_LDFLAGS@ @PROTOBUF_LDFLAGS@  $(AM_LDFLAGS_G) 
+AM_LIBADD   = @BOOST_PYTHON_LIB@ @BOOST_FILESYSTEM_LIB@ @BOOST_SYSTEM_LIB@ @BOOST_LOG_LIB@ @BOOST_LOG_SETUP_LIB@ @BOOST_DATE_TIME_LIB@ @BOOST_THREAD_LIB@ @BOOST_REGEX_LIB@ @DB_STL_LIBS@ @PROTOBUF_LIBS@ $(AM_LIBADD_G) 
 
 lib_LTLIBRARIES    = librange.la
 noinst_LTLIBRARIES = librange_db.la librange_graph.la librange_compiler.la librange_util.la librange_core.la librange_gnu.la
@@ -75,7 +71,7 @@ nobase_librange_util_la_include_HEADERS = util/crc32.h \
 librange_util_la_SOURCES = util/crc32.cpp \
 						   ./util/demangle.cpp
 
-librange_util_la_LIBADD = $(AM_LIBADD)
+#librange_util_la_LIBADD = # $(AM_LIBADD)
 
 ################################################################################
 
@@ -96,7 +92,7 @@ nobase_librange_compiler_la_include_HEADERS = compiler/ast.h \
 librange_compiler_la_SOURCES = compiler/RangeParser_v1.cpp \
 							   compiler/RangeScanner_v1.cpp \
 							   compiler/expanding_visitor.cpp
-librange_compiler_la_LIBADD = $(AM_LIBADD)
+#librange_compiler_la_LIBADD = # $(AM_LIBADD)
 
 ################################################################################
 
@@ -127,7 +123,7 @@ librange_db_la_SOURCES = db/pbuff_node.cpp \
 						 db/changelist.pb.cpp \
 						 $(top_builddir)/range_config.h 
 
-librange_db_la_LIBADD = $(AM_LIBADD)
+#librange_db_la_LIBADD = # $(AM_LIBADD)
 
 ################################################################################
 
@@ -143,7 +139,7 @@ librange_graph_la_SOURCES = graph/graphdb.cpp \
 							graph/graph_iter.cpp \
 							graph/node_interface.cpp
 
-librange_graph_la_LIBADD = $(AM_LIBADD)
+#librange_graph_la_LIBADD = # $(AM_LIBADD)
 
 ################################################################################
 
@@ -172,12 +168,14 @@ librange_core_la_SOURCES = ./core/config_builder.cpp \
 						   ./core/log.cpp \
 						   ./core/builtins.cpp
 	
-librange_core_la_LIBADD = $(AM_LIBADD)
+#librange_core_la_LIBADD = # $(AM_LIBADD)
 
 
 librange_la_SOURCES = 
-librange_la_LDFLAGS = -version-info $(RANGEXX_LIBRARY_VERSION)
-librange_la_LIBADD = librange_graph.la librange_db.la librange_compiler.la librange_util.la librange_core.la librange_gnu.la
+librange_la_CXXFLAGS = -Wl,--no-as-needed
+librange_la_LIBTOOLFLAGS = --tag=CXX
+librange_la_LDFLAGS = -Wl,--no-allow-shlib-undefined -version-info $(RANGEXX_LIBRARY_VERSION) $(AM_LDFLAGS) -lpthread -lrt
+librange_la_LIBADD = librange_graph.la librange_db.la librange_compiler.la librange_util.la librange_core.la librange_gnu.la $(AM_LIBADD)
 
 #nobase_librange_la_include_HEADERS = 
 

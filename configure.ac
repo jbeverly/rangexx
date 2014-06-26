@@ -9,6 +9,7 @@ AC_LANG([C++])
 AC_USE_SYSTEM_EXTENSIONS
 AM_PROG_AR
 LT_INIT
+LT_LANG([C++])
 AM_INIT_AUTOMAKE([-W -Wall gnu])
 AC_CONFIG_SRCDIR([range_config.h.in])
 AC_CONFIG_HEADERS([range_config.h])
@@ -34,7 +35,7 @@ AS_VAR_SET([tmp_stl_LDFLAGS],["$LDFLAGS"])
 AS_VAR_SET([LDFLAGS], ["$LDFLAGS $DB_CXX_LDFLAGS"])
 AS_VAR_SET([tmp_stl_CPPFLAGS],["$CPPFLAGS"])
 AS_VAR_SET([CPPFLAGS], ["$CPPFLAGS $DB_CXX_CPPFLAGS"])
-AX_CHECK_EXT_LIB_CLASS([db_stl], [<dbstl_vector.h>], [dbstl::db_vector<int, int>], [], [AC_MSG_ERROR([Berkeley db6 is required])])
+AX_CHECK_EXT_LIB_CLASS([db_stl], [<dbstl_map.h>], [dbstl::db_map<int, int>], [], [AC_MSG_ERROR([Berkeley db6 is required])])
 #AS_VAR_SET([LDFLAGS], ["$LDFLAGS -ldb"])
 #AX_CHECK_EXT_LIB([evpaxos], [evproposer_init], [], [AC_MSG_ERROR([libevpaxos3 is required])])
 AS_VAR_SET([LDFLAGS], ["$tmp_stl_LDFLAGS"])
