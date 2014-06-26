@@ -15,8 +15,26 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <thread>
+
+#include <boost/make_shared.hpp>
+
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
+
+#include "../../librange/tests/mock_backend.h"
+
+class TestStored : public ::testing::Test {
+	void SetUp() {
+		be = boost::make_shared<MockBackend>();
+	}
+
+	boost::shared_ptr<MockBackend> be;
+};
+
+TEST_F(TestStored, test_stuff) {
+    EXPECT_EQ(1, 1);
+}
 
 int
 main(int argc, char **argv)
