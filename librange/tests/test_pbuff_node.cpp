@@ -505,9 +505,9 @@ TEST_F(TestProtobufNode, TestNodeKeys) {
     test.set_list_version(1);
     test.set_node_type(static_cast<int>(range::graph::NodeIface::node_type::UNKNOWN));
     test.set_crc32(0);
+    test.mutable_tags();
     test.mutable_forward();
     test.mutable_reverse();
-    //test.add_graph_versions(0);
     test.mutable_graph_versions();
     test.set_crc32(0);
     test.set_crc32(range::util::crc32(test.SerializeAsString()));
