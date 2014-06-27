@@ -638,7 +638,7 @@ librange_core_la_SOURCES = ./core/config_builder.cpp \
 librange_la_SOURCES = 
 librange_la_CXXFLAGS = -Wl,--no-as-needed
 librange_la_LIBTOOLFLAGS = --tag=CXX
-librange_la_LDFLAGS = -Wl,--no-allow-shlib-undefined -version-info $(RANGEXX_LIBRARY_VERSION) $(AM_LDFLAGS) -lpthread -lrt
+librange_la_LDFLAGS = -Wl,--no-allow-shlib-undefined -version-info $(RANGEXX_LIBRARY_VERSION) $(AM_LDFLAGS) -lpthread -lrt -lz -ldl -lutil
 librange_la_LIBADD = librange_graph.la librange_db.la librange_compiler.la librange_util.la librange_core.la librange_gnu.la $(AM_LIBADD)
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

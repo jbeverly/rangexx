@@ -612,12 +612,10 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = parallel-tests color-tests 
-AM_CPPFLAGS = @BOOST_CPPFLAGS@ @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ -I$(top_builddir)/librange
-# @PROTOBUF_CPPFLAGS@ @DB_STL_CPPFLAGS@ 
-AM_LDFLAGS = -Wl,--copy-dt-needed-entries @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ 
-# @PROTOBUF_LDFLAGS@ @DB_STL_LDFLAGS@ 
-LDADD = $(top_builddir)/librange/librange.la @GTEST_LIBS@ @GMOCK_LIBS@ ## @DB_STL_LIBS@ @BOOST_REGEX_LIB@
-LIBADD = $(top_builddir)/librange/librange.la
+AM_CPPFLAGS = @PROTOBUF_CPPFLAGS@ @DB_STL_CPPFLAGS@ @BOOST_CPPFLAGS@ @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ -I$(top_builddir)/librange
+AM_LDFLAGS = -Wl,--copy-dt-needed-entries @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ -lpthread -lrt
+LDADD = @GTEST_LIBS@ @GMOCK_LIBS@ $(top_builddir)/librange/librange.la ## @DB_STL_LIBS@ @BOOST_REGEX_LIB@
+LIBADD = @GTEST_LIBS@ @GMOCK_LIBS@ $(top_builddir)/librange/librange.la
 AM_DEFAULT_SOURCE_EXT = .cpp
 TESTS = $(check_PROGRAMS) 
 all: all-am
