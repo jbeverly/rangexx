@@ -28,7 +28,6 @@
 // @@protoc_insertion_point(includes)
 
 namespace range {
-namespace core {
 namespace stored {
 
 // Internal implementation detail -- do not call these.
@@ -37,35 +36,18 @@ void protobuf_AssignDesc_store_2eproto();
 void protobuf_ShutdownFile_store_2eproto();
 
 class Request;
-class Request_CreateGraph;
-class Request_RemoveNode;
-class Request_CreateNode;
-class Request_AddTagValues;
-class Request_AddTagValues_Values;
-class Request_RemoveTagValues;
-class Request_RemoveTagValues_Values;
-class Request_DeleteTag;
-class Request_AddForwardEdge;
-class Request_RemoveForwardEdge;
-class Request_AddReverseEdge;
-class Request_RemoveReverseEdge;
 class Ack;
 
 enum Request_Type {
-  Request_Type_CREATE_GRAPH = 0,
-  Request_Type_REMOVE_NODE = 1,
-  Request_Type_CREATE_NODE = 2,
-  Request_Type_ADD_TAG_VALUES = 3,
-  Request_Type_REMOVE_TAG_VALUES = 4,
-  Request_Type_DELETE_TAG = 5,
-  Request_Type_ADD_FORWARD_EDGE = 6,
-  Request_Type_ADD_REVERSE_EDGE = 7,
-  Request_Type_REMOVE_FORWARD_EDGE = 8,
-  Request_Type_REMOVE_REVERSE_EDGE = 9
+  Request_Type_REQUEST = 0,
+  Request_Type_SUBMIT = 1,
+  Request_Type_PREPARE = 2,
+  Request_Type_PROPOSE = 3,
+  Request_Type_LEARN = 4
 };
 bool Request_Type_IsValid(int value);
-const Request_Type Request_Type_Type_MIN = Request_Type_CREATE_GRAPH;
-const Request_Type Request_Type_Type_MAX = Request_Type_REMOVE_REVERSE_EDGE;
+const Request_Type Request_Type_Type_MIN = Request_Type_REQUEST;
+const Request_Type Request_Type_Type_MAX = Request_Type_LEARN;
 const int Request_Type_Type_ARRAYSIZE = Request_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Request_Type_descriptor();
@@ -78,1359 +60,28 @@ inline bool Request_Type_Parse(
   return ::google::protobuf::internal::ParseNamedEnum<Request_Type>(
     Request_Type_descriptor(), name, value);
 }
+enum Ack_Type {
+  Ack_Type_ACK = 0,
+  Ack_Type_PROMISE = 1,
+  Ack_Type_NACK = 2,
+  Ack_Type_ACCEPTED = 3
+};
+bool Ack_Type_IsValid(int value);
+const Ack_Type Ack_Type_Type_MIN = Ack_Type_ACK;
+const Ack_Type Ack_Type_Type_MAX = Ack_Type_ACCEPTED;
+const int Ack_Type_Type_ARRAYSIZE = Ack_Type_Type_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* Ack_Type_descriptor();
+inline const ::std::string& Ack_Type_Name(Ack_Type value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    Ack_Type_descriptor(), value);
+}
+inline bool Ack_Type_Parse(
+    const ::std::string& name, Ack_Type* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<Ack_Type>(
+    Ack_Type_descriptor(), name, value);
+}
 // ===================================================================
-
-class Request_CreateGraph : public ::google::protobuf::Message {
- public:
-  Request_CreateGraph();
-  virtual ~Request_CreateGraph();
-
-  Request_CreateGraph(const Request_CreateGraph& from);
-
-  inline Request_CreateGraph& operator=(const Request_CreateGraph& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Request_CreateGraph& default_instance();
-
-  void Swap(Request_CreateGraph* other);
-
-  // implements Message ----------------------------------------------
-
-  Request_CreateGraph* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Request_CreateGraph& from);
-  void MergeFrom(const Request_CreateGraph& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // required string graph_name = 1;
-  inline bool has_graph_name() const;
-  inline void clear_graph_name();
-  static const int kGraphNameFieldNumber = 1;
-  inline const ::std::string& graph_name() const;
-  inline void set_graph_name(const ::std::string& value);
-  inline void set_graph_name(const char* value);
-  inline void set_graph_name(const char* value, size_t size);
-  inline ::std::string* mutable_graph_name();
-  inline ::std::string* release_graph_name();
-  inline void set_allocated_graph_name(::std::string* graph_name);
-
-  // optional bool prepopulate = 2 [default = true];
-  inline bool has_prepopulate() const;
-  inline void clear_prepopulate();
-  static const int kPrepopulateFieldNumber = 2;
-  inline bool prepopulate() const;
-  inline void set_prepopulate(bool value);
-
-  // optional string prepopulate_source = 3 [default = "primary"];
-  inline bool has_prepopulate_source() const;
-  inline void clear_prepopulate_source();
-  static const int kPrepopulateSourceFieldNumber = 3;
-  inline const ::std::string& prepopulate_source() const;
-  inline void set_prepopulate_source(const ::std::string& value);
-  inline void set_prepopulate_source(const char* value);
-  inline void set_prepopulate_source(const char* value, size_t size);
-  inline ::std::string* mutable_prepopulate_source();
-  inline ::std::string* release_prepopulate_source();
-  inline void set_allocated_prepopulate_source(::std::string* prepopulate_source);
-
-  // @@protoc_insertion_point(class_scope:range.core.stored.Request.CreateGraph)
- private:
-  inline void set_has_graph_name();
-  inline void clear_has_graph_name();
-  inline void set_has_prepopulate();
-  inline void clear_has_prepopulate();
-  inline void set_has_prepopulate_source();
-  inline void clear_has_prepopulate_source();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::std::string* graph_name_;
-  ::std::string* prepopulate_source_;
-  static ::std::string* _default_prepopulate_source_;
-  bool prepopulate_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
-
-  friend void  protobuf_AddDesc_store_2eproto();
-  friend void protobuf_AssignDesc_store_2eproto();
-  friend void protobuf_ShutdownFile_store_2eproto();
-
-  void InitAsDefaultInstance();
-  static Request_CreateGraph* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Request_RemoveNode : public ::google::protobuf::Message {
- public:
-  Request_RemoveNode();
-  virtual ~Request_RemoveNode();
-
-  Request_RemoveNode(const Request_RemoveNode& from);
-
-  inline Request_RemoveNode& operator=(const Request_RemoveNode& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Request_RemoveNode& default_instance();
-
-  void Swap(Request_RemoveNode* other);
-
-  // implements Message ----------------------------------------------
-
-  Request_RemoveNode* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Request_RemoveNode& from);
-  void MergeFrom(const Request_RemoveNode& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // required string graph_name = 1;
-  inline bool has_graph_name() const;
-  inline void clear_graph_name();
-  static const int kGraphNameFieldNumber = 1;
-  inline const ::std::string& graph_name() const;
-  inline void set_graph_name(const ::std::string& value);
-  inline void set_graph_name(const char* value);
-  inline void set_graph_name(const char* value, size_t size);
-  inline ::std::string* mutable_graph_name();
-  inline ::std::string* release_graph_name();
-  inline void set_allocated_graph_name(::std::string* graph_name);
-
-  // required string name = 2;
-  inline bool has_name() const;
-  inline void clear_name();
-  static const int kNameFieldNumber = 2;
-  inline const ::std::string& name() const;
-  inline void set_name(const ::std::string& value);
-  inline void set_name(const char* value);
-  inline void set_name(const char* value, size_t size);
-  inline ::std::string* mutable_name();
-  inline ::std::string* release_name();
-  inline void set_allocated_name(::std::string* name);
-
-  // @@protoc_insertion_point(class_scope:range.core.stored.Request.RemoveNode)
- private:
-  inline void set_has_graph_name();
-  inline void clear_has_graph_name();
-  inline void set_has_name();
-  inline void clear_has_name();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::std::string* graph_name_;
-  ::std::string* name_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
-
-  friend void  protobuf_AddDesc_store_2eproto();
-  friend void protobuf_AssignDesc_store_2eproto();
-  friend void protobuf_ShutdownFile_store_2eproto();
-
-  void InitAsDefaultInstance();
-  static Request_RemoveNode* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Request_CreateNode : public ::google::protobuf::Message {
- public:
-  Request_CreateNode();
-  virtual ~Request_CreateNode();
-
-  Request_CreateNode(const Request_CreateNode& from);
-
-  inline Request_CreateNode& operator=(const Request_CreateNode& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Request_CreateNode& default_instance();
-
-  void Swap(Request_CreateNode* other);
-
-  // implements Message ----------------------------------------------
-
-  Request_CreateNode* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Request_CreateNode& from);
-  void MergeFrom(const Request_CreateNode& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // required string graph_name = 1;
-  inline bool has_graph_name() const;
-  inline void clear_graph_name();
-  static const int kGraphNameFieldNumber = 1;
-  inline const ::std::string& graph_name() const;
-  inline void set_graph_name(const ::std::string& value);
-  inline void set_graph_name(const char* value);
-  inline void set_graph_name(const char* value, size_t size);
-  inline ::std::string* mutable_graph_name();
-  inline ::std::string* release_graph_name();
-  inline void set_allocated_graph_name(::std::string* graph_name);
-
-  // required string name = 2;
-  inline bool has_name() const;
-  inline void clear_name();
-  static const int kNameFieldNumber = 2;
-  inline const ::std::string& name() const;
-  inline void set_name(const ::std::string& value);
-  inline void set_name(const char* value);
-  inline void set_name(const char* value, size_t size);
-  inline ::std::string* mutable_name();
-  inline ::std::string* release_name();
-  inline void set_allocated_name(::std::string* name);
-
-  // required uint32 type = 3;
-  inline bool has_type() const;
-  inline void clear_type();
-  static const int kTypeFieldNumber = 3;
-  inline ::google::protobuf::uint32 type() const;
-  inline void set_type(::google::protobuf::uint32 value);
-
-  // @@protoc_insertion_point(class_scope:range.core.stored.Request.CreateNode)
- private:
-  inline void set_has_graph_name();
-  inline void clear_has_graph_name();
-  inline void set_has_name();
-  inline void clear_has_name();
-  inline void set_has_type();
-  inline void clear_has_type();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::std::string* graph_name_;
-  ::std::string* name_;
-  ::google::protobuf::uint32 type_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
-
-  friend void  protobuf_AddDesc_store_2eproto();
-  friend void protobuf_AssignDesc_store_2eproto();
-  friend void protobuf_ShutdownFile_store_2eproto();
-
-  void InitAsDefaultInstance();
-  static Request_CreateNode* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Request_AddTagValues_Values : public ::google::protobuf::Message {
- public:
-  Request_AddTagValues_Values();
-  virtual ~Request_AddTagValues_Values();
-
-  Request_AddTagValues_Values(const Request_AddTagValues_Values& from);
-
-  inline Request_AddTagValues_Values& operator=(const Request_AddTagValues_Values& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Request_AddTagValues_Values& default_instance();
-
-  void Swap(Request_AddTagValues_Values* other);
-
-  // implements Message ----------------------------------------------
-
-  Request_AddTagValues_Values* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Request_AddTagValues_Values& from);
-  void MergeFrom(const Request_AddTagValues_Values& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // repeated string values = 1;
-  inline int values_size() const;
-  inline void clear_values();
-  static const int kValuesFieldNumber = 1;
-  inline const ::std::string& values(int index) const;
-  inline ::std::string* mutable_values(int index);
-  inline void set_values(int index, const ::std::string& value);
-  inline void set_values(int index, const char* value);
-  inline void set_values(int index, const char* value, size_t size);
-  inline ::std::string* add_values();
-  inline void add_values(const ::std::string& value);
-  inline void add_values(const char* value);
-  inline void add_values(const char* value, size_t size);
-  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& values() const;
-  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_values();
-
-  // @@protoc_insertion_point(class_scope:range.core.stored.Request.AddTagValues.Values)
- private:
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::google::protobuf::RepeatedPtrField< ::std::string> values_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
-
-  friend void  protobuf_AddDesc_store_2eproto();
-  friend void protobuf_AssignDesc_store_2eproto();
-  friend void protobuf_ShutdownFile_store_2eproto();
-
-  void InitAsDefaultInstance();
-  static Request_AddTagValues_Values* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Request_AddTagValues : public ::google::protobuf::Message {
- public:
-  Request_AddTagValues();
-  virtual ~Request_AddTagValues();
-
-  Request_AddTagValues(const Request_AddTagValues& from);
-
-  inline Request_AddTagValues& operator=(const Request_AddTagValues& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Request_AddTagValues& default_instance();
-
-  void Swap(Request_AddTagValues* other);
-
-  // implements Message ----------------------------------------------
-
-  Request_AddTagValues* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Request_AddTagValues& from);
-  void MergeFrom(const Request_AddTagValues& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  typedef Request_AddTagValues_Values Values;
-
-  // accessors -------------------------------------------------------
-
-  // required string graph_name = 1;
-  inline bool has_graph_name() const;
-  inline void clear_graph_name();
-  static const int kGraphNameFieldNumber = 1;
-  inline const ::std::string& graph_name() const;
-  inline void set_graph_name(const ::std::string& value);
-  inline void set_graph_name(const char* value);
-  inline void set_graph_name(const char* value, size_t size);
-  inline ::std::string* mutable_graph_name();
-  inline ::std::string* release_graph_name();
-  inline void set_allocated_graph_name(::std::string* graph_name);
-
-  // required string node_name = 2;
-  inline bool has_node_name() const;
-  inline void clear_node_name();
-  static const int kNodeNameFieldNumber = 2;
-  inline const ::std::string& node_name() const;
-  inline void set_node_name(const ::std::string& value);
-  inline void set_node_name(const char* value);
-  inline void set_node_name(const char* value, size_t size);
-  inline ::std::string* mutable_node_name();
-  inline ::std::string* release_node_name();
-  inline void set_allocated_node_name(::std::string* node_name);
-
-  // required string tag_key = 3;
-  inline bool has_tag_key() const;
-  inline void clear_tag_key();
-  static const int kTagKeyFieldNumber = 3;
-  inline const ::std::string& tag_key() const;
-  inline void set_tag_key(const ::std::string& value);
-  inline void set_tag_key(const char* value);
-  inline void set_tag_key(const char* value, size_t size);
-  inline ::std::string* mutable_tag_key();
-  inline ::std::string* release_tag_key();
-  inline void set_allocated_tag_key(::std::string* tag_key);
-
-  // required .range.core.stored.Request.AddTagValues.Values values = 4;
-  inline bool has_values() const;
-  inline void clear_values();
-  static const int kValuesFieldNumber = 4;
-  inline const ::range::core::stored::Request_AddTagValues_Values& values() const;
-  inline ::range::core::stored::Request_AddTagValues_Values* mutable_values();
-  inline ::range::core::stored::Request_AddTagValues_Values* release_values();
-  inline void set_allocated_values(::range::core::stored::Request_AddTagValues_Values* values);
-
-  // @@protoc_insertion_point(class_scope:range.core.stored.Request.AddTagValues)
- private:
-  inline void set_has_graph_name();
-  inline void clear_has_graph_name();
-  inline void set_has_node_name();
-  inline void clear_has_node_name();
-  inline void set_has_tag_key();
-  inline void clear_has_tag_key();
-  inline void set_has_values();
-  inline void clear_has_values();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::std::string* graph_name_;
-  ::std::string* node_name_;
-  ::std::string* tag_key_;
-  ::range::core::stored::Request_AddTagValues_Values* values_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
-
-  friend void  protobuf_AddDesc_store_2eproto();
-  friend void protobuf_AssignDesc_store_2eproto();
-  friend void protobuf_ShutdownFile_store_2eproto();
-
-  void InitAsDefaultInstance();
-  static Request_AddTagValues* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Request_RemoveTagValues_Values : public ::google::protobuf::Message {
- public:
-  Request_RemoveTagValues_Values();
-  virtual ~Request_RemoveTagValues_Values();
-
-  Request_RemoveTagValues_Values(const Request_RemoveTagValues_Values& from);
-
-  inline Request_RemoveTagValues_Values& operator=(const Request_RemoveTagValues_Values& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Request_RemoveTagValues_Values& default_instance();
-
-  void Swap(Request_RemoveTagValues_Values* other);
-
-  // implements Message ----------------------------------------------
-
-  Request_RemoveTagValues_Values* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Request_RemoveTagValues_Values& from);
-  void MergeFrom(const Request_RemoveTagValues_Values& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // repeated string values = 1;
-  inline int values_size() const;
-  inline void clear_values();
-  static const int kValuesFieldNumber = 1;
-  inline const ::std::string& values(int index) const;
-  inline ::std::string* mutable_values(int index);
-  inline void set_values(int index, const ::std::string& value);
-  inline void set_values(int index, const char* value);
-  inline void set_values(int index, const char* value, size_t size);
-  inline ::std::string* add_values();
-  inline void add_values(const ::std::string& value);
-  inline void add_values(const char* value);
-  inline void add_values(const char* value, size_t size);
-  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& values() const;
-  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_values();
-
-  // @@protoc_insertion_point(class_scope:range.core.stored.Request.RemoveTagValues.Values)
- private:
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::google::protobuf::RepeatedPtrField< ::std::string> values_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
-
-  friend void  protobuf_AddDesc_store_2eproto();
-  friend void protobuf_AssignDesc_store_2eproto();
-  friend void protobuf_ShutdownFile_store_2eproto();
-
-  void InitAsDefaultInstance();
-  static Request_RemoveTagValues_Values* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Request_RemoveTagValues : public ::google::protobuf::Message {
- public:
-  Request_RemoveTagValues();
-  virtual ~Request_RemoveTagValues();
-
-  Request_RemoveTagValues(const Request_RemoveTagValues& from);
-
-  inline Request_RemoveTagValues& operator=(const Request_RemoveTagValues& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Request_RemoveTagValues& default_instance();
-
-  void Swap(Request_RemoveTagValues* other);
-
-  // implements Message ----------------------------------------------
-
-  Request_RemoveTagValues* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Request_RemoveTagValues& from);
-  void MergeFrom(const Request_RemoveTagValues& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  typedef Request_RemoveTagValues_Values Values;
-
-  // accessors -------------------------------------------------------
-
-  // required string graph_name = 1;
-  inline bool has_graph_name() const;
-  inline void clear_graph_name();
-  static const int kGraphNameFieldNumber = 1;
-  inline const ::std::string& graph_name() const;
-  inline void set_graph_name(const ::std::string& value);
-  inline void set_graph_name(const char* value);
-  inline void set_graph_name(const char* value, size_t size);
-  inline ::std::string* mutable_graph_name();
-  inline ::std::string* release_graph_name();
-  inline void set_allocated_graph_name(::std::string* graph_name);
-
-  // required string node_name = 2;
-  inline bool has_node_name() const;
-  inline void clear_node_name();
-  static const int kNodeNameFieldNumber = 2;
-  inline const ::std::string& node_name() const;
-  inline void set_node_name(const ::std::string& value);
-  inline void set_node_name(const char* value);
-  inline void set_node_name(const char* value, size_t size);
-  inline ::std::string* mutable_node_name();
-  inline ::std::string* release_node_name();
-  inline void set_allocated_node_name(::std::string* node_name);
-
-  // required string tag_key = 3;
-  inline bool has_tag_key() const;
-  inline void clear_tag_key();
-  static const int kTagKeyFieldNumber = 3;
-  inline const ::std::string& tag_key() const;
-  inline void set_tag_key(const ::std::string& value);
-  inline void set_tag_key(const char* value);
-  inline void set_tag_key(const char* value, size_t size);
-  inline ::std::string* mutable_tag_key();
-  inline ::std::string* release_tag_key();
-  inline void set_allocated_tag_key(::std::string* tag_key);
-
-  // required .range.core.stored.Request.RemoveTagValues.Values values = 4;
-  inline bool has_values() const;
-  inline void clear_values();
-  static const int kValuesFieldNumber = 4;
-  inline const ::range::core::stored::Request_RemoveTagValues_Values& values() const;
-  inline ::range::core::stored::Request_RemoveTagValues_Values* mutable_values();
-  inline ::range::core::stored::Request_RemoveTagValues_Values* release_values();
-  inline void set_allocated_values(::range::core::stored::Request_RemoveTagValues_Values* values);
-
-  // @@protoc_insertion_point(class_scope:range.core.stored.Request.RemoveTagValues)
- private:
-  inline void set_has_graph_name();
-  inline void clear_has_graph_name();
-  inline void set_has_node_name();
-  inline void clear_has_node_name();
-  inline void set_has_tag_key();
-  inline void clear_has_tag_key();
-  inline void set_has_values();
-  inline void clear_has_values();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::std::string* graph_name_;
-  ::std::string* node_name_;
-  ::std::string* tag_key_;
-  ::range::core::stored::Request_RemoveTagValues_Values* values_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
-
-  friend void  protobuf_AddDesc_store_2eproto();
-  friend void protobuf_AssignDesc_store_2eproto();
-  friend void protobuf_ShutdownFile_store_2eproto();
-
-  void InitAsDefaultInstance();
-  static Request_RemoveTagValues* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Request_DeleteTag : public ::google::protobuf::Message {
- public:
-  Request_DeleteTag();
-  virtual ~Request_DeleteTag();
-
-  Request_DeleteTag(const Request_DeleteTag& from);
-
-  inline Request_DeleteTag& operator=(const Request_DeleteTag& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Request_DeleteTag& default_instance();
-
-  void Swap(Request_DeleteTag* other);
-
-  // implements Message ----------------------------------------------
-
-  Request_DeleteTag* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Request_DeleteTag& from);
-  void MergeFrom(const Request_DeleteTag& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // required string graph_name = 1;
-  inline bool has_graph_name() const;
-  inline void clear_graph_name();
-  static const int kGraphNameFieldNumber = 1;
-  inline const ::std::string& graph_name() const;
-  inline void set_graph_name(const ::std::string& value);
-  inline void set_graph_name(const char* value);
-  inline void set_graph_name(const char* value, size_t size);
-  inline ::std::string* mutable_graph_name();
-  inline ::std::string* release_graph_name();
-  inline void set_allocated_graph_name(::std::string* graph_name);
-
-  // required string node_name = 2;
-  inline bool has_node_name() const;
-  inline void clear_node_name();
-  static const int kNodeNameFieldNumber = 2;
-  inline const ::std::string& node_name() const;
-  inline void set_node_name(const ::std::string& value);
-  inline void set_node_name(const char* value);
-  inline void set_node_name(const char* value, size_t size);
-  inline ::std::string* mutable_node_name();
-  inline ::std::string* release_node_name();
-  inline void set_allocated_node_name(::std::string* node_name);
-
-  // required string tag_key = 3;
-  inline bool has_tag_key() const;
-  inline void clear_tag_key();
-  static const int kTagKeyFieldNumber = 3;
-  inline const ::std::string& tag_key() const;
-  inline void set_tag_key(const ::std::string& value);
-  inline void set_tag_key(const char* value);
-  inline void set_tag_key(const char* value, size_t size);
-  inline ::std::string* mutable_tag_key();
-  inline ::std::string* release_tag_key();
-  inline void set_allocated_tag_key(::std::string* tag_key);
-
-  // @@protoc_insertion_point(class_scope:range.core.stored.Request.DeleteTag)
- private:
-  inline void set_has_graph_name();
-  inline void clear_has_graph_name();
-  inline void set_has_node_name();
-  inline void clear_has_node_name();
-  inline void set_has_tag_key();
-  inline void clear_has_tag_key();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::std::string* graph_name_;
-  ::std::string* node_name_;
-  ::std::string* tag_key_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
-
-  friend void  protobuf_AddDesc_store_2eproto();
-  friend void protobuf_AssignDesc_store_2eproto();
-  friend void protobuf_ShutdownFile_store_2eproto();
-
-  void InitAsDefaultInstance();
-  static Request_DeleteTag* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Request_AddForwardEdge : public ::google::protobuf::Message {
- public:
-  Request_AddForwardEdge();
-  virtual ~Request_AddForwardEdge();
-
-  Request_AddForwardEdge(const Request_AddForwardEdge& from);
-
-  inline Request_AddForwardEdge& operator=(const Request_AddForwardEdge& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Request_AddForwardEdge& default_instance();
-
-  void Swap(Request_AddForwardEdge* other);
-
-  // implements Message ----------------------------------------------
-
-  Request_AddForwardEdge* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Request_AddForwardEdge& from);
-  void MergeFrom(const Request_AddForwardEdge& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // required string graph_name = 1;
-  inline bool has_graph_name() const;
-  inline void clear_graph_name();
-  static const int kGraphNameFieldNumber = 1;
-  inline const ::std::string& graph_name() const;
-  inline void set_graph_name(const ::std::string& value);
-  inline void set_graph_name(const char* value);
-  inline void set_graph_name(const char* value, size_t size);
-  inline ::std::string* mutable_graph_name();
-  inline ::std::string* release_graph_name();
-  inline void set_allocated_graph_name(::std::string* graph_name);
-
-  // required string node_name = 2;
-  inline bool has_node_name() const;
-  inline void clear_node_name();
-  static const int kNodeNameFieldNumber = 2;
-  inline const ::std::string& node_name() const;
-  inline void set_node_name(const ::std::string& value);
-  inline void set_node_name(const char* value);
-  inline void set_node_name(const char* value, size_t size);
-  inline ::std::string* mutable_node_name();
-  inline ::std::string* release_node_name();
-  inline void set_allocated_node_name(::std::string* node_name);
-
-  // required string edge_name = 3;
-  inline bool has_edge_name() const;
-  inline void clear_edge_name();
-  static const int kEdgeNameFieldNumber = 3;
-  inline const ::std::string& edge_name() const;
-  inline void set_edge_name(const ::std::string& value);
-  inline void set_edge_name(const char* value);
-  inline void set_edge_name(const char* value, size_t size);
-  inline ::std::string* mutable_edge_name();
-  inline ::std::string* release_edge_name();
-  inline void set_allocated_edge_name(::std::string* edge_name);
-
-  // @@protoc_insertion_point(class_scope:range.core.stored.Request.AddForwardEdge)
- private:
-  inline void set_has_graph_name();
-  inline void clear_has_graph_name();
-  inline void set_has_node_name();
-  inline void clear_has_node_name();
-  inline void set_has_edge_name();
-  inline void clear_has_edge_name();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::std::string* graph_name_;
-  ::std::string* node_name_;
-  ::std::string* edge_name_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
-
-  friend void  protobuf_AddDesc_store_2eproto();
-  friend void protobuf_AssignDesc_store_2eproto();
-  friend void protobuf_ShutdownFile_store_2eproto();
-
-  void InitAsDefaultInstance();
-  static Request_AddForwardEdge* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Request_RemoveForwardEdge : public ::google::protobuf::Message {
- public:
-  Request_RemoveForwardEdge();
-  virtual ~Request_RemoveForwardEdge();
-
-  Request_RemoveForwardEdge(const Request_RemoveForwardEdge& from);
-
-  inline Request_RemoveForwardEdge& operator=(const Request_RemoveForwardEdge& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Request_RemoveForwardEdge& default_instance();
-
-  void Swap(Request_RemoveForwardEdge* other);
-
-  // implements Message ----------------------------------------------
-
-  Request_RemoveForwardEdge* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Request_RemoveForwardEdge& from);
-  void MergeFrom(const Request_RemoveForwardEdge& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // required string graph_name = 1;
-  inline bool has_graph_name() const;
-  inline void clear_graph_name();
-  static const int kGraphNameFieldNumber = 1;
-  inline const ::std::string& graph_name() const;
-  inline void set_graph_name(const ::std::string& value);
-  inline void set_graph_name(const char* value);
-  inline void set_graph_name(const char* value, size_t size);
-  inline ::std::string* mutable_graph_name();
-  inline ::std::string* release_graph_name();
-  inline void set_allocated_graph_name(::std::string* graph_name);
-
-  // required string node_name = 2;
-  inline bool has_node_name() const;
-  inline void clear_node_name();
-  static const int kNodeNameFieldNumber = 2;
-  inline const ::std::string& node_name() const;
-  inline void set_node_name(const ::std::string& value);
-  inline void set_node_name(const char* value);
-  inline void set_node_name(const char* value, size_t size);
-  inline ::std::string* mutable_node_name();
-  inline ::std::string* release_node_name();
-  inline void set_allocated_node_name(::std::string* node_name);
-
-  // required string edge_name = 3;
-  inline bool has_edge_name() const;
-  inline void clear_edge_name();
-  static const int kEdgeNameFieldNumber = 3;
-  inline const ::std::string& edge_name() const;
-  inline void set_edge_name(const ::std::string& value);
-  inline void set_edge_name(const char* value);
-  inline void set_edge_name(const char* value, size_t size);
-  inline ::std::string* mutable_edge_name();
-  inline ::std::string* release_edge_name();
-  inline void set_allocated_edge_name(::std::string* edge_name);
-
-  // @@protoc_insertion_point(class_scope:range.core.stored.Request.RemoveForwardEdge)
- private:
-  inline void set_has_graph_name();
-  inline void clear_has_graph_name();
-  inline void set_has_node_name();
-  inline void clear_has_node_name();
-  inline void set_has_edge_name();
-  inline void clear_has_edge_name();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::std::string* graph_name_;
-  ::std::string* node_name_;
-  ::std::string* edge_name_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
-
-  friend void  protobuf_AddDesc_store_2eproto();
-  friend void protobuf_AssignDesc_store_2eproto();
-  friend void protobuf_ShutdownFile_store_2eproto();
-
-  void InitAsDefaultInstance();
-  static Request_RemoveForwardEdge* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Request_AddReverseEdge : public ::google::protobuf::Message {
- public:
-  Request_AddReverseEdge();
-  virtual ~Request_AddReverseEdge();
-
-  Request_AddReverseEdge(const Request_AddReverseEdge& from);
-
-  inline Request_AddReverseEdge& operator=(const Request_AddReverseEdge& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Request_AddReverseEdge& default_instance();
-
-  void Swap(Request_AddReverseEdge* other);
-
-  // implements Message ----------------------------------------------
-
-  Request_AddReverseEdge* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Request_AddReverseEdge& from);
-  void MergeFrom(const Request_AddReverseEdge& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // required string graph_name = 1;
-  inline bool has_graph_name() const;
-  inline void clear_graph_name();
-  static const int kGraphNameFieldNumber = 1;
-  inline const ::std::string& graph_name() const;
-  inline void set_graph_name(const ::std::string& value);
-  inline void set_graph_name(const char* value);
-  inline void set_graph_name(const char* value, size_t size);
-  inline ::std::string* mutable_graph_name();
-  inline ::std::string* release_graph_name();
-  inline void set_allocated_graph_name(::std::string* graph_name);
-
-  // required string node_name = 2;
-  inline bool has_node_name() const;
-  inline void clear_node_name();
-  static const int kNodeNameFieldNumber = 2;
-  inline const ::std::string& node_name() const;
-  inline void set_node_name(const ::std::string& value);
-  inline void set_node_name(const char* value);
-  inline void set_node_name(const char* value, size_t size);
-  inline ::std::string* mutable_node_name();
-  inline ::std::string* release_node_name();
-  inline void set_allocated_node_name(::std::string* node_name);
-
-  // required string edge_name = 3;
-  inline bool has_edge_name() const;
-  inline void clear_edge_name();
-  static const int kEdgeNameFieldNumber = 3;
-  inline const ::std::string& edge_name() const;
-  inline void set_edge_name(const ::std::string& value);
-  inline void set_edge_name(const char* value);
-  inline void set_edge_name(const char* value, size_t size);
-  inline ::std::string* mutable_edge_name();
-  inline ::std::string* release_edge_name();
-  inline void set_allocated_edge_name(::std::string* edge_name);
-
-  // @@protoc_insertion_point(class_scope:range.core.stored.Request.AddReverseEdge)
- private:
-  inline void set_has_graph_name();
-  inline void clear_has_graph_name();
-  inline void set_has_node_name();
-  inline void clear_has_node_name();
-  inline void set_has_edge_name();
-  inline void clear_has_edge_name();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::std::string* graph_name_;
-  ::std::string* node_name_;
-  ::std::string* edge_name_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
-
-  friend void  protobuf_AddDesc_store_2eproto();
-  friend void protobuf_AssignDesc_store_2eproto();
-  friend void protobuf_ShutdownFile_store_2eproto();
-
-  void InitAsDefaultInstance();
-  static Request_AddReverseEdge* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class Request_RemoveReverseEdge : public ::google::protobuf::Message {
- public:
-  Request_RemoveReverseEdge();
-  virtual ~Request_RemoveReverseEdge();
-
-  Request_RemoveReverseEdge(const Request_RemoveReverseEdge& from);
-
-  inline Request_RemoveReverseEdge& operator=(const Request_RemoveReverseEdge& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const Request_RemoveReverseEdge& default_instance();
-
-  void Swap(Request_RemoveReverseEdge* other);
-
-  // implements Message ----------------------------------------------
-
-  Request_RemoveReverseEdge* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const Request_RemoveReverseEdge& from);
-  void MergeFrom(const Request_RemoveReverseEdge& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // required string graph_name = 1;
-  inline bool has_graph_name() const;
-  inline void clear_graph_name();
-  static const int kGraphNameFieldNumber = 1;
-  inline const ::std::string& graph_name() const;
-  inline void set_graph_name(const ::std::string& value);
-  inline void set_graph_name(const char* value);
-  inline void set_graph_name(const char* value, size_t size);
-  inline ::std::string* mutable_graph_name();
-  inline ::std::string* release_graph_name();
-  inline void set_allocated_graph_name(::std::string* graph_name);
-
-  // required string node_name = 2;
-  inline bool has_node_name() const;
-  inline void clear_node_name();
-  static const int kNodeNameFieldNumber = 2;
-  inline const ::std::string& node_name() const;
-  inline void set_node_name(const ::std::string& value);
-  inline void set_node_name(const char* value);
-  inline void set_node_name(const char* value, size_t size);
-  inline ::std::string* mutable_node_name();
-  inline ::std::string* release_node_name();
-  inline void set_allocated_node_name(::std::string* node_name);
-
-  // required string edge_name = 3;
-  inline bool has_edge_name() const;
-  inline void clear_edge_name();
-  static const int kEdgeNameFieldNumber = 3;
-  inline const ::std::string& edge_name() const;
-  inline void set_edge_name(const ::std::string& value);
-  inline void set_edge_name(const char* value);
-  inline void set_edge_name(const char* value, size_t size);
-  inline ::std::string* mutable_edge_name();
-  inline ::std::string* release_edge_name();
-  inline void set_allocated_edge_name(::std::string* edge_name);
-
-  // @@protoc_insertion_point(class_scope:range.core.stored.Request.RemoveReverseEdge)
- private:
-  inline void set_has_graph_name();
-  inline void clear_has_graph_name();
-  inline void set_has_node_name();
-  inline void clear_has_node_name();
-  inline void set_has_edge_name();
-  inline void clear_has_edge_name();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::std::string* graph_name_;
-  ::std::string* node_name_;
-  ::std::string* edge_name_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
-
-  friend void  protobuf_AddDesc_store_2eproto();
-  friend void protobuf_AssignDesc_store_2eproto();
-  friend void protobuf_ShutdownFile_store_2eproto();
-
-  void InitAsDefaultInstance();
-  static Request_RemoveReverseEdge* default_instance_;
-};
-// -------------------------------------------------------------------
 
 class Request : public ::google::protobuf::Message {
  public:
@@ -1484,28 +135,12 @@ class Request : public ::google::protobuf::Message {
 
   // nested types ----------------------------------------------------
 
-  typedef Request_CreateGraph CreateGraph;
-  typedef Request_RemoveNode RemoveNode;
-  typedef Request_CreateNode CreateNode;
-  typedef Request_AddTagValues AddTagValues;
-  typedef Request_RemoveTagValues RemoveTagValues;
-  typedef Request_DeleteTag DeleteTag;
-  typedef Request_AddForwardEdge AddForwardEdge;
-  typedef Request_RemoveForwardEdge RemoveForwardEdge;
-  typedef Request_AddReverseEdge AddReverseEdge;
-  typedef Request_RemoveReverseEdge RemoveReverseEdge;
-
   typedef Request_Type Type;
-  static const Type CREATE_GRAPH = Request_Type_CREATE_GRAPH;
-  static const Type REMOVE_NODE = Request_Type_REMOVE_NODE;
-  static const Type CREATE_NODE = Request_Type_CREATE_NODE;
-  static const Type ADD_TAG_VALUES = Request_Type_ADD_TAG_VALUES;
-  static const Type REMOVE_TAG_VALUES = Request_Type_REMOVE_TAG_VALUES;
-  static const Type DELETE_TAG = Request_Type_DELETE_TAG;
-  static const Type ADD_FORWARD_EDGE = Request_Type_ADD_FORWARD_EDGE;
-  static const Type ADD_REVERSE_EDGE = Request_Type_ADD_REVERSE_EDGE;
-  static const Type REMOVE_FORWARD_EDGE = Request_Type_REMOVE_FORWARD_EDGE;
-  static const Type REMOVE_REVERSE_EDGE = Request_Type_REMOVE_REVERSE_EDGE;
+  static const Type REQUEST = Request_Type_REQUEST;
+  static const Type SUBMIT = Request_Type_SUBMIT;
+  static const Type PREPARE = Request_Type_PREPARE;
+  static const Type PROPOSE = Request_Type_PROPOSE;
+  static const Type LEARN = Request_Type_LEARN;
   static inline bool Type_IsValid(int value) {
     return Request_Type_IsValid(value);
   }
@@ -1529,24 +164,17 @@ class Request : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .range.core.stored.Request.Type request_type = 1;
-  inline bool has_request_type() const;
-  inline void clear_request_type();
-  static const int kRequestTypeFieldNumber = 1;
-  inline ::range::core::stored::Request_Type request_type() const;
-  inline void set_request_type(::range::core::stored::Request_Type value);
+  // required uint32 crc = 1;
+  inline bool has_crc() const;
+  inline void clear_crc();
+  static const int kCrcFieldNumber = 1;
+  inline ::google::protobuf::uint32 crc() const;
+  inline void set_crc(::google::protobuf::uint32 value);
 
-  // required bool blocking = 2;
-  inline bool has_blocking() const;
-  inline void clear_blocking();
-  static const int kBlockingFieldNumber = 2;
-  inline bool blocking() const;
-  inline void set_blocking(bool value);
-
-  // required string client_id = 3;
+  // required string client_id = 2;
   inline bool has_client_id() const;
   inline void clear_client_id();
-  static const int kClientIdFieldNumber = 3;
+  static const int kClientIdFieldNumber = 2;
   inline const ::std::string& client_id() const;
   inline void set_client_id(const ::std::string& value);
   inline void set_client_id(const char* value);
@@ -1555,143 +183,102 @@ class Request : public ::google::protobuf::Message {
   inline ::std::string* release_client_id();
   inline void set_allocated_client_id(::std::string* client_id);
 
-  // optional .range.core.stored.Request.CreateGraph create_graph = 4;
-  inline bool has_create_graph() const;
-  inline void clear_create_graph();
-  static const int kCreateGraphFieldNumber = 4;
-  inline const ::range::core::stored::Request_CreateGraph& create_graph() const;
-  inline ::range::core::stored::Request_CreateGraph* mutable_create_graph();
-  inline ::range::core::stored::Request_CreateGraph* release_create_graph();
-  inline void set_allocated_create_graph(::range::core::stored::Request_CreateGraph* create_graph);
+  // required uint64 request_id = 3;
+  inline bool has_request_id() const;
+  inline void clear_request_id();
+  static const int kRequestIdFieldNumber = 3;
+  inline ::google::protobuf::uint64 request_id() const;
+  inline void set_request_id(::google::protobuf::uint64 value);
 
-  // optional .range.core.stored.Request.RemoveNode remove_node = 5;
-  inline bool has_remove_node() const;
-  inline void clear_remove_node();
-  static const int kRemoveNodeFieldNumber = 5;
-  inline const ::range::core::stored::Request_RemoveNode& remove_node() const;
-  inline ::range::core::stored::Request_RemoveNode* mutable_remove_node();
-  inline ::range::core::stored::Request_RemoveNode* release_remove_node();
-  inline void set_allocated_remove_node(::range::core::stored::Request_RemoveNode* remove_node);
+  // required string method = 4;
+  inline bool has_method() const;
+  inline void clear_method();
+  static const int kMethodFieldNumber = 4;
+  inline const ::std::string& method() const;
+  inline void set_method(const ::std::string& value);
+  inline void set_method(const char* value);
+  inline void set_method(const char* value, size_t size);
+  inline ::std::string* mutable_method();
+  inline ::std::string* release_method();
+  inline void set_allocated_method(::std::string* method);
 
-  // optional .range.core.stored.Request.CreateNode create_node = 6;
-  inline bool has_create_node() const;
-  inline void clear_create_node();
-  static const int kCreateNodeFieldNumber = 6;
-  inline const ::range::core::stored::Request_CreateNode& create_node() const;
-  inline ::range::core::stored::Request_CreateNode* mutable_create_node();
-  inline ::range::core::stored::Request_CreateNode* release_create_node();
-  inline void set_allocated_create_node(::range::core::stored::Request_CreateNode* create_node);
+  // repeated string args = 5;
+  inline int args_size() const;
+  inline void clear_args();
+  static const int kArgsFieldNumber = 5;
+  inline const ::std::string& args(int index) const;
+  inline ::std::string* mutable_args(int index);
+  inline void set_args(int index, const ::std::string& value);
+  inline void set_args(int index, const char* value);
+  inline void set_args(int index, const char* value, size_t size);
+  inline ::std::string* add_args();
+  inline void add_args(const ::std::string& value);
+  inline void add_args(const char* value);
+  inline void add_args(const char* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& args() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_args();
 
-  // optional .range.core.stored.Request.AddTagValues add_tag_values = 7;
-  inline bool has_add_tag_values() const;
-  inline void clear_add_tag_values();
-  static const int kAddTagValuesFieldNumber = 7;
-  inline const ::range::core::stored::Request_AddTagValues& add_tag_values() const;
-  inline ::range::core::stored::Request_AddTagValues* mutable_add_tag_values();
-  inline ::range::core::stored::Request_AddTagValues* release_add_tag_values();
-  inline void set_allocated_add_tag_values(::range::core::stored::Request_AddTagValues* add_tag_values);
+  // optional uint64 timestamp = 6;
+  inline bool has_timestamp() const;
+  inline void clear_timestamp();
+  static const int kTimestampFieldNumber = 6;
+  inline ::google::protobuf::uint64 timestamp() const;
+  inline void set_timestamp(::google::protobuf::uint64 value);
 
-  // optional .range.core.stored.Request.RemoveTagValues remove_tag_values = 8;
-  inline bool has_remove_tag_values() const;
-  inline void clear_remove_tag_values();
-  static const int kRemoveTagValuesFieldNumber = 8;
-  inline const ::range::core::stored::Request_RemoveTagValues& remove_tag_values() const;
-  inline ::range::core::stored::Request_RemoveTagValues* mutable_remove_tag_values();
-  inline ::range::core::stored::Request_RemoveTagValues* release_remove_tag_values();
-  inline void set_allocated_remove_tag_values(::range::core::stored::Request_RemoveTagValues* remove_tag_values);
+  // optional .range.stored.Request.Type type = 7;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 7;
+  inline ::range::stored::Request_Type type() const;
+  inline void set_type(::range::stored::Request_Type value);
 
-  // optional .range.core.stored.Request.DeleteTag delete_tag = 9;
-  inline bool has_delete_tag() const;
-  inline void clear_delete_tag();
-  static const int kDeleteTagFieldNumber = 9;
-  inline const ::range::core::stored::Request_DeleteTag& delete_tag() const;
-  inline ::range::core::stored::Request_DeleteTag* mutable_delete_tag();
-  inline ::range::core::stored::Request_DeleteTag* release_delete_tag();
-  inline void set_allocated_delete_tag(::range::core::stored::Request_DeleteTag* delete_tag);
+  // optional uint64 proposal_num = 8;
+  inline bool has_proposal_num() const;
+  inline void clear_proposal_num();
+  static const int kProposalNumFieldNumber = 8;
+  inline ::google::protobuf::uint64 proposal_num() const;
+  inline void set_proposal_num(::google::protobuf::uint64 value);
 
-  // optional .range.core.stored.Request.AddForwardEdge add_forward_edge = 10;
-  inline bool has_add_forward_edge() const;
-  inline void clear_add_forward_edge();
-  static const int kAddForwardEdgeFieldNumber = 10;
-  inline const ::range::core::stored::Request_AddForwardEdge& add_forward_edge() const;
-  inline ::range::core::stored::Request_AddForwardEdge* mutable_add_forward_edge();
-  inline ::range::core::stored::Request_AddForwardEdge* release_add_forward_edge();
-  inline void set_allocated_add_forward_edge(::range::core::stored::Request_AddForwardEdge* add_forward_edge);
+  // optional uint32 proposer_id = 9;
+  inline bool has_proposer_id() const;
+  inline void clear_proposer_id();
+  static const int kProposerIdFieldNumber = 9;
+  inline ::google::protobuf::uint32 proposer_id() const;
+  inline void set_proposer_id(::google::protobuf::uint32 value);
 
-  // optional .range.core.stored.Request.RemoveForwardEdge remove_foreward_edge = 11;
-  inline bool has_remove_foreward_edge() const;
-  inline void clear_remove_foreward_edge();
-  static const int kRemoveForewardEdgeFieldNumber = 11;
-  inline const ::range::core::stored::Request_RemoveForwardEdge& remove_foreward_edge() const;
-  inline ::range::core::stored::Request_RemoveForwardEdge* mutable_remove_foreward_edge();
-  inline ::range::core::stored::Request_RemoveForwardEdge* release_remove_foreward_edge();
-  inline void set_allocated_remove_foreward_edge(::range::core::stored::Request_RemoveForwardEdge* remove_foreward_edge);
-
-  // optional .range.core.stored.Request.AddReverseEdge add_reverse_edge = 12;
-  inline bool has_add_reverse_edge() const;
-  inline void clear_add_reverse_edge();
-  static const int kAddReverseEdgeFieldNumber = 12;
-  inline const ::range::core::stored::Request_AddReverseEdge& add_reverse_edge() const;
-  inline ::range::core::stored::Request_AddReverseEdge* mutable_add_reverse_edge();
-  inline ::range::core::stored::Request_AddReverseEdge* release_add_reverse_edge();
-  inline void set_allocated_add_reverse_edge(::range::core::stored::Request_AddReverseEdge* add_reverse_edge);
-
-  // optional .range.core.stored.Request.RemoveReverseEdge remove_reverse_edge = 13;
-  inline bool has_remove_reverse_edge() const;
-  inline void clear_remove_reverse_edge();
-  static const int kRemoveReverseEdgeFieldNumber = 13;
-  inline const ::range::core::stored::Request_RemoveReverseEdge& remove_reverse_edge() const;
-  inline ::range::core::stored::Request_RemoveReverseEdge* mutable_remove_reverse_edge();
-  inline ::range::core::stored::Request_RemoveReverseEdge* release_remove_reverse_edge();
-  inline void set_allocated_remove_reverse_edge(::range::core::stored::Request_RemoveReverseEdge* remove_reverse_edge);
-
-  // @@protoc_insertion_point(class_scope:range.core.stored.Request)
+  // @@protoc_insertion_point(class_scope:range.stored.Request)
  private:
-  inline void set_has_request_type();
-  inline void clear_has_request_type();
-  inline void set_has_blocking();
-  inline void clear_has_blocking();
+  inline void set_has_crc();
+  inline void clear_has_crc();
   inline void set_has_client_id();
   inline void clear_has_client_id();
-  inline void set_has_create_graph();
-  inline void clear_has_create_graph();
-  inline void set_has_remove_node();
-  inline void clear_has_remove_node();
-  inline void set_has_create_node();
-  inline void clear_has_create_node();
-  inline void set_has_add_tag_values();
-  inline void clear_has_add_tag_values();
-  inline void set_has_remove_tag_values();
-  inline void clear_has_remove_tag_values();
-  inline void set_has_delete_tag();
-  inline void clear_has_delete_tag();
-  inline void set_has_add_forward_edge();
-  inline void clear_has_add_forward_edge();
-  inline void set_has_remove_foreward_edge();
-  inline void clear_has_remove_foreward_edge();
-  inline void set_has_add_reverse_edge();
-  inline void clear_has_add_reverse_edge();
-  inline void set_has_remove_reverse_edge();
-  inline void clear_has_remove_reverse_edge();
+  inline void set_has_request_id();
+  inline void clear_has_request_id();
+  inline void set_has_method();
+  inline void clear_has_method();
+  inline void set_has_timestamp();
+  inline void clear_has_timestamp();
+  inline void set_has_type();
+  inline void clear_has_type();
+  inline void set_has_proposal_num();
+  inline void clear_has_proposal_num();
+  inline void set_has_proposer_id();
+  inline void clear_has_proposer_id();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  int request_type_;
-  bool blocking_;
   ::std::string* client_id_;
-  ::range::core::stored::Request_CreateGraph* create_graph_;
-  ::range::core::stored::Request_RemoveNode* remove_node_;
-  ::range::core::stored::Request_CreateNode* create_node_;
-  ::range::core::stored::Request_AddTagValues* add_tag_values_;
-  ::range::core::stored::Request_RemoveTagValues* remove_tag_values_;
-  ::range::core::stored::Request_DeleteTag* delete_tag_;
-  ::range::core::stored::Request_AddForwardEdge* add_forward_edge_;
-  ::range::core::stored::Request_RemoveForwardEdge* remove_foreward_edge_;
-  ::range::core::stored::Request_AddReverseEdge* add_reverse_edge_;
-  ::range::core::stored::Request_RemoveReverseEdge* remove_reverse_edge_;
+  ::google::protobuf::uint64 request_id_;
+  ::std::string* method_;
+  ::google::protobuf::uint32 crc_;
+  int type_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> args_;
+  ::google::protobuf::uint64 timestamp_;
+  ::google::protobuf::uint64 proposal_num_;
+  ::google::protobuf::uint32 proposer_id_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(13 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
 
   friend void  protobuf_AddDesc_store_2eproto();
   friend void protobuf_AssignDesc_store_2eproto();
@@ -1754,6 +341,32 @@ class Ack : public ::google::protobuf::Message {
 
   // nested types ----------------------------------------------------
 
+  typedef Ack_Type Type;
+  static const Type ACK = Ack_Type_ACK;
+  static const Type PROMISE = Ack_Type_PROMISE;
+  static const Type NACK = Ack_Type_NACK;
+  static const Type ACCEPTED = Ack_Type_ACCEPTED;
+  static inline bool Type_IsValid(int value) {
+    return Ack_Type_IsValid(value);
+  }
+  static const Type Type_MIN =
+    Ack_Type_Type_MIN;
+  static const Type Type_MAX =
+    Ack_Type_Type_MAX;
+  static const int Type_ARRAYSIZE =
+    Ack_Type_Type_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  Type_descriptor() {
+    return Ack_Type_descriptor();
+  }
+  static inline const ::std::string& Type_Name(Type value) {
+    return Ack_Type_Name(value);
+  }
+  static inline bool Type_Parse(const ::std::string& name,
+      Type* value) {
+    return Ack_Type_Parse(name, value);
+  }
+
   // accessors -------------------------------------------------------
 
   // required bool status = 1;
@@ -1763,17 +376,36 @@ class Ack : public ::google::protobuf::Message {
   inline bool status() const;
   inline void set_status(bool value);
 
-  // optional uint64 code = 2;
+  // required string client_id = 2;
+  inline bool has_client_id() const;
+  inline void clear_client_id();
+  static const int kClientIdFieldNumber = 2;
+  inline const ::std::string& client_id() const;
+  inline void set_client_id(const ::std::string& value);
+  inline void set_client_id(const char* value);
+  inline void set_client_id(const char* value, size_t size);
+  inline ::std::string* mutable_client_id();
+  inline ::std::string* release_client_id();
+  inline void set_allocated_client_id(::std::string* client_id);
+
+  // required uint64 request_id = 3;
+  inline bool has_request_id() const;
+  inline void clear_request_id();
+  static const int kRequestIdFieldNumber = 3;
+  inline ::google::protobuf::uint64 request_id() const;
+  inline void set_request_id(::google::protobuf::uint64 value);
+
+  // optional uint64 code = 4;
   inline bool has_code() const;
   inline void clear_code();
-  static const int kCodeFieldNumber = 2;
+  static const int kCodeFieldNumber = 4;
   inline ::google::protobuf::uint64 code() const;
   inline void set_code(::google::protobuf::uint64 value);
 
-  // optional string reason = 3;
+  // optional string reason = 5;
   inline bool has_reason() const;
   inline void clear_reason();
-  static const int kReasonFieldNumber = 3;
+  static const int kReasonFieldNumber = 5;
   inline const ::std::string& reason() const;
   inline void set_reason(const ::std::string& value);
   inline void set_reason(const char* value);
@@ -1782,23 +414,69 @@ class Ack : public ::google::protobuf::Message {
   inline ::std::string* release_reason();
   inline void set_allocated_reason(::std::string* reason);
 
-  // @@protoc_insertion_point(class_scope:range.core.stored.Ack)
+  // optional .range.stored.Ack.Type type = 6;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 6;
+  inline ::range::stored::Ack_Type type() const;
+  inline void set_type(::range::stored::Ack_Type value);
+
+  // optional uint64 proposal_num = 7;
+  inline bool has_proposal_num() const;
+  inline void clear_proposal_num();
+  static const int kProposalNumFieldNumber = 7;
+  inline ::google::protobuf::uint64 proposal_num() const;
+  inline void set_proposal_num(::google::protobuf::uint64 value);
+
+  // optional uint32 proposer_id = 8;
+  inline bool has_proposer_id() const;
+  inline void clear_proposer_id();
+  static const int kProposerIdFieldNumber = 8;
+  inline ::google::protobuf::uint32 proposer_id() const;
+  inline void set_proposer_id(::google::protobuf::uint32 value);
+
+  // optional uint64 next_proposal_num = 9;
+  inline bool has_next_proposal_num() const;
+  inline void clear_next_proposal_num();
+  static const int kNextProposalNumFieldNumber = 9;
+  inline ::google::protobuf::uint64 next_proposal_num() const;
+  inline void set_next_proposal_num(::google::protobuf::uint64 value);
+
+  // @@protoc_insertion_point(class_scope:range.stored.Ack)
  private:
   inline void set_has_status();
   inline void clear_has_status();
+  inline void set_has_client_id();
+  inline void clear_has_client_id();
+  inline void set_has_request_id();
+  inline void clear_has_request_id();
   inline void set_has_code();
   inline void clear_has_code();
   inline void set_has_reason();
   inline void clear_has_reason();
+  inline void set_has_type();
+  inline void clear_has_type();
+  inline void set_has_proposal_num();
+  inline void clear_has_proposal_num();
+  inline void set_has_proposer_id();
+  inline void clear_has_proposer_id();
+  inline void set_has_next_proposal_num();
+  inline void clear_has_next_proposal_num();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
+  ::std::string* client_id_;
+  ::google::protobuf::uint64 request_id_;
+  bool status_;
+  int type_;
   ::google::protobuf::uint64 code_;
   ::std::string* reason_;
-  bool status_;
+  ::google::protobuf::uint64 proposal_num_;
+  ::google::protobuf::uint64 next_proposal_num_;
+  ::google::protobuf::uint32 proposer_id_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
 
   friend void  protobuf_AddDesc_store_2eproto();
   friend void protobuf_AssignDesc_store_2eproto();
@@ -1812,2208 +490,39 @@ class Ack : public ::google::protobuf::Message {
 
 // ===================================================================
 
-// Request_CreateGraph
-
-// required string graph_name = 1;
-inline bool Request_CreateGraph::has_graph_name() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Request_CreateGraph::set_has_graph_name() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Request_CreateGraph::clear_has_graph_name() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Request_CreateGraph::clear_graph_name() {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    graph_name_->clear();
-  }
-  clear_has_graph_name();
-}
-inline const ::std::string& Request_CreateGraph::graph_name() const {
-  return *graph_name_;
-}
-inline void Request_CreateGraph::set_graph_name(const ::std::string& value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_CreateGraph::set_graph_name(const char* value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_CreateGraph::set_graph_name(const char* value, size_t size) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_CreateGraph::mutable_graph_name() {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  return graph_name_;
-}
-inline ::std::string* Request_CreateGraph::release_graph_name() {
-  clear_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = graph_name_;
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_CreateGraph::set_allocated_graph_name(::std::string* graph_name) {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete graph_name_;
-  }
-  if (graph_name) {
-    set_has_graph_name();
-    graph_name_ = graph_name;
-  } else {
-    clear_has_graph_name();
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// optional bool prepopulate = 2 [default = true];
-inline bool Request_CreateGraph::has_prepopulate() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Request_CreateGraph::set_has_prepopulate() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Request_CreateGraph::clear_has_prepopulate() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Request_CreateGraph::clear_prepopulate() {
-  prepopulate_ = true;
-  clear_has_prepopulate();
-}
-inline bool Request_CreateGraph::prepopulate() const {
-  return prepopulate_;
-}
-inline void Request_CreateGraph::set_prepopulate(bool value) {
-  set_has_prepopulate();
-  prepopulate_ = value;
-}
-
-// optional string prepopulate_source = 3 [default = "primary"];
-inline bool Request_CreateGraph::has_prepopulate_source() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Request_CreateGraph::set_has_prepopulate_source() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void Request_CreateGraph::clear_has_prepopulate_source() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Request_CreateGraph::clear_prepopulate_source() {
-  if (prepopulate_source_ != _default_prepopulate_source_) {
-    prepopulate_source_->assign(*_default_prepopulate_source_);
-  }
-  clear_has_prepopulate_source();
-}
-inline const ::std::string& Request_CreateGraph::prepopulate_source() const {
-  return *prepopulate_source_;
-}
-inline void Request_CreateGraph::set_prepopulate_source(const ::std::string& value) {
-  set_has_prepopulate_source();
-  if (prepopulate_source_ == _default_prepopulate_source_) {
-    prepopulate_source_ = new ::std::string;
-  }
-  prepopulate_source_->assign(value);
-}
-inline void Request_CreateGraph::set_prepopulate_source(const char* value) {
-  set_has_prepopulate_source();
-  if (prepopulate_source_ == _default_prepopulate_source_) {
-    prepopulate_source_ = new ::std::string;
-  }
-  prepopulate_source_->assign(value);
-}
-inline void Request_CreateGraph::set_prepopulate_source(const char* value, size_t size) {
-  set_has_prepopulate_source();
-  if (prepopulate_source_ == _default_prepopulate_source_) {
-    prepopulate_source_ = new ::std::string;
-  }
-  prepopulate_source_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_CreateGraph::mutable_prepopulate_source() {
-  set_has_prepopulate_source();
-  if (prepopulate_source_ == _default_prepopulate_source_) {
-    prepopulate_source_ = new ::std::string(*_default_prepopulate_source_);
-  }
-  return prepopulate_source_;
-}
-inline ::std::string* Request_CreateGraph::release_prepopulate_source() {
-  clear_has_prepopulate_source();
-  if (prepopulate_source_ == _default_prepopulate_source_) {
-    return NULL;
-  } else {
-    ::std::string* temp = prepopulate_source_;
-    prepopulate_source_ = const_cast< ::std::string*>(_default_prepopulate_source_);
-    return temp;
-  }
-}
-inline void Request_CreateGraph::set_allocated_prepopulate_source(::std::string* prepopulate_source) {
-  if (prepopulate_source_ != _default_prepopulate_source_) {
-    delete prepopulate_source_;
-  }
-  if (prepopulate_source) {
-    set_has_prepopulate_source();
-    prepopulate_source_ = prepopulate_source;
-  } else {
-    clear_has_prepopulate_source();
-    prepopulate_source_ = const_cast< ::std::string*>(_default_prepopulate_source_);
-  }
-}
-
-// -------------------------------------------------------------------
-
-// Request_RemoveNode
-
-// required string graph_name = 1;
-inline bool Request_RemoveNode::has_graph_name() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Request_RemoveNode::set_has_graph_name() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Request_RemoveNode::clear_has_graph_name() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Request_RemoveNode::clear_graph_name() {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    graph_name_->clear();
-  }
-  clear_has_graph_name();
-}
-inline const ::std::string& Request_RemoveNode::graph_name() const {
-  return *graph_name_;
-}
-inline void Request_RemoveNode::set_graph_name(const ::std::string& value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_RemoveNode::set_graph_name(const char* value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_RemoveNode::set_graph_name(const char* value, size_t size) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_RemoveNode::mutable_graph_name() {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  return graph_name_;
-}
-inline ::std::string* Request_RemoveNode::release_graph_name() {
-  clear_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = graph_name_;
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_RemoveNode::set_allocated_graph_name(::std::string* graph_name) {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete graph_name_;
-  }
-  if (graph_name) {
-    set_has_graph_name();
-    graph_name_ = graph_name;
-  } else {
-    clear_has_graph_name();
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string name = 2;
-inline bool Request_RemoveNode::has_name() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Request_RemoveNode::set_has_name() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Request_RemoveNode::clear_has_name() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Request_RemoveNode::clear_name() {
-  if (name_ != &::google::protobuf::internal::kEmptyString) {
-    name_->clear();
-  }
-  clear_has_name();
-}
-inline const ::std::string& Request_RemoveNode::name() const {
-  return *name_;
-}
-inline void Request_RemoveNode::set_name(const ::std::string& value) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(value);
-}
-inline void Request_RemoveNode::set_name(const char* value) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(value);
-}
-inline void Request_RemoveNode::set_name(const char* value, size_t size) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_RemoveNode::mutable_name() {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  return name_;
-}
-inline ::std::string* Request_RemoveNode::release_name() {
-  clear_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = name_;
-    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_RemoveNode::set_allocated_name(::std::string* name) {
-  if (name_ != &::google::protobuf::internal::kEmptyString) {
-    delete name_;
-  }
-  if (name) {
-    set_has_name();
-    name_ = name;
-  } else {
-    clear_has_name();
-    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// -------------------------------------------------------------------
-
-// Request_CreateNode
-
-// required string graph_name = 1;
-inline bool Request_CreateNode::has_graph_name() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Request_CreateNode::set_has_graph_name() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Request_CreateNode::clear_has_graph_name() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Request_CreateNode::clear_graph_name() {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    graph_name_->clear();
-  }
-  clear_has_graph_name();
-}
-inline const ::std::string& Request_CreateNode::graph_name() const {
-  return *graph_name_;
-}
-inline void Request_CreateNode::set_graph_name(const ::std::string& value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_CreateNode::set_graph_name(const char* value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_CreateNode::set_graph_name(const char* value, size_t size) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_CreateNode::mutable_graph_name() {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  return graph_name_;
-}
-inline ::std::string* Request_CreateNode::release_graph_name() {
-  clear_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = graph_name_;
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_CreateNode::set_allocated_graph_name(::std::string* graph_name) {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete graph_name_;
-  }
-  if (graph_name) {
-    set_has_graph_name();
-    graph_name_ = graph_name;
-  } else {
-    clear_has_graph_name();
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string name = 2;
-inline bool Request_CreateNode::has_name() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Request_CreateNode::set_has_name() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Request_CreateNode::clear_has_name() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Request_CreateNode::clear_name() {
-  if (name_ != &::google::protobuf::internal::kEmptyString) {
-    name_->clear();
-  }
-  clear_has_name();
-}
-inline const ::std::string& Request_CreateNode::name() const {
-  return *name_;
-}
-inline void Request_CreateNode::set_name(const ::std::string& value) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(value);
-}
-inline void Request_CreateNode::set_name(const char* value) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(value);
-}
-inline void Request_CreateNode::set_name(const char* value, size_t size) {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_CreateNode::mutable_name() {
-  set_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    name_ = new ::std::string;
-  }
-  return name_;
-}
-inline ::std::string* Request_CreateNode::release_name() {
-  clear_has_name();
-  if (name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = name_;
-    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_CreateNode::set_allocated_name(::std::string* name) {
-  if (name_ != &::google::protobuf::internal::kEmptyString) {
-    delete name_;
-  }
-  if (name) {
-    set_has_name();
-    name_ = name;
-  } else {
-    clear_has_name();
-    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required uint32 type = 3;
-inline bool Request_CreateNode::has_type() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Request_CreateNode::set_has_type() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void Request_CreateNode::clear_has_type() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Request_CreateNode::clear_type() {
-  type_ = 0u;
-  clear_has_type();
-}
-inline ::google::protobuf::uint32 Request_CreateNode::type() const {
-  return type_;
-}
-inline void Request_CreateNode::set_type(::google::protobuf::uint32 value) {
-  set_has_type();
-  type_ = value;
-}
-
-// -------------------------------------------------------------------
-
-// Request_AddTagValues_Values
-
-// repeated string values = 1;
-inline int Request_AddTagValues_Values::values_size() const {
-  return values_.size();
-}
-inline void Request_AddTagValues_Values::clear_values() {
-  values_.Clear();
-}
-inline const ::std::string& Request_AddTagValues_Values::values(int index) const {
-  return values_.Get(index);
-}
-inline ::std::string* Request_AddTagValues_Values::mutable_values(int index) {
-  return values_.Mutable(index);
-}
-inline void Request_AddTagValues_Values::set_values(int index, const ::std::string& value) {
-  values_.Mutable(index)->assign(value);
-}
-inline void Request_AddTagValues_Values::set_values(int index, const char* value) {
-  values_.Mutable(index)->assign(value);
-}
-inline void Request_AddTagValues_Values::set_values(int index, const char* value, size_t size) {
-  values_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_AddTagValues_Values::add_values() {
-  return values_.Add();
-}
-inline void Request_AddTagValues_Values::add_values(const ::std::string& value) {
-  values_.Add()->assign(value);
-}
-inline void Request_AddTagValues_Values::add_values(const char* value) {
-  values_.Add()->assign(value);
-}
-inline void Request_AddTagValues_Values::add_values(const char* value, size_t size) {
-  values_.Add()->assign(reinterpret_cast<const char*>(value), size);
-}
-inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-Request_AddTagValues_Values::values() const {
-  return values_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-Request_AddTagValues_Values::mutable_values() {
-  return &values_;
-}
-
-// -------------------------------------------------------------------
-
-// Request_AddTagValues
-
-// required string graph_name = 1;
-inline bool Request_AddTagValues::has_graph_name() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Request_AddTagValues::set_has_graph_name() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Request_AddTagValues::clear_has_graph_name() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Request_AddTagValues::clear_graph_name() {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    graph_name_->clear();
-  }
-  clear_has_graph_name();
-}
-inline const ::std::string& Request_AddTagValues::graph_name() const {
-  return *graph_name_;
-}
-inline void Request_AddTagValues::set_graph_name(const ::std::string& value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_AddTagValues::set_graph_name(const char* value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_AddTagValues::set_graph_name(const char* value, size_t size) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_AddTagValues::mutable_graph_name() {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  return graph_name_;
-}
-inline ::std::string* Request_AddTagValues::release_graph_name() {
-  clear_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = graph_name_;
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_AddTagValues::set_allocated_graph_name(::std::string* graph_name) {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete graph_name_;
-  }
-  if (graph_name) {
-    set_has_graph_name();
-    graph_name_ = graph_name;
-  } else {
-    clear_has_graph_name();
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string node_name = 2;
-inline bool Request_AddTagValues::has_node_name() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Request_AddTagValues::set_has_node_name() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Request_AddTagValues::clear_has_node_name() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Request_AddTagValues::clear_node_name() {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    node_name_->clear();
-  }
-  clear_has_node_name();
-}
-inline const ::std::string& Request_AddTagValues::node_name() const {
-  return *node_name_;
-}
-inline void Request_AddTagValues::set_node_name(const ::std::string& value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_AddTagValues::set_node_name(const char* value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_AddTagValues::set_node_name(const char* value, size_t size) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_AddTagValues::mutable_node_name() {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  return node_name_;
-}
-inline ::std::string* Request_AddTagValues::release_node_name() {
-  clear_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = node_name_;
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_AddTagValues::set_allocated_node_name(::std::string* node_name) {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete node_name_;
-  }
-  if (node_name) {
-    set_has_node_name();
-    node_name_ = node_name;
-  } else {
-    clear_has_node_name();
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string tag_key = 3;
-inline bool Request_AddTagValues::has_tag_key() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Request_AddTagValues::set_has_tag_key() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void Request_AddTagValues::clear_has_tag_key() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Request_AddTagValues::clear_tag_key() {
-  if (tag_key_ != &::google::protobuf::internal::kEmptyString) {
-    tag_key_->clear();
-  }
-  clear_has_tag_key();
-}
-inline const ::std::string& Request_AddTagValues::tag_key() const {
-  return *tag_key_;
-}
-inline void Request_AddTagValues::set_tag_key(const ::std::string& value) {
-  set_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    tag_key_ = new ::std::string;
-  }
-  tag_key_->assign(value);
-}
-inline void Request_AddTagValues::set_tag_key(const char* value) {
-  set_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    tag_key_ = new ::std::string;
-  }
-  tag_key_->assign(value);
-}
-inline void Request_AddTagValues::set_tag_key(const char* value, size_t size) {
-  set_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    tag_key_ = new ::std::string;
-  }
-  tag_key_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_AddTagValues::mutable_tag_key() {
-  set_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    tag_key_ = new ::std::string;
-  }
-  return tag_key_;
-}
-inline ::std::string* Request_AddTagValues::release_tag_key() {
-  clear_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = tag_key_;
-    tag_key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_AddTagValues::set_allocated_tag_key(::std::string* tag_key) {
-  if (tag_key_ != &::google::protobuf::internal::kEmptyString) {
-    delete tag_key_;
-  }
-  if (tag_key) {
-    set_has_tag_key();
-    tag_key_ = tag_key;
-  } else {
-    clear_has_tag_key();
-    tag_key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required .range.core.stored.Request.AddTagValues.Values values = 4;
-inline bool Request_AddTagValues::has_values() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void Request_AddTagValues::set_has_values() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void Request_AddTagValues::clear_has_values() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void Request_AddTagValues::clear_values() {
-  if (values_ != NULL) values_->::range::core::stored::Request_AddTagValues_Values::Clear();
-  clear_has_values();
-}
-inline const ::range::core::stored::Request_AddTagValues_Values& Request_AddTagValues::values() const {
-  return values_ != NULL ? *values_ : *default_instance_->values_;
-}
-inline ::range::core::stored::Request_AddTagValues_Values* Request_AddTagValues::mutable_values() {
-  set_has_values();
-  if (values_ == NULL) values_ = new ::range::core::stored::Request_AddTagValues_Values;
-  return values_;
-}
-inline ::range::core::stored::Request_AddTagValues_Values* Request_AddTagValues::release_values() {
-  clear_has_values();
-  ::range::core::stored::Request_AddTagValues_Values* temp = values_;
-  values_ = NULL;
-  return temp;
-}
-inline void Request_AddTagValues::set_allocated_values(::range::core::stored::Request_AddTagValues_Values* values) {
-  delete values_;
-  values_ = values;
-  if (values) {
-    set_has_values();
-  } else {
-    clear_has_values();
-  }
-}
-
-// -------------------------------------------------------------------
-
-// Request_RemoveTagValues_Values
-
-// repeated string values = 1;
-inline int Request_RemoveTagValues_Values::values_size() const {
-  return values_.size();
-}
-inline void Request_RemoveTagValues_Values::clear_values() {
-  values_.Clear();
-}
-inline const ::std::string& Request_RemoveTagValues_Values::values(int index) const {
-  return values_.Get(index);
-}
-inline ::std::string* Request_RemoveTagValues_Values::mutable_values(int index) {
-  return values_.Mutable(index);
-}
-inline void Request_RemoveTagValues_Values::set_values(int index, const ::std::string& value) {
-  values_.Mutable(index)->assign(value);
-}
-inline void Request_RemoveTagValues_Values::set_values(int index, const char* value) {
-  values_.Mutable(index)->assign(value);
-}
-inline void Request_RemoveTagValues_Values::set_values(int index, const char* value, size_t size) {
-  values_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_RemoveTagValues_Values::add_values() {
-  return values_.Add();
-}
-inline void Request_RemoveTagValues_Values::add_values(const ::std::string& value) {
-  values_.Add()->assign(value);
-}
-inline void Request_RemoveTagValues_Values::add_values(const char* value) {
-  values_.Add()->assign(value);
-}
-inline void Request_RemoveTagValues_Values::add_values(const char* value, size_t size) {
-  values_.Add()->assign(reinterpret_cast<const char*>(value), size);
-}
-inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-Request_RemoveTagValues_Values::values() const {
-  return values_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-Request_RemoveTagValues_Values::mutable_values() {
-  return &values_;
-}
-
-// -------------------------------------------------------------------
-
-// Request_RemoveTagValues
-
-// required string graph_name = 1;
-inline bool Request_RemoveTagValues::has_graph_name() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Request_RemoveTagValues::set_has_graph_name() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Request_RemoveTagValues::clear_has_graph_name() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Request_RemoveTagValues::clear_graph_name() {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    graph_name_->clear();
-  }
-  clear_has_graph_name();
-}
-inline const ::std::string& Request_RemoveTagValues::graph_name() const {
-  return *graph_name_;
-}
-inline void Request_RemoveTagValues::set_graph_name(const ::std::string& value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_RemoveTagValues::set_graph_name(const char* value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_RemoveTagValues::set_graph_name(const char* value, size_t size) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_RemoveTagValues::mutable_graph_name() {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  return graph_name_;
-}
-inline ::std::string* Request_RemoveTagValues::release_graph_name() {
-  clear_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = graph_name_;
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_RemoveTagValues::set_allocated_graph_name(::std::string* graph_name) {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete graph_name_;
-  }
-  if (graph_name) {
-    set_has_graph_name();
-    graph_name_ = graph_name;
-  } else {
-    clear_has_graph_name();
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string node_name = 2;
-inline bool Request_RemoveTagValues::has_node_name() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Request_RemoveTagValues::set_has_node_name() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Request_RemoveTagValues::clear_has_node_name() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Request_RemoveTagValues::clear_node_name() {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    node_name_->clear();
-  }
-  clear_has_node_name();
-}
-inline const ::std::string& Request_RemoveTagValues::node_name() const {
-  return *node_name_;
-}
-inline void Request_RemoveTagValues::set_node_name(const ::std::string& value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_RemoveTagValues::set_node_name(const char* value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_RemoveTagValues::set_node_name(const char* value, size_t size) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_RemoveTagValues::mutable_node_name() {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  return node_name_;
-}
-inline ::std::string* Request_RemoveTagValues::release_node_name() {
-  clear_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = node_name_;
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_RemoveTagValues::set_allocated_node_name(::std::string* node_name) {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete node_name_;
-  }
-  if (node_name) {
-    set_has_node_name();
-    node_name_ = node_name;
-  } else {
-    clear_has_node_name();
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string tag_key = 3;
-inline bool Request_RemoveTagValues::has_tag_key() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Request_RemoveTagValues::set_has_tag_key() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void Request_RemoveTagValues::clear_has_tag_key() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Request_RemoveTagValues::clear_tag_key() {
-  if (tag_key_ != &::google::protobuf::internal::kEmptyString) {
-    tag_key_->clear();
-  }
-  clear_has_tag_key();
-}
-inline const ::std::string& Request_RemoveTagValues::tag_key() const {
-  return *tag_key_;
-}
-inline void Request_RemoveTagValues::set_tag_key(const ::std::string& value) {
-  set_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    tag_key_ = new ::std::string;
-  }
-  tag_key_->assign(value);
-}
-inline void Request_RemoveTagValues::set_tag_key(const char* value) {
-  set_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    tag_key_ = new ::std::string;
-  }
-  tag_key_->assign(value);
-}
-inline void Request_RemoveTagValues::set_tag_key(const char* value, size_t size) {
-  set_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    tag_key_ = new ::std::string;
-  }
-  tag_key_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_RemoveTagValues::mutable_tag_key() {
-  set_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    tag_key_ = new ::std::string;
-  }
-  return tag_key_;
-}
-inline ::std::string* Request_RemoveTagValues::release_tag_key() {
-  clear_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = tag_key_;
-    tag_key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_RemoveTagValues::set_allocated_tag_key(::std::string* tag_key) {
-  if (tag_key_ != &::google::protobuf::internal::kEmptyString) {
-    delete tag_key_;
-  }
-  if (tag_key) {
-    set_has_tag_key();
-    tag_key_ = tag_key;
-  } else {
-    clear_has_tag_key();
-    tag_key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required .range.core.stored.Request.RemoveTagValues.Values values = 4;
-inline bool Request_RemoveTagValues::has_values() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void Request_RemoveTagValues::set_has_values() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void Request_RemoveTagValues::clear_has_values() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void Request_RemoveTagValues::clear_values() {
-  if (values_ != NULL) values_->::range::core::stored::Request_RemoveTagValues_Values::Clear();
-  clear_has_values();
-}
-inline const ::range::core::stored::Request_RemoveTagValues_Values& Request_RemoveTagValues::values() const {
-  return values_ != NULL ? *values_ : *default_instance_->values_;
-}
-inline ::range::core::stored::Request_RemoveTagValues_Values* Request_RemoveTagValues::mutable_values() {
-  set_has_values();
-  if (values_ == NULL) values_ = new ::range::core::stored::Request_RemoveTagValues_Values;
-  return values_;
-}
-inline ::range::core::stored::Request_RemoveTagValues_Values* Request_RemoveTagValues::release_values() {
-  clear_has_values();
-  ::range::core::stored::Request_RemoveTagValues_Values* temp = values_;
-  values_ = NULL;
-  return temp;
-}
-inline void Request_RemoveTagValues::set_allocated_values(::range::core::stored::Request_RemoveTagValues_Values* values) {
-  delete values_;
-  values_ = values;
-  if (values) {
-    set_has_values();
-  } else {
-    clear_has_values();
-  }
-}
-
-// -------------------------------------------------------------------
-
-// Request_DeleteTag
-
-// required string graph_name = 1;
-inline bool Request_DeleteTag::has_graph_name() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Request_DeleteTag::set_has_graph_name() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Request_DeleteTag::clear_has_graph_name() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Request_DeleteTag::clear_graph_name() {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    graph_name_->clear();
-  }
-  clear_has_graph_name();
-}
-inline const ::std::string& Request_DeleteTag::graph_name() const {
-  return *graph_name_;
-}
-inline void Request_DeleteTag::set_graph_name(const ::std::string& value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_DeleteTag::set_graph_name(const char* value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_DeleteTag::set_graph_name(const char* value, size_t size) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_DeleteTag::mutable_graph_name() {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  return graph_name_;
-}
-inline ::std::string* Request_DeleteTag::release_graph_name() {
-  clear_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = graph_name_;
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_DeleteTag::set_allocated_graph_name(::std::string* graph_name) {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete graph_name_;
-  }
-  if (graph_name) {
-    set_has_graph_name();
-    graph_name_ = graph_name;
-  } else {
-    clear_has_graph_name();
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string node_name = 2;
-inline bool Request_DeleteTag::has_node_name() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Request_DeleteTag::set_has_node_name() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Request_DeleteTag::clear_has_node_name() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Request_DeleteTag::clear_node_name() {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    node_name_->clear();
-  }
-  clear_has_node_name();
-}
-inline const ::std::string& Request_DeleteTag::node_name() const {
-  return *node_name_;
-}
-inline void Request_DeleteTag::set_node_name(const ::std::string& value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_DeleteTag::set_node_name(const char* value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_DeleteTag::set_node_name(const char* value, size_t size) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_DeleteTag::mutable_node_name() {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  return node_name_;
-}
-inline ::std::string* Request_DeleteTag::release_node_name() {
-  clear_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = node_name_;
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_DeleteTag::set_allocated_node_name(::std::string* node_name) {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete node_name_;
-  }
-  if (node_name) {
-    set_has_node_name();
-    node_name_ = node_name;
-  } else {
-    clear_has_node_name();
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string tag_key = 3;
-inline bool Request_DeleteTag::has_tag_key() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Request_DeleteTag::set_has_tag_key() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void Request_DeleteTag::clear_has_tag_key() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Request_DeleteTag::clear_tag_key() {
-  if (tag_key_ != &::google::protobuf::internal::kEmptyString) {
-    tag_key_->clear();
-  }
-  clear_has_tag_key();
-}
-inline const ::std::string& Request_DeleteTag::tag_key() const {
-  return *tag_key_;
-}
-inline void Request_DeleteTag::set_tag_key(const ::std::string& value) {
-  set_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    tag_key_ = new ::std::string;
-  }
-  tag_key_->assign(value);
-}
-inline void Request_DeleteTag::set_tag_key(const char* value) {
-  set_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    tag_key_ = new ::std::string;
-  }
-  tag_key_->assign(value);
-}
-inline void Request_DeleteTag::set_tag_key(const char* value, size_t size) {
-  set_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    tag_key_ = new ::std::string;
-  }
-  tag_key_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_DeleteTag::mutable_tag_key() {
-  set_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    tag_key_ = new ::std::string;
-  }
-  return tag_key_;
-}
-inline ::std::string* Request_DeleteTag::release_tag_key() {
-  clear_has_tag_key();
-  if (tag_key_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = tag_key_;
-    tag_key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_DeleteTag::set_allocated_tag_key(::std::string* tag_key) {
-  if (tag_key_ != &::google::protobuf::internal::kEmptyString) {
-    delete tag_key_;
-  }
-  if (tag_key) {
-    set_has_tag_key();
-    tag_key_ = tag_key;
-  } else {
-    clear_has_tag_key();
-    tag_key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// -------------------------------------------------------------------
-
-// Request_AddForwardEdge
-
-// required string graph_name = 1;
-inline bool Request_AddForwardEdge::has_graph_name() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Request_AddForwardEdge::set_has_graph_name() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Request_AddForwardEdge::clear_has_graph_name() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Request_AddForwardEdge::clear_graph_name() {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    graph_name_->clear();
-  }
-  clear_has_graph_name();
-}
-inline const ::std::string& Request_AddForwardEdge::graph_name() const {
-  return *graph_name_;
-}
-inline void Request_AddForwardEdge::set_graph_name(const ::std::string& value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_AddForwardEdge::set_graph_name(const char* value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_AddForwardEdge::set_graph_name(const char* value, size_t size) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_AddForwardEdge::mutable_graph_name() {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  return graph_name_;
-}
-inline ::std::string* Request_AddForwardEdge::release_graph_name() {
-  clear_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = graph_name_;
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_AddForwardEdge::set_allocated_graph_name(::std::string* graph_name) {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete graph_name_;
-  }
-  if (graph_name) {
-    set_has_graph_name();
-    graph_name_ = graph_name;
-  } else {
-    clear_has_graph_name();
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string node_name = 2;
-inline bool Request_AddForwardEdge::has_node_name() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Request_AddForwardEdge::set_has_node_name() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Request_AddForwardEdge::clear_has_node_name() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Request_AddForwardEdge::clear_node_name() {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    node_name_->clear();
-  }
-  clear_has_node_name();
-}
-inline const ::std::string& Request_AddForwardEdge::node_name() const {
-  return *node_name_;
-}
-inline void Request_AddForwardEdge::set_node_name(const ::std::string& value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_AddForwardEdge::set_node_name(const char* value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_AddForwardEdge::set_node_name(const char* value, size_t size) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_AddForwardEdge::mutable_node_name() {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  return node_name_;
-}
-inline ::std::string* Request_AddForwardEdge::release_node_name() {
-  clear_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = node_name_;
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_AddForwardEdge::set_allocated_node_name(::std::string* node_name) {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete node_name_;
-  }
-  if (node_name) {
-    set_has_node_name();
-    node_name_ = node_name;
-  } else {
-    clear_has_node_name();
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string edge_name = 3;
-inline bool Request_AddForwardEdge::has_edge_name() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Request_AddForwardEdge::set_has_edge_name() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void Request_AddForwardEdge::clear_has_edge_name() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Request_AddForwardEdge::clear_edge_name() {
-  if (edge_name_ != &::google::protobuf::internal::kEmptyString) {
-    edge_name_->clear();
-  }
-  clear_has_edge_name();
-}
-inline const ::std::string& Request_AddForwardEdge::edge_name() const {
-  return *edge_name_;
-}
-inline void Request_AddForwardEdge::set_edge_name(const ::std::string& value) {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  edge_name_->assign(value);
-}
-inline void Request_AddForwardEdge::set_edge_name(const char* value) {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  edge_name_->assign(value);
-}
-inline void Request_AddForwardEdge::set_edge_name(const char* value, size_t size) {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  edge_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_AddForwardEdge::mutable_edge_name() {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  return edge_name_;
-}
-inline ::std::string* Request_AddForwardEdge::release_edge_name() {
-  clear_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = edge_name_;
-    edge_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_AddForwardEdge::set_allocated_edge_name(::std::string* edge_name) {
-  if (edge_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete edge_name_;
-  }
-  if (edge_name) {
-    set_has_edge_name();
-    edge_name_ = edge_name;
-  } else {
-    clear_has_edge_name();
-    edge_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// -------------------------------------------------------------------
-
-// Request_RemoveForwardEdge
-
-// required string graph_name = 1;
-inline bool Request_RemoveForwardEdge::has_graph_name() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Request_RemoveForwardEdge::set_has_graph_name() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Request_RemoveForwardEdge::clear_has_graph_name() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Request_RemoveForwardEdge::clear_graph_name() {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    graph_name_->clear();
-  }
-  clear_has_graph_name();
-}
-inline const ::std::string& Request_RemoveForwardEdge::graph_name() const {
-  return *graph_name_;
-}
-inline void Request_RemoveForwardEdge::set_graph_name(const ::std::string& value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_RemoveForwardEdge::set_graph_name(const char* value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_RemoveForwardEdge::set_graph_name(const char* value, size_t size) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_RemoveForwardEdge::mutable_graph_name() {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  return graph_name_;
-}
-inline ::std::string* Request_RemoveForwardEdge::release_graph_name() {
-  clear_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = graph_name_;
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_RemoveForwardEdge::set_allocated_graph_name(::std::string* graph_name) {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete graph_name_;
-  }
-  if (graph_name) {
-    set_has_graph_name();
-    graph_name_ = graph_name;
-  } else {
-    clear_has_graph_name();
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string node_name = 2;
-inline bool Request_RemoveForwardEdge::has_node_name() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Request_RemoveForwardEdge::set_has_node_name() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Request_RemoveForwardEdge::clear_has_node_name() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Request_RemoveForwardEdge::clear_node_name() {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    node_name_->clear();
-  }
-  clear_has_node_name();
-}
-inline const ::std::string& Request_RemoveForwardEdge::node_name() const {
-  return *node_name_;
-}
-inline void Request_RemoveForwardEdge::set_node_name(const ::std::string& value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_RemoveForwardEdge::set_node_name(const char* value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_RemoveForwardEdge::set_node_name(const char* value, size_t size) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_RemoveForwardEdge::mutable_node_name() {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  return node_name_;
-}
-inline ::std::string* Request_RemoveForwardEdge::release_node_name() {
-  clear_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = node_name_;
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_RemoveForwardEdge::set_allocated_node_name(::std::string* node_name) {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete node_name_;
-  }
-  if (node_name) {
-    set_has_node_name();
-    node_name_ = node_name;
-  } else {
-    clear_has_node_name();
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string edge_name = 3;
-inline bool Request_RemoveForwardEdge::has_edge_name() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Request_RemoveForwardEdge::set_has_edge_name() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void Request_RemoveForwardEdge::clear_has_edge_name() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Request_RemoveForwardEdge::clear_edge_name() {
-  if (edge_name_ != &::google::protobuf::internal::kEmptyString) {
-    edge_name_->clear();
-  }
-  clear_has_edge_name();
-}
-inline const ::std::string& Request_RemoveForwardEdge::edge_name() const {
-  return *edge_name_;
-}
-inline void Request_RemoveForwardEdge::set_edge_name(const ::std::string& value) {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  edge_name_->assign(value);
-}
-inline void Request_RemoveForwardEdge::set_edge_name(const char* value) {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  edge_name_->assign(value);
-}
-inline void Request_RemoveForwardEdge::set_edge_name(const char* value, size_t size) {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  edge_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_RemoveForwardEdge::mutable_edge_name() {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  return edge_name_;
-}
-inline ::std::string* Request_RemoveForwardEdge::release_edge_name() {
-  clear_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = edge_name_;
-    edge_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_RemoveForwardEdge::set_allocated_edge_name(::std::string* edge_name) {
-  if (edge_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete edge_name_;
-  }
-  if (edge_name) {
-    set_has_edge_name();
-    edge_name_ = edge_name;
-  } else {
-    clear_has_edge_name();
-    edge_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// -------------------------------------------------------------------
-
-// Request_AddReverseEdge
-
-// required string graph_name = 1;
-inline bool Request_AddReverseEdge::has_graph_name() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Request_AddReverseEdge::set_has_graph_name() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Request_AddReverseEdge::clear_has_graph_name() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Request_AddReverseEdge::clear_graph_name() {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    graph_name_->clear();
-  }
-  clear_has_graph_name();
-}
-inline const ::std::string& Request_AddReverseEdge::graph_name() const {
-  return *graph_name_;
-}
-inline void Request_AddReverseEdge::set_graph_name(const ::std::string& value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_AddReverseEdge::set_graph_name(const char* value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_AddReverseEdge::set_graph_name(const char* value, size_t size) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_AddReverseEdge::mutable_graph_name() {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  return graph_name_;
-}
-inline ::std::string* Request_AddReverseEdge::release_graph_name() {
-  clear_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = graph_name_;
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_AddReverseEdge::set_allocated_graph_name(::std::string* graph_name) {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete graph_name_;
-  }
-  if (graph_name) {
-    set_has_graph_name();
-    graph_name_ = graph_name;
-  } else {
-    clear_has_graph_name();
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string node_name = 2;
-inline bool Request_AddReverseEdge::has_node_name() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Request_AddReverseEdge::set_has_node_name() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Request_AddReverseEdge::clear_has_node_name() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Request_AddReverseEdge::clear_node_name() {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    node_name_->clear();
-  }
-  clear_has_node_name();
-}
-inline const ::std::string& Request_AddReverseEdge::node_name() const {
-  return *node_name_;
-}
-inline void Request_AddReverseEdge::set_node_name(const ::std::string& value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_AddReverseEdge::set_node_name(const char* value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_AddReverseEdge::set_node_name(const char* value, size_t size) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_AddReverseEdge::mutable_node_name() {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  return node_name_;
-}
-inline ::std::string* Request_AddReverseEdge::release_node_name() {
-  clear_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = node_name_;
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_AddReverseEdge::set_allocated_node_name(::std::string* node_name) {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete node_name_;
-  }
-  if (node_name) {
-    set_has_node_name();
-    node_name_ = node_name;
-  } else {
-    clear_has_node_name();
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string edge_name = 3;
-inline bool Request_AddReverseEdge::has_edge_name() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Request_AddReverseEdge::set_has_edge_name() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void Request_AddReverseEdge::clear_has_edge_name() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Request_AddReverseEdge::clear_edge_name() {
-  if (edge_name_ != &::google::protobuf::internal::kEmptyString) {
-    edge_name_->clear();
-  }
-  clear_has_edge_name();
-}
-inline const ::std::string& Request_AddReverseEdge::edge_name() const {
-  return *edge_name_;
-}
-inline void Request_AddReverseEdge::set_edge_name(const ::std::string& value) {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  edge_name_->assign(value);
-}
-inline void Request_AddReverseEdge::set_edge_name(const char* value) {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  edge_name_->assign(value);
-}
-inline void Request_AddReverseEdge::set_edge_name(const char* value, size_t size) {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  edge_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_AddReverseEdge::mutable_edge_name() {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  return edge_name_;
-}
-inline ::std::string* Request_AddReverseEdge::release_edge_name() {
-  clear_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = edge_name_;
-    edge_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_AddReverseEdge::set_allocated_edge_name(::std::string* edge_name) {
-  if (edge_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete edge_name_;
-  }
-  if (edge_name) {
-    set_has_edge_name();
-    edge_name_ = edge_name;
-  } else {
-    clear_has_edge_name();
-    edge_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// -------------------------------------------------------------------
-
-// Request_RemoveReverseEdge
-
-// required string graph_name = 1;
-inline bool Request_RemoveReverseEdge::has_graph_name() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Request_RemoveReverseEdge::set_has_graph_name() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Request_RemoveReverseEdge::clear_has_graph_name() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Request_RemoveReverseEdge::clear_graph_name() {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    graph_name_->clear();
-  }
-  clear_has_graph_name();
-}
-inline const ::std::string& Request_RemoveReverseEdge::graph_name() const {
-  return *graph_name_;
-}
-inline void Request_RemoveReverseEdge::set_graph_name(const ::std::string& value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_RemoveReverseEdge::set_graph_name(const char* value) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(value);
-}
-inline void Request_RemoveReverseEdge::set_graph_name(const char* value, size_t size) {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  graph_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_RemoveReverseEdge::mutable_graph_name() {
-  set_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    graph_name_ = new ::std::string;
-  }
-  return graph_name_;
-}
-inline ::std::string* Request_RemoveReverseEdge::release_graph_name() {
-  clear_has_graph_name();
-  if (graph_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = graph_name_;
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_RemoveReverseEdge::set_allocated_graph_name(::std::string* graph_name) {
-  if (graph_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete graph_name_;
-  }
-  if (graph_name) {
-    set_has_graph_name();
-    graph_name_ = graph_name;
-  } else {
-    clear_has_graph_name();
-    graph_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string node_name = 2;
-inline bool Request_RemoveReverseEdge::has_node_name() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Request_RemoveReverseEdge::set_has_node_name() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void Request_RemoveReverseEdge::clear_has_node_name() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Request_RemoveReverseEdge::clear_node_name() {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    node_name_->clear();
-  }
-  clear_has_node_name();
-}
-inline const ::std::string& Request_RemoveReverseEdge::node_name() const {
-  return *node_name_;
-}
-inline void Request_RemoveReverseEdge::set_node_name(const ::std::string& value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_RemoveReverseEdge::set_node_name(const char* value) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(value);
-}
-inline void Request_RemoveReverseEdge::set_node_name(const char* value, size_t size) {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  node_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_RemoveReverseEdge::mutable_node_name() {
-  set_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    node_name_ = new ::std::string;
-  }
-  return node_name_;
-}
-inline ::std::string* Request_RemoveReverseEdge::release_node_name() {
-  clear_has_node_name();
-  if (node_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = node_name_;
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_RemoveReverseEdge::set_allocated_node_name(::std::string* node_name) {
-  if (node_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete node_name_;
-  }
-  if (node_name) {
-    set_has_node_name();
-    node_name_ = node_name;
-  } else {
-    clear_has_node_name();
-    node_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// required string edge_name = 3;
-inline bool Request_RemoveReverseEdge::has_edge_name() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Request_RemoveReverseEdge::set_has_edge_name() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void Request_RemoveReverseEdge::clear_has_edge_name() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void Request_RemoveReverseEdge::clear_edge_name() {
-  if (edge_name_ != &::google::protobuf::internal::kEmptyString) {
-    edge_name_->clear();
-  }
-  clear_has_edge_name();
-}
-inline const ::std::string& Request_RemoveReverseEdge::edge_name() const {
-  return *edge_name_;
-}
-inline void Request_RemoveReverseEdge::set_edge_name(const ::std::string& value) {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  edge_name_->assign(value);
-}
-inline void Request_RemoveReverseEdge::set_edge_name(const char* value) {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  edge_name_->assign(value);
-}
-inline void Request_RemoveReverseEdge::set_edge_name(const char* value, size_t size) {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  edge_name_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Request_RemoveReverseEdge::mutable_edge_name() {
-  set_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    edge_name_ = new ::std::string;
-  }
-  return edge_name_;
-}
-inline ::std::string* Request_RemoveReverseEdge::release_edge_name() {
-  clear_has_edge_name();
-  if (edge_name_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = edge_name_;
-    edge_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void Request_RemoveReverseEdge::set_allocated_edge_name(::std::string* edge_name) {
-  if (edge_name_ != &::google::protobuf::internal::kEmptyString) {
-    delete edge_name_;
-  }
-  if (edge_name) {
-    set_has_edge_name();
-    edge_name_ = edge_name;
-  } else {
-    clear_has_edge_name();
-    edge_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// -------------------------------------------------------------------
-
 // Request
 
-// required .range.core.stored.Request.Type request_type = 1;
-inline bool Request::has_request_type() const {
+// required uint32 crc = 1;
+inline bool Request::has_crc() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void Request::set_has_request_type() {
+inline void Request::set_has_crc() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void Request::clear_has_request_type() {
+inline void Request::clear_has_crc() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void Request::clear_request_type() {
-  request_type_ = 0;
-  clear_has_request_type();
+inline void Request::clear_crc() {
+  crc_ = 0u;
+  clear_has_crc();
 }
-inline ::range::core::stored::Request_Type Request::request_type() const {
-  return static_cast< ::range::core::stored::Request_Type >(request_type_);
+inline ::google::protobuf::uint32 Request::crc() const {
+  return crc_;
 }
-inline void Request::set_request_type(::range::core::stored::Request_Type value) {
-  assert(::range::core::stored::Request_Type_IsValid(value));
-  set_has_request_type();
-  request_type_ = value;
+inline void Request::set_crc(::google::protobuf::uint32 value) {
+  set_has_crc();
+  crc_ = value;
 }
 
-// required bool blocking = 2;
-inline bool Request::has_blocking() const {
+// required string client_id = 2;
+inline bool Request::has_client_id() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void Request::set_has_blocking() {
+inline void Request::set_has_client_id() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void Request::clear_has_blocking() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void Request::clear_blocking() {
-  blocking_ = false;
-  clear_has_blocking();
-}
-inline bool Request::blocking() const {
-  return blocking_;
-}
-inline void Request::set_blocking(bool value) {
-  set_has_blocking();
-  blocking_ = value;
-}
-
-// required string client_id = 3;
-inline bool Request::has_client_id() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void Request::set_has_client_id() {
-  _has_bits_[0] |= 0x00000004u;
-}
 inline void Request::clear_has_client_id() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void Request::clear_client_id() {
   if (client_id_ != &::google::protobuf::internal::kEmptyString) {
@@ -4075,384 +584,229 @@ inline void Request::set_allocated_client_id(::std::string* client_id) {
   }
 }
 
-// optional .range.core.stored.Request.CreateGraph create_graph = 4;
-inline bool Request::has_create_graph() const {
+// required uint64 request_id = 3;
+inline bool Request::has_request_id() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void Request::set_has_request_id() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void Request::clear_has_request_id() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void Request::clear_request_id() {
+  request_id_ = GOOGLE_ULONGLONG(0);
+  clear_has_request_id();
+}
+inline ::google::protobuf::uint64 Request::request_id() const {
+  return request_id_;
+}
+inline void Request::set_request_id(::google::protobuf::uint64 value) {
+  set_has_request_id();
+  request_id_ = value;
+}
+
+// required string method = 4;
+inline bool Request::has_method() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void Request::set_has_create_graph() {
+inline void Request::set_has_method() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void Request::clear_has_create_graph() {
+inline void Request::clear_has_method() {
   _has_bits_[0] &= ~0x00000008u;
 }
-inline void Request::clear_create_graph() {
-  if (create_graph_ != NULL) create_graph_->::range::core::stored::Request_CreateGraph::Clear();
-  clear_has_create_graph();
+inline void Request::clear_method() {
+  if (method_ != &::google::protobuf::internal::kEmptyString) {
+    method_->clear();
+  }
+  clear_has_method();
 }
-inline const ::range::core::stored::Request_CreateGraph& Request::create_graph() const {
-  return create_graph_ != NULL ? *create_graph_ : *default_instance_->create_graph_;
+inline const ::std::string& Request::method() const {
+  return *method_;
 }
-inline ::range::core::stored::Request_CreateGraph* Request::mutable_create_graph() {
-  set_has_create_graph();
-  if (create_graph_ == NULL) create_graph_ = new ::range::core::stored::Request_CreateGraph;
-  return create_graph_;
+inline void Request::set_method(const ::std::string& value) {
+  set_has_method();
+  if (method_ == &::google::protobuf::internal::kEmptyString) {
+    method_ = new ::std::string;
+  }
+  method_->assign(value);
 }
-inline ::range::core::stored::Request_CreateGraph* Request::release_create_graph() {
-  clear_has_create_graph();
-  ::range::core::stored::Request_CreateGraph* temp = create_graph_;
-  create_graph_ = NULL;
-  return temp;
+inline void Request::set_method(const char* value) {
+  set_has_method();
+  if (method_ == &::google::protobuf::internal::kEmptyString) {
+    method_ = new ::std::string;
+  }
+  method_->assign(value);
 }
-inline void Request::set_allocated_create_graph(::range::core::stored::Request_CreateGraph* create_graph) {
-  delete create_graph_;
-  create_graph_ = create_graph;
-  if (create_graph) {
-    set_has_create_graph();
+inline void Request::set_method(const char* value, size_t size) {
+  set_has_method();
+  if (method_ == &::google::protobuf::internal::kEmptyString) {
+    method_ = new ::std::string;
+  }
+  method_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Request::mutable_method() {
+  set_has_method();
+  if (method_ == &::google::protobuf::internal::kEmptyString) {
+    method_ = new ::std::string;
+  }
+  return method_;
+}
+inline ::std::string* Request::release_method() {
+  clear_has_method();
+  if (method_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
   } else {
-    clear_has_create_graph();
+    ::std::string* temp = method_;
+    method_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Request::set_allocated_method(::std::string* method) {
+  if (method_ != &::google::protobuf::internal::kEmptyString) {
+    delete method_;
+  }
+  if (method) {
+    set_has_method();
+    method_ = method;
+  } else {
+    clear_has_method();
+    method_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
 }
 
-// optional .range.core.stored.Request.RemoveNode remove_node = 5;
-inline bool Request::has_remove_node() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+// repeated string args = 5;
+inline int Request::args_size() const {
+  return args_.size();
 }
-inline void Request::set_has_remove_node() {
-  _has_bits_[0] |= 0x00000010u;
+inline void Request::clear_args() {
+  args_.Clear();
 }
-inline void Request::clear_has_remove_node() {
-  _has_bits_[0] &= ~0x00000010u;
+inline const ::std::string& Request::args(int index) const {
+  return args_.Get(index);
 }
-inline void Request::clear_remove_node() {
-  if (remove_node_ != NULL) remove_node_->::range::core::stored::Request_RemoveNode::Clear();
-  clear_has_remove_node();
+inline ::std::string* Request::mutable_args(int index) {
+  return args_.Mutable(index);
 }
-inline const ::range::core::stored::Request_RemoveNode& Request::remove_node() const {
-  return remove_node_ != NULL ? *remove_node_ : *default_instance_->remove_node_;
+inline void Request::set_args(int index, const ::std::string& value) {
+  args_.Mutable(index)->assign(value);
 }
-inline ::range::core::stored::Request_RemoveNode* Request::mutable_remove_node() {
-  set_has_remove_node();
-  if (remove_node_ == NULL) remove_node_ = new ::range::core::stored::Request_RemoveNode;
-  return remove_node_;
+inline void Request::set_args(int index, const char* value) {
+  args_.Mutable(index)->assign(value);
 }
-inline ::range::core::stored::Request_RemoveNode* Request::release_remove_node() {
-  clear_has_remove_node();
-  ::range::core::stored::Request_RemoveNode* temp = remove_node_;
-  remove_node_ = NULL;
-  return temp;
+inline void Request::set_args(int index, const char* value, size_t size) {
+  args_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
 }
-inline void Request::set_allocated_remove_node(::range::core::stored::Request_RemoveNode* remove_node) {
-  delete remove_node_;
-  remove_node_ = remove_node;
-  if (remove_node) {
-    set_has_remove_node();
-  } else {
-    clear_has_remove_node();
-  }
+inline ::std::string* Request::add_args() {
+  return args_.Add();
+}
+inline void Request::add_args(const ::std::string& value) {
+  args_.Add()->assign(value);
+}
+inline void Request::add_args(const char* value) {
+  args_.Add()->assign(value);
+}
+inline void Request::add_args(const char* value, size_t size) {
+  args_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+Request::args() const {
+  return args_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+Request::mutable_args() {
+  return &args_;
 }
 
-// optional .range.core.stored.Request.CreateNode create_node = 6;
-inline bool Request::has_create_node() const {
+// optional uint64 timestamp = 6;
+inline bool Request::has_timestamp() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void Request::set_has_create_node() {
+inline void Request::set_has_timestamp() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void Request::clear_has_create_node() {
+inline void Request::clear_has_timestamp() {
   _has_bits_[0] &= ~0x00000020u;
 }
-inline void Request::clear_create_node() {
-  if (create_node_ != NULL) create_node_->::range::core::stored::Request_CreateNode::Clear();
-  clear_has_create_node();
+inline void Request::clear_timestamp() {
+  timestamp_ = GOOGLE_ULONGLONG(0);
+  clear_has_timestamp();
 }
-inline const ::range::core::stored::Request_CreateNode& Request::create_node() const {
-  return create_node_ != NULL ? *create_node_ : *default_instance_->create_node_;
+inline ::google::protobuf::uint64 Request::timestamp() const {
+  return timestamp_;
 }
-inline ::range::core::stored::Request_CreateNode* Request::mutable_create_node() {
-  set_has_create_node();
-  if (create_node_ == NULL) create_node_ = new ::range::core::stored::Request_CreateNode;
-  return create_node_;
-}
-inline ::range::core::stored::Request_CreateNode* Request::release_create_node() {
-  clear_has_create_node();
-  ::range::core::stored::Request_CreateNode* temp = create_node_;
-  create_node_ = NULL;
-  return temp;
-}
-inline void Request::set_allocated_create_node(::range::core::stored::Request_CreateNode* create_node) {
-  delete create_node_;
-  create_node_ = create_node;
-  if (create_node) {
-    set_has_create_node();
-  } else {
-    clear_has_create_node();
-  }
+inline void Request::set_timestamp(::google::protobuf::uint64 value) {
+  set_has_timestamp();
+  timestamp_ = value;
 }
 
-// optional .range.core.stored.Request.AddTagValues add_tag_values = 7;
-inline bool Request::has_add_tag_values() const {
+// optional .range.stored.Request.Type type = 7;
+inline bool Request::has_type() const {
   return (_has_bits_[0] & 0x00000040u) != 0;
 }
-inline void Request::set_has_add_tag_values() {
+inline void Request::set_has_type() {
   _has_bits_[0] |= 0x00000040u;
 }
-inline void Request::clear_has_add_tag_values() {
+inline void Request::clear_has_type() {
   _has_bits_[0] &= ~0x00000040u;
 }
-inline void Request::clear_add_tag_values() {
-  if (add_tag_values_ != NULL) add_tag_values_->::range::core::stored::Request_AddTagValues::Clear();
-  clear_has_add_tag_values();
+inline void Request::clear_type() {
+  type_ = 0;
+  clear_has_type();
 }
-inline const ::range::core::stored::Request_AddTagValues& Request::add_tag_values() const {
-  return add_tag_values_ != NULL ? *add_tag_values_ : *default_instance_->add_tag_values_;
+inline ::range::stored::Request_Type Request::type() const {
+  return static_cast< ::range::stored::Request_Type >(type_);
 }
-inline ::range::core::stored::Request_AddTagValues* Request::mutable_add_tag_values() {
-  set_has_add_tag_values();
-  if (add_tag_values_ == NULL) add_tag_values_ = new ::range::core::stored::Request_AddTagValues;
-  return add_tag_values_;
-}
-inline ::range::core::stored::Request_AddTagValues* Request::release_add_tag_values() {
-  clear_has_add_tag_values();
-  ::range::core::stored::Request_AddTagValues* temp = add_tag_values_;
-  add_tag_values_ = NULL;
-  return temp;
-}
-inline void Request::set_allocated_add_tag_values(::range::core::stored::Request_AddTagValues* add_tag_values) {
-  delete add_tag_values_;
-  add_tag_values_ = add_tag_values;
-  if (add_tag_values) {
-    set_has_add_tag_values();
-  } else {
-    clear_has_add_tag_values();
-  }
+inline void Request::set_type(::range::stored::Request_Type value) {
+  assert(::range::stored::Request_Type_IsValid(value));
+  set_has_type();
+  type_ = value;
 }
 
-// optional .range.core.stored.Request.RemoveTagValues remove_tag_values = 8;
-inline bool Request::has_remove_tag_values() const {
+// optional uint64 proposal_num = 8;
+inline bool Request::has_proposal_num() const {
   return (_has_bits_[0] & 0x00000080u) != 0;
 }
-inline void Request::set_has_remove_tag_values() {
+inline void Request::set_has_proposal_num() {
   _has_bits_[0] |= 0x00000080u;
 }
-inline void Request::clear_has_remove_tag_values() {
+inline void Request::clear_has_proposal_num() {
   _has_bits_[0] &= ~0x00000080u;
 }
-inline void Request::clear_remove_tag_values() {
-  if (remove_tag_values_ != NULL) remove_tag_values_->::range::core::stored::Request_RemoveTagValues::Clear();
-  clear_has_remove_tag_values();
+inline void Request::clear_proposal_num() {
+  proposal_num_ = GOOGLE_ULONGLONG(0);
+  clear_has_proposal_num();
 }
-inline const ::range::core::stored::Request_RemoveTagValues& Request::remove_tag_values() const {
-  return remove_tag_values_ != NULL ? *remove_tag_values_ : *default_instance_->remove_tag_values_;
+inline ::google::protobuf::uint64 Request::proposal_num() const {
+  return proposal_num_;
 }
-inline ::range::core::stored::Request_RemoveTagValues* Request::mutable_remove_tag_values() {
-  set_has_remove_tag_values();
-  if (remove_tag_values_ == NULL) remove_tag_values_ = new ::range::core::stored::Request_RemoveTagValues;
-  return remove_tag_values_;
-}
-inline ::range::core::stored::Request_RemoveTagValues* Request::release_remove_tag_values() {
-  clear_has_remove_tag_values();
-  ::range::core::stored::Request_RemoveTagValues* temp = remove_tag_values_;
-  remove_tag_values_ = NULL;
-  return temp;
-}
-inline void Request::set_allocated_remove_tag_values(::range::core::stored::Request_RemoveTagValues* remove_tag_values) {
-  delete remove_tag_values_;
-  remove_tag_values_ = remove_tag_values;
-  if (remove_tag_values) {
-    set_has_remove_tag_values();
-  } else {
-    clear_has_remove_tag_values();
-  }
+inline void Request::set_proposal_num(::google::protobuf::uint64 value) {
+  set_has_proposal_num();
+  proposal_num_ = value;
 }
 
-// optional .range.core.stored.Request.DeleteTag delete_tag = 9;
-inline bool Request::has_delete_tag() const {
+// optional uint32 proposer_id = 9;
+inline bool Request::has_proposer_id() const {
   return (_has_bits_[0] & 0x00000100u) != 0;
 }
-inline void Request::set_has_delete_tag() {
+inline void Request::set_has_proposer_id() {
   _has_bits_[0] |= 0x00000100u;
 }
-inline void Request::clear_has_delete_tag() {
+inline void Request::clear_has_proposer_id() {
   _has_bits_[0] &= ~0x00000100u;
 }
-inline void Request::clear_delete_tag() {
-  if (delete_tag_ != NULL) delete_tag_->::range::core::stored::Request_DeleteTag::Clear();
-  clear_has_delete_tag();
+inline void Request::clear_proposer_id() {
+  proposer_id_ = 0u;
+  clear_has_proposer_id();
 }
-inline const ::range::core::stored::Request_DeleteTag& Request::delete_tag() const {
-  return delete_tag_ != NULL ? *delete_tag_ : *default_instance_->delete_tag_;
+inline ::google::protobuf::uint32 Request::proposer_id() const {
+  return proposer_id_;
 }
-inline ::range::core::stored::Request_DeleteTag* Request::mutable_delete_tag() {
-  set_has_delete_tag();
-  if (delete_tag_ == NULL) delete_tag_ = new ::range::core::stored::Request_DeleteTag;
-  return delete_tag_;
-}
-inline ::range::core::stored::Request_DeleteTag* Request::release_delete_tag() {
-  clear_has_delete_tag();
-  ::range::core::stored::Request_DeleteTag* temp = delete_tag_;
-  delete_tag_ = NULL;
-  return temp;
-}
-inline void Request::set_allocated_delete_tag(::range::core::stored::Request_DeleteTag* delete_tag) {
-  delete delete_tag_;
-  delete_tag_ = delete_tag;
-  if (delete_tag) {
-    set_has_delete_tag();
-  } else {
-    clear_has_delete_tag();
-  }
-}
-
-// optional .range.core.stored.Request.AddForwardEdge add_forward_edge = 10;
-inline bool Request::has_add_forward_edge() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
-}
-inline void Request::set_has_add_forward_edge() {
-  _has_bits_[0] |= 0x00000200u;
-}
-inline void Request::clear_has_add_forward_edge() {
-  _has_bits_[0] &= ~0x00000200u;
-}
-inline void Request::clear_add_forward_edge() {
-  if (add_forward_edge_ != NULL) add_forward_edge_->::range::core::stored::Request_AddForwardEdge::Clear();
-  clear_has_add_forward_edge();
-}
-inline const ::range::core::stored::Request_AddForwardEdge& Request::add_forward_edge() const {
-  return add_forward_edge_ != NULL ? *add_forward_edge_ : *default_instance_->add_forward_edge_;
-}
-inline ::range::core::stored::Request_AddForwardEdge* Request::mutable_add_forward_edge() {
-  set_has_add_forward_edge();
-  if (add_forward_edge_ == NULL) add_forward_edge_ = new ::range::core::stored::Request_AddForwardEdge;
-  return add_forward_edge_;
-}
-inline ::range::core::stored::Request_AddForwardEdge* Request::release_add_forward_edge() {
-  clear_has_add_forward_edge();
-  ::range::core::stored::Request_AddForwardEdge* temp = add_forward_edge_;
-  add_forward_edge_ = NULL;
-  return temp;
-}
-inline void Request::set_allocated_add_forward_edge(::range::core::stored::Request_AddForwardEdge* add_forward_edge) {
-  delete add_forward_edge_;
-  add_forward_edge_ = add_forward_edge;
-  if (add_forward_edge) {
-    set_has_add_forward_edge();
-  } else {
-    clear_has_add_forward_edge();
-  }
-}
-
-// optional .range.core.stored.Request.RemoveForwardEdge remove_foreward_edge = 11;
-inline bool Request::has_remove_foreward_edge() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
-}
-inline void Request::set_has_remove_foreward_edge() {
-  _has_bits_[0] |= 0x00000400u;
-}
-inline void Request::clear_has_remove_foreward_edge() {
-  _has_bits_[0] &= ~0x00000400u;
-}
-inline void Request::clear_remove_foreward_edge() {
-  if (remove_foreward_edge_ != NULL) remove_foreward_edge_->::range::core::stored::Request_RemoveForwardEdge::Clear();
-  clear_has_remove_foreward_edge();
-}
-inline const ::range::core::stored::Request_RemoveForwardEdge& Request::remove_foreward_edge() const {
-  return remove_foreward_edge_ != NULL ? *remove_foreward_edge_ : *default_instance_->remove_foreward_edge_;
-}
-inline ::range::core::stored::Request_RemoveForwardEdge* Request::mutable_remove_foreward_edge() {
-  set_has_remove_foreward_edge();
-  if (remove_foreward_edge_ == NULL) remove_foreward_edge_ = new ::range::core::stored::Request_RemoveForwardEdge;
-  return remove_foreward_edge_;
-}
-inline ::range::core::stored::Request_RemoveForwardEdge* Request::release_remove_foreward_edge() {
-  clear_has_remove_foreward_edge();
-  ::range::core::stored::Request_RemoveForwardEdge* temp = remove_foreward_edge_;
-  remove_foreward_edge_ = NULL;
-  return temp;
-}
-inline void Request::set_allocated_remove_foreward_edge(::range::core::stored::Request_RemoveForwardEdge* remove_foreward_edge) {
-  delete remove_foreward_edge_;
-  remove_foreward_edge_ = remove_foreward_edge;
-  if (remove_foreward_edge) {
-    set_has_remove_foreward_edge();
-  } else {
-    clear_has_remove_foreward_edge();
-  }
-}
-
-// optional .range.core.stored.Request.AddReverseEdge add_reverse_edge = 12;
-inline bool Request::has_add_reverse_edge() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
-}
-inline void Request::set_has_add_reverse_edge() {
-  _has_bits_[0] |= 0x00000800u;
-}
-inline void Request::clear_has_add_reverse_edge() {
-  _has_bits_[0] &= ~0x00000800u;
-}
-inline void Request::clear_add_reverse_edge() {
-  if (add_reverse_edge_ != NULL) add_reverse_edge_->::range::core::stored::Request_AddReverseEdge::Clear();
-  clear_has_add_reverse_edge();
-}
-inline const ::range::core::stored::Request_AddReverseEdge& Request::add_reverse_edge() const {
-  return add_reverse_edge_ != NULL ? *add_reverse_edge_ : *default_instance_->add_reverse_edge_;
-}
-inline ::range::core::stored::Request_AddReverseEdge* Request::mutable_add_reverse_edge() {
-  set_has_add_reverse_edge();
-  if (add_reverse_edge_ == NULL) add_reverse_edge_ = new ::range::core::stored::Request_AddReverseEdge;
-  return add_reverse_edge_;
-}
-inline ::range::core::stored::Request_AddReverseEdge* Request::release_add_reverse_edge() {
-  clear_has_add_reverse_edge();
-  ::range::core::stored::Request_AddReverseEdge* temp = add_reverse_edge_;
-  add_reverse_edge_ = NULL;
-  return temp;
-}
-inline void Request::set_allocated_add_reverse_edge(::range::core::stored::Request_AddReverseEdge* add_reverse_edge) {
-  delete add_reverse_edge_;
-  add_reverse_edge_ = add_reverse_edge;
-  if (add_reverse_edge) {
-    set_has_add_reverse_edge();
-  } else {
-    clear_has_add_reverse_edge();
-  }
-}
-
-// optional .range.core.stored.Request.RemoveReverseEdge remove_reverse_edge = 13;
-inline bool Request::has_remove_reverse_edge() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
-}
-inline void Request::set_has_remove_reverse_edge() {
-  _has_bits_[0] |= 0x00001000u;
-}
-inline void Request::clear_has_remove_reverse_edge() {
-  _has_bits_[0] &= ~0x00001000u;
-}
-inline void Request::clear_remove_reverse_edge() {
-  if (remove_reverse_edge_ != NULL) remove_reverse_edge_->::range::core::stored::Request_RemoveReverseEdge::Clear();
-  clear_has_remove_reverse_edge();
-}
-inline const ::range::core::stored::Request_RemoveReverseEdge& Request::remove_reverse_edge() const {
-  return remove_reverse_edge_ != NULL ? *remove_reverse_edge_ : *default_instance_->remove_reverse_edge_;
-}
-inline ::range::core::stored::Request_RemoveReverseEdge* Request::mutable_remove_reverse_edge() {
-  set_has_remove_reverse_edge();
-  if (remove_reverse_edge_ == NULL) remove_reverse_edge_ = new ::range::core::stored::Request_RemoveReverseEdge;
-  return remove_reverse_edge_;
-}
-inline ::range::core::stored::Request_RemoveReverseEdge* Request::release_remove_reverse_edge() {
-  clear_has_remove_reverse_edge();
-  ::range::core::stored::Request_RemoveReverseEdge* temp = remove_reverse_edge_;
-  remove_reverse_edge_ = NULL;
-  return temp;
-}
-inline void Request::set_allocated_remove_reverse_edge(::range::core::stored::Request_RemoveReverseEdge* remove_reverse_edge) {
-  delete remove_reverse_edge_;
-  remove_reverse_edge_ = remove_reverse_edge;
-  if (remove_reverse_edge) {
-    set_has_remove_reverse_edge();
-  } else {
-    clear_has_remove_reverse_edge();
-  }
+inline void Request::set_proposer_id(::google::protobuf::uint32 value) {
+  set_has_proposer_id();
+  proposer_id_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -4481,15 +835,107 @@ inline void Ack::set_status(bool value) {
   status_ = value;
 }
 
-// optional uint64 code = 2;
-inline bool Ack::has_code() const {
+// required string client_id = 2;
+inline bool Ack::has_client_id() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void Ack::set_has_code() {
+inline void Ack::set_has_client_id() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void Ack::clear_has_code() {
+inline void Ack::clear_has_client_id() {
   _has_bits_[0] &= ~0x00000002u;
+}
+inline void Ack::clear_client_id() {
+  if (client_id_ != &::google::protobuf::internal::kEmptyString) {
+    client_id_->clear();
+  }
+  clear_has_client_id();
+}
+inline const ::std::string& Ack::client_id() const {
+  return *client_id_;
+}
+inline void Ack::set_client_id(const ::std::string& value) {
+  set_has_client_id();
+  if (client_id_ == &::google::protobuf::internal::kEmptyString) {
+    client_id_ = new ::std::string;
+  }
+  client_id_->assign(value);
+}
+inline void Ack::set_client_id(const char* value) {
+  set_has_client_id();
+  if (client_id_ == &::google::protobuf::internal::kEmptyString) {
+    client_id_ = new ::std::string;
+  }
+  client_id_->assign(value);
+}
+inline void Ack::set_client_id(const char* value, size_t size) {
+  set_has_client_id();
+  if (client_id_ == &::google::protobuf::internal::kEmptyString) {
+    client_id_ = new ::std::string;
+  }
+  client_id_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Ack::mutable_client_id() {
+  set_has_client_id();
+  if (client_id_ == &::google::protobuf::internal::kEmptyString) {
+    client_id_ = new ::std::string;
+  }
+  return client_id_;
+}
+inline ::std::string* Ack::release_client_id() {
+  clear_has_client_id();
+  if (client_id_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = client_id_;
+    client_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Ack::set_allocated_client_id(::std::string* client_id) {
+  if (client_id_ != &::google::protobuf::internal::kEmptyString) {
+    delete client_id_;
+  }
+  if (client_id) {
+    set_has_client_id();
+    client_id_ = client_id;
+  } else {
+    clear_has_client_id();
+    client_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// required uint64 request_id = 3;
+inline bool Ack::has_request_id() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void Ack::set_has_request_id() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void Ack::clear_has_request_id() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void Ack::clear_request_id() {
+  request_id_ = GOOGLE_ULONGLONG(0);
+  clear_has_request_id();
+}
+inline ::google::protobuf::uint64 Ack::request_id() const {
+  return request_id_;
+}
+inline void Ack::set_request_id(::google::protobuf::uint64 value) {
+  set_has_request_id();
+  request_id_ = value;
+}
+
+// optional uint64 code = 4;
+inline bool Ack::has_code() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void Ack::set_has_code() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void Ack::clear_has_code() {
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void Ack::clear_code() {
   code_ = GOOGLE_ULONGLONG(0);
@@ -4503,15 +949,15 @@ inline void Ack::set_code(::google::protobuf::uint64 value) {
   code_ = value;
 }
 
-// optional string reason = 3;
+// optional string reason = 5;
 inline bool Ack::has_reason() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void Ack::set_has_reason() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void Ack::clear_has_reason() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void Ack::clear_reason() {
   if (reason_ != &::google::protobuf::internal::kEmptyString) {
@@ -4573,11 +1019,99 @@ inline void Ack::set_allocated_reason(::std::string* reason) {
   }
 }
 
+// optional .range.stored.Ack.Type type = 6;
+inline bool Ack::has_type() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void Ack::set_has_type() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void Ack::clear_has_type() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void Ack::clear_type() {
+  type_ = 0;
+  clear_has_type();
+}
+inline ::range::stored::Ack_Type Ack::type() const {
+  return static_cast< ::range::stored::Ack_Type >(type_);
+}
+inline void Ack::set_type(::range::stored::Ack_Type value) {
+  assert(::range::stored::Ack_Type_IsValid(value));
+  set_has_type();
+  type_ = value;
+}
+
+// optional uint64 proposal_num = 7;
+inline bool Ack::has_proposal_num() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void Ack::set_has_proposal_num() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void Ack::clear_has_proposal_num() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void Ack::clear_proposal_num() {
+  proposal_num_ = GOOGLE_ULONGLONG(0);
+  clear_has_proposal_num();
+}
+inline ::google::protobuf::uint64 Ack::proposal_num() const {
+  return proposal_num_;
+}
+inline void Ack::set_proposal_num(::google::protobuf::uint64 value) {
+  set_has_proposal_num();
+  proposal_num_ = value;
+}
+
+// optional uint32 proposer_id = 8;
+inline bool Ack::has_proposer_id() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void Ack::set_has_proposer_id() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void Ack::clear_has_proposer_id() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void Ack::clear_proposer_id() {
+  proposer_id_ = 0u;
+  clear_has_proposer_id();
+}
+inline ::google::protobuf::uint32 Ack::proposer_id() const {
+  return proposer_id_;
+}
+inline void Ack::set_proposer_id(::google::protobuf::uint32 value) {
+  set_has_proposer_id();
+  proposer_id_ = value;
+}
+
+// optional uint64 next_proposal_num = 9;
+inline bool Ack::has_next_proposal_num() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void Ack::set_has_next_proposal_num() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void Ack::clear_has_next_proposal_num() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void Ack::clear_next_proposal_num() {
+  next_proposal_num_ = GOOGLE_ULONGLONG(0);
+  clear_has_next_proposal_num();
+}
+inline ::google::protobuf::uint64 Ack::next_proposal_num() const {
+  return next_proposal_num_;
+}
+inline void Ack::set_next_proposal_num(::google::protobuf::uint64 value) {
+  set_has_next_proposal_num();
+  next_proposal_num_ = value;
+}
+
 
 // @@protoc_insertion_point(namespace_scope)
 
 }  // namespace stored
-}  // namespace core
 }  // namespace range
 
 #ifndef SWIG
@@ -4585,8 +1119,12 @@ namespace google {
 namespace protobuf {
 
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::range::core::stored::Request_Type>() {
-  return ::range::core::stored::Request_Type_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::range::stored::Request_Type>() {
+  return ::range::stored::Request_Type_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::range::stored::Ack_Type>() {
+  return ::range::stored::Ack_Type_descriptor();
 }
 
 }  // namespace google

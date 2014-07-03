@@ -20,6 +20,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 #include <boost/shared_ptr.hpp>
 
@@ -570,6 +571,7 @@ class RangeAPI_v1
                                                 const std::string &dependency_name);
 
 
+        static const std::map<std::string, size_t> num_arguments;
     private:
         range::Emitter log;
         boost::shared_ptr<Config> cfg_;

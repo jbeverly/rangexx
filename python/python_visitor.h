@@ -24,7 +24,7 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 
-#include "../librange/core/range_struct.h"
+#include <rangexx/core/range_struct.h>
 
 namespace range {
 

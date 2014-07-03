@@ -20,6 +20,24 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <unistd.h>
+#include <signal.h>
+//#include <thread>
+
+#include <rangexx/core/api.h>
+#include <rangexx/core/log.h>
+#include <rangexx/core/stored_config.h>
+#include <rangexx/core/config_builder.h>
+#include <rangexx/db/berkeley_db.h>
+
+#include "mqserv.h"
+#include "listenserv.h"
+#include "signalhandler.h"
+
+#ifndef DEFAULT_CONFIG_PATH
+#define DEFAULT_CONFIG_PATH "/etc/range/range.conf"
+#endif
+
 
 std::vector<int> version { {0, 1, 0} };
 
@@ -118,6 +136,37 @@ main(int argc, char ** argv, char ** envp)
         }
     }
 
+    if (cfgfile.empty()) {
+        cfgfile = DEFAULT_CONFIG_PATH;
+    }
+
+    if (verbosity > static_cast<uint8_t>(::range::Emitter::logseverity::debug9)) {
+        verbosity = static_cast<uint8_t>(::range::Emitter::logseverity::debug9);
+    }
+
+    ::range::initialize_logger("/dev/stdout", static_cast<uint8_t>(::range::Emitter::logseverity(verbosity)));
+    ::range::Emitter log { "main" };
+    BOOST_LOG_FUNCTION();
+
+    {
+        auto cfg_ptr = ::range::config_builder(cfgfile, ::range::Consumer::STORED);
+        boost::shared_ptr<::range::StoreDaemonConfig> cfg = boost::dynamic_pointer_cast<::range::StoreDaemonConfig>(cfg_ptr);
+
+        ::range::stored::SignalHandler hdl { cfg };
+        hdl.run();
+        ::range::stored::SignalHandler::block_signals();
+
+        ::range::stored::MQServer mqsrv { cfg };
+        mqsrv.run();
+
+        ::range::stored::ListenServer lserv { cfg };
+        lserv.run();
+
+        hdl.join();
+        LOG(critical, "shutting down");
+    }
+    ::range::config = nullptr;
+    range::db::BerkeleyDB::s_shutdown();
     return 0;
 }
 

@@ -29,7 +29,7 @@ TESTS = $(check_PROGRAMS)
 valgrind: $(check_PROGRAMS)
 	for n in $(TESTS); do \
 		LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$(top_builddir)/librange/.libs/" \
-		valgrind -q --tool=memcheck --leak-check=full --leak-resolution=high --track-origins=yes --show-reachable=yes --suppressions=$(top_builddir)/librange/tests/valrind_suppressions.txt $(builddir)/.libs/$$n; \
+		../../libtool --mode=execute valgrind -q --tool=memcheck --leak-check=full --leak-resolution=high --track-origins=yes --show-reachable=yes --suppressions=$(top_builddir)/librange/tests/valrind_suppressions.txt $(builddir)/$$n; \
 	done
 
 

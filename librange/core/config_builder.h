@@ -23,7 +23,12 @@
 
 namespace range {
 
-boost::shared_ptr<Config> config_builder(const std::string& filename); 
+enum class Consumer {
+    STORED = 1,
+    CLIENT = 2,
+};
+
+boost::shared_ptr<Config> config_builder(const std::string& filename, Consumer type=Consumer::CLIENT); 
 boost::shared_ptr<compiler::functor_map_t> build_symtable();
 extern boost::shared_ptr<Config> config;
 

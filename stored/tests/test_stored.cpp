@@ -24,6 +24,10 @@
 
 #include "../../librange/tests/mock_backend.h"
 
+#include "../network.h"
+#include <rangexx/core/store.pb.h>
+#include <rangexx/util/crc32.h>
+
 class TestStored : public ::testing::Test {
 	void SetUp() {
 		be = boost::make_shared<MockBackend>();
@@ -39,8 +43,28 @@ TEST_F(TestStored, test_stuff) {
 int
 main(int argc, char **argv)
 {
+    (void)(argc);
+    (void)(argv);
+
 //    GOOGLE_PROTOBUF_VERIFY_VERSION;
-    ::testing::InitGoogleTest(&argc, argv);
+//    ::testing::InitGoogleTest(&argc, argv);
 //    range::db::ProtobufNode::s_shutdown();
-    return RUN_ALL_TESTS();
+//    return RUN_ALL_TESTS();
+    ::range::initialize_logger("/dev/stdout", static_cast<uint8_t>(::range::Emitter::logseverity::debug9));
+    range::stored::network::UDPMultiClient cl { { "symvz11", "symvz12", "symvz13" }, "5444" };
+
+    range::stored::Request req;
+    req.set_type(::range::stored::Request::REQUEST);
+    req.set_method("Some Method!");
+    req.set_client_id("foo");
+    req.set_request_id(9);
+    req.set_crc(0);
+    req.set_crc(range::util::crc32(req.SerializeAsString()));
+
+    auto res = cl.timed_send(req.SerializeAsString(), 5000, 1);
+
+    for (auto r : res) {
+        std::cout << "from host: " << r.first << " : " << r.second.status() << " : " << r.second.code() << " : " << r.second.reason() << std::endl;
+    }
+    google::protobuf::ShutdownProtobufLibrary();
 }

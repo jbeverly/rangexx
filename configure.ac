@@ -84,8 +84,8 @@ gl_EXTERN_INLINE
 AC_CONFIG_FILES([Makefile
                  librange/Makefile
                  librange/tests/Makefile
-				 rangexxstored/Makefile
-				 rangexxstored/tests/Makefile
+				 stored/Makefile
+				 stored/tests/Makefile
 				 python/Makefile
                  ])
 

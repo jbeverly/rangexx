@@ -20086,7 +20086,7 @@ $as_echo "#define my_strftime nstrftime" >>confdefs.h
 
 
 
-ac_config_files="$ac_config_files Makefile librange/Makefile librange/tests/Makefile rangexxstored/Makefile rangexxstored/tests/Makefile python/Makefile"
+ac_config_files="$ac_config_files Makefile librange/Makefile librange/tests/Makefile stored/Makefile stored/tests/Makefile python/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -21203,8 +21203,8 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "librange/Makefile") CONFIG_FILES="$CONFIG_FILES librange/Makefile" ;;
     "librange/tests/Makefile") CONFIG_FILES="$CONFIG_FILES librange/tests/Makefile" ;;
-    "rangexxstored/Makefile") CONFIG_FILES="$CONFIG_FILES rangexxstored/Makefile" ;;
-    "rangexxstored/tests/Makefile") CONFIG_FILES="$CONFIG_FILES rangexxstored/tests/Makefile" ;;
+    "stored/Makefile") CONFIG_FILES="$CONFIG_FILES stored/Makefile" ;;
+    "stored/tests/Makefile") CONFIG_FILES="$CONFIG_FILES stored/tests/Makefile" ;;
     "python/Makefile") CONFIG_FILES="$CONFIG_FILES python/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

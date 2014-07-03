@@ -30,7 +30,7 @@
 
 #include "log.h"
 
-namespace range { namespace core { namespace stored { 
+namespace range { namespace stored { 
 
 namespace ipc = boost::interprocess;
 namespace bpt = boost::posix_time;
@@ -49,12 +49,30 @@ class MessageQueue {
         {
         } 
 
+        
+        //######################################################################
+        //######################################################################
+        size_t
+        pending() const
+        {
+            return q_->get_num_msg();
+        }
+
+        //######################################################################
+        //######################################################################
+        void
+        flush() {
+            while (pending() > 0) {
+                receive();
+            }
+        }
+
         //##############################################################################
         //##############################################################################
         std::string
         receive() const
         {
-            RANGE_LOG_FUNCTION();
+            //RANGE_LOG_FUNCTION();
 
             char buf[bufsize] = {0};
             std::string msg;
@@ -142,7 +160,7 @@ class MessageQueue {
         boost::shared_ptr<mqImpl> q_;
         uint32_t send_timeout_;
         uint32_t recv_timeout_;
-        static const uint32_t msg_ordinal; // = 0xAAAAAAAA; 
+        static const uint32_t msg_ordinal; 
 };
 
 //##############################################################################
@@ -166,6 +184,6 @@ boost::shared_ptr<T> CreateMQ(std::string name, size_t qlen=512) {
 
 
 
-} /* stored */ } /* core */ } /* range */
+} /* stored */ } /* range */
 
 #endif

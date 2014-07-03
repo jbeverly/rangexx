@@ -24,6 +24,7 @@
 #include <mutex>
 
 #include <boost/make_shared.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 #include <boost/log/core.hpp>
 #include <boost/log/attributes.hpp>
@@ -216,7 +217,7 @@ class Emitter {
     public:
         //######################################################################
         enum class logseverity : uint8_t {
-            fatal,                                                              /// Error which will likely crash the app
+            fatal = 0,                                                              /// Error which will likely crash the app
             critical,                                                           /// Something the user should know about
             error,                                                              /// An error has occurred, generally recoverable
             warning,                                                            /// Something less than good happened
@@ -299,6 +300,14 @@ class Emitter {
                 logseverity, std::string
             > logger_mt;
 
+        typedef boost::log::attributes::mutable_constant<
+                std::string,
+                boost::shared_mutex,
+                boost::unique_lock< boost::shared_mutex >,
+                boost::shared_lock< boost::shared_mutex >
+            > shared_sevstr; 
+
+        mutable shared_sevstr sevstr_;
         std::string module_;
         mutable logger_mt log;
         static logseverity loglevel_;

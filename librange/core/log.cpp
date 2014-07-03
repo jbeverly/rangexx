@@ -174,8 +174,10 @@ Emitter::Timer::~Timer()
 //##############################################################################
 
 Emitter::Emitter(std::string module)
-    : module_(module), log(boost::log::keywords::channel = module)
+    : sevstr_("unknown"), module_(module),
+        log(boost::log::keywords::channel = module)
 {
+    log.add_attribute("SevString", sevstr_); 
 }
 
 //######################################################################
@@ -202,9 +204,7 @@ void
 Emitter::writelog(const std::string &event, const std::string &extra,
         logseverity s) const
 {
-    log.add_attribute("SevString", 
-            boost::log::attributes::mutable_constant<std::string>(
-                logseverity_strings[static_cast<uint8_t>(s)]));
+    sevstr_.set(logseverity_strings[static_cast<uint8_t>(s)]);
     BOOST_LOG_SEV(log, s) << event << ": " << extra;
 }
 

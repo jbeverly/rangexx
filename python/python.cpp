@@ -26,8 +26,9 @@ extern "C" {
 
 #include <dbstl_exception.h>
 
-#include "../librange/core/api.h"
-#include "../librange/core/log.h"
+#include <rangexx/core/api.h>
+#include <rangexx/core/log.h>
+
 #include "python_visitor.h"
 
 using namespace boost::python;

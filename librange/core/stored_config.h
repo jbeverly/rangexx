@@ -19,30 +19,39 @@
 #define _RANGE_CORE_STORED_CONFIG_H
 
 #include "config.h"
-namespace range { namespace stored {
+namespace range { 
 
 class StoreDaemonConfig : public Config
 {
     public:
-        StoreDaemonConfig() { }
+        StoreDaemonConfig() 
+        { }
 
-        const std::vector<std::string>& initial_peers() const
-        {
-            return initial_peers_;
-        }
+        virtual const std::vector<std::string>& initial_peers() const
+        { return initial_peers_; }
 
-        uint32_t heartbeat_timeout() const
-        {
-            return heartbeat_timeout_;
-        }
+        virtual uint32_t heartbeat_timeout() const
+        { return heartbeat_timeout_; }
 
+        virtual short port() const
+        { return port_; }
+
+        virtual void initial_peers(const std::vector<std::string> v)
+        { initial_peers_ = v; }
+
+        virtual void heartbeat_timeout(uint32_t v)
+        { heartbeat_timeout_ = v; }
+
+        virtual void port(short v)
+        { port_ = v; }
 
     private:
         std::vector<std::string> initial_peers_;
         uint32_t heartbeat_timeout_;
+        short port_;
 };
 
-} /* namespace stored */ } /* namespace range */ 
+} /* namespace stored */
 
 #endif
 

@@ -63,7 +63,7 @@ TEST_F(TestMQ, test_send)
     uint32_t ord = 0xAAAAAAAA; 
     std::string msg { "Hello" };
     uint32_t size = msg.size();
-    char buf[::range::core::stored::MessageQueue<MockMQ>::bufsize] = {0};
+    char buf[::range::stored::MessageQueue<MockMQ>::bufsize] = {0};
     std::memcpy(buf, &ord, sizeof(ord));
     std::memcpy(buf + sizeof(ord), &size, sizeof(size));
     std::memcpy(buf + sizeof(ord) + sizeof(size), msg.c_str(), msg.size());
@@ -72,7 +72,7 @@ TEST_F(TestMQ, test_send)
         .Times(1)
         .WillOnce(Return(true));
 
-    ::range::core::stored::MessageQueue<MockMQ> testq { sendq };
+    ::range::stored::MessageQueue<MockMQ> testq { sendq };
     testq.send(msg);
 }
 
@@ -82,16 +82,16 @@ TEST_F(TestMQ, test_send_almost_full)
 {
     auto sendq = boost::make_shared<MockMQ>();
     uint32_t ord = 0xAAAAAAAA; 
-    size_t n = ::range::core::stored::MessageQueue<MockMQ>::bufsize - sizeof(ord);
+    size_t n = ::range::stored::MessageQueue<MockMQ>::bufsize - sizeof(ord);
     std::string msg(n, 'A'); 
 
     uint32_t size = msg.size();
-    char buf1[::range::core::stored::MessageQueue<MockMQ>::bufsize] = {0};
+    char buf1[::range::stored::MessageQueue<MockMQ>::bufsize] = {0};
     std::memcpy(buf1, &ord, sizeof(ord));
     std::memcpy(buf1 + sizeof(ord), &size, sizeof(size));
     std::memcpy(buf1 + sizeof(ord) + sizeof(size), msg.c_str(), msg.size() - sizeof(ord));
 
-    EXPECT_CALL(*sendq, timed_send(PointeeUptoLen(buf1, ::range::core::stored::MessageQueue<MockMQ>::bufsize), ::range::core::stored::MessageQueue<MockMQ>::bufsize, 0, _))
+    EXPECT_CALL(*sendq, timed_send(PointeeUptoLen(buf1, ::range::stored::MessageQueue<MockMQ>::bufsize), ::range::stored::MessageQueue<MockMQ>::bufsize, 0, _))
         .Times(1)
         .WillOnce(Return(true));
 
@@ -102,7 +102,7 @@ TEST_F(TestMQ, test_send_almost_full)
         .Times(1)
         .WillOnce(Return(true));
 
-    ::range::core::stored::MessageQueue<MockMQ> testq { sendq };
+    ::range::stored::MessageQueue<MockMQ> testq { sendq };
     testq.send(msg);
 }
 
@@ -124,7 +124,7 @@ TEST_F(TestMQ, test_receive)
 
     uint32_t ord = 0xAAAAAAAA; 
     uint32_t size = msg.size();
-    char buf[::range::core::stored::MessageQueue<MockMQ>::bufsize] = {0};
+    char buf[::range::stored::MessageQueue<MockMQ>::bufsize] = {0};
     std::memcpy(buf, &ord, sizeof(ord));
     std::memcpy(buf + sizeof(ord), &size, sizeof(size));
     std::memcpy(buf + sizeof(ord) + sizeof(size), msg.c_str(), msg.size());
@@ -132,11 +132,11 @@ TEST_F(TestMQ, test_receive)
 
     size_t total_size = 13;
 
-    EXPECT_CALL(*recvq, timed_receive(_, ::range::core::stored::MessageQueue<MockMQ>::bufsize, _, prio, _))
+    EXPECT_CALL(*recvq, timed_receive(_, ::range::stored::MessageQueue<MockMQ>::bufsize, _, prio, _))
         .Times(1)
         .WillOnce(DoAll(set_buffer(buf, total_size), SetArgReferee<2>(total_size), SetArgReferee<3>(0), Return(true)));
 
-    ::range::core::stored::MessageQueue<MockMQ> testq { recvq };
+    ::range::stored::MessageQueue<MockMQ> testq { recvq };
     std::string got = testq.receive();
 
     EXPECT_EQ(msg, got);
@@ -148,29 +148,29 @@ TEST_F(TestMQ, test_receive_almost_full)
 {
     auto recvq = boost::make_shared<MockMQ>();
     uint32_t ord = 0xAAAAAAAA; 
-    size_t n = ::range::core::stored::MessageQueue<MockMQ>::bufsize - sizeof(ord);
+    size_t n = ::range::stored::MessageQueue<MockMQ>::bufsize - sizeof(ord);
     std::string msg(n , 'A');
     uint32_t prio = 0;
 
     uint32_t size = msg.size();
-    char buf1[::range::core::stored::MessageQueue<MockMQ>::bufsize] = {0};
+    char buf1[::range::stored::MessageQueue<MockMQ>::bufsize] = {0};
     std::memcpy(buf1, &ord, sizeof(ord));
     std::memcpy(buf1 + sizeof(ord), &size, sizeof(size));
     std::memcpy(buf1 + sizeof(ord) + sizeof(size), msg.c_str(), msg.size() - sizeof(ord));
 
-    char buf2[::range::core::stored::MessageQueue<MockMQ>::bufsize] = {0};
+    char buf2[::range::stored::MessageQueue<MockMQ>::bufsize] = {0};
     std::memcpy(buf2, msg.c_str() + (msg.size() - sizeof(ord)), sizeof(ord));
 
-    size_t total_size = ::range::core::stored::MessageQueue<MockMQ>::bufsize;
+    size_t total_size = ::range::stored::MessageQueue<MockMQ>::bufsize;
     size_t total_size2 = 4;
 
-    EXPECT_CALL(*recvq, timed_receive(_, ::range::core::stored::MessageQueue<MockMQ>::bufsize, _, prio, _))
+    EXPECT_CALL(*recvq, timed_receive(_, ::range::stored::MessageQueue<MockMQ>::bufsize, _, prio, _))
         .Times(2)
         .WillOnce(DoAll(set_buffer(buf1, total_size), SetArgReferee<2>(total_size), SetArgReferee<3>(0), Return(true)))
         .WillOnce(DoAll(set_buffer(buf2, total_size2), SetArgReferee<2>(total_size2), SetArgReferee<3>(0), Return(true)));
 
 
-    ::range::core::stored::MessageQueue<MockMQ> testq { recvq };
+    ::range::stored::MessageQueue<MockMQ> testq { recvq };
     std::string got = testq.receive();
 
     EXPECT_EQ(msg.size(), got.size());

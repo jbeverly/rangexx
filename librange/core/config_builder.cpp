@@ -19,6 +19,7 @@
 #include <map>
 
 #include "config_builder.h"
+#include "stored_config.h"
 #include "../db/berkeley_db.h"
 #include "../db/config_interface.h"
 #include "../db/pbuff_node.h"
@@ -46,24 +47,46 @@ build_symtable() {
 }
 
 boost::shared_ptr<Config>
-config_builder(const std::string& filename)
+config_builder(const std::string& filename, Consumer type)
 {
     (void)(filename);
-    Config * cfg = new Config();
+
+    Config * cfg; 
+    switch (type) {
+        case Consumer::CLIENT:
+            cfg = new Config();
+            break;
+        case Consumer::STORED:
+            cfg = new StoreDaemonConfig();
+            break;
+    }
+
     
     auto db_conf = db::ConfigIface("/var/lib/rangexx", 67108864);
     auto db = boost::make_shared<range::db::BerkeleyDB>( db_conf );
-    //auto db = new range::db::BerkeleyDB { db_conf };
 
-    //cfg->db_backend(boost::shared_ptr<range::db::BerkeleyDB>(db));
     cfg->db_backend(db);
+    cfg->db_backend()->register_thread();
     cfg->graph_factory(boost::make_shared<graph::GraphdbConcreteFactory<graph::GraphDB>>());
     cfg->node_factory(boost::make_shared<graph::NodeIfaceConcreteFactory<db::ProtobufNode>>()); 
     cfg->range_symbol_table(build_symtable());
-    cfg->use_stored(false);
-    cfg->stored_mq_name("bob");
-    cfg->stored_request_timeout(0);
-    cfg->reader_ack_timeout(0);
+    cfg->stored_mq_name("rangexx_request");
+
+    switch (type) {
+        case Consumer::CLIENT:
+            cfg->use_stored(true);
+            cfg->stored_request_timeout(30000);
+            cfg->reader_ack_timeout(30000);
+            break;
+        case Consumer::STORED:
+            cfg->use_stored(false);
+            cfg->stored_request_timeout(5000);
+            cfg->reader_ack_timeout(5000);
+            dynamic_cast<StoreDaemonConfig*>(cfg)->initial_peers({ "range" });
+            dynamic_cast<StoreDaemonConfig*>(cfg)->heartbeat_timeout(1);
+            dynamic_cast<StoreDaemonConfig*>(cfg)->port(5444);
+            break;
+    }
 
     std::map<std::string, bool> instances { {"primary", false}, {"dependency", false} };
 

@@ -16,10 +16,11 @@
  */
 
 #include "log.h"
+#include "api.h"
 #include "stored_message.h"
 #include "exceptions.h"
 
-namespace range { namespace core { namespace stored {
+namespace range { namespace stored {
 
 //##############################################################################
 //##############################################################################
@@ -33,46 +34,16 @@ bool
 RequestQueue::verify_request(const Request& req)
 {
     BOOST_LOG_FUNCTION();
-
-    if (! req.IsInitialized()) {
+    auto it = range::RangeAPI_v1::num_arguments.find(req.method());
+    if (it == range::RangeAPI_v1::num_arguments.end()) {
         return false;
     }
 
-    typedef Request r;
-
-    switch (req.request_type()) {
-        case r::CREATE_GRAPH: {
-                                  return req.has_create_graph();
-                              }
-        case r::REMOVE_NODE: {
-                                 return req.has_remove_node();
-                             }
-        case r::CREATE_NODE: {
-                                 return req.has_create_node();
-                             }
-        case r::ADD_TAG_VALUES: {
-                                    return req.has_add_tag_values();
-                                }
-        case r::REMOVE_TAG_VALUES: {
-                                       return req.has_remove_tag_values();
-                                   }
-        case r::DELETE_TAG: {
-                                return req.has_delete_tag();
-                            }
-        case r::ADD_FORWARD_EDGE: {
-                                      return req.has_add_forward_edge();
-                                  }
-        case r::ADD_REVERSE_EDGE: {
-                                      return req.has_add_reverse_edge();
-                                  }
-        case r::REMOVE_FORWARD_EDGE: {
-                                         return req.has_remove_foreward_edge();
-                                     }
-        case r::REMOVE_REVERSE_EDGE: {
-                                         return req.has_remove_reverse_edge();
-                                     }
-        default: { return false; }
+    if (static_cast<size_t>(req.args_size()) != it->second) {
+        return false;
     }
+
+    return true;
 }
 
 
@@ -85,12 +56,23 @@ RequestQueueClient::request(const Request& req, Ack& ack)
     if (! verify_request(req)) {
         throw MqueueException("invalid request");
     }
+
+    ack_queue.flush(); /* Ensure ack queue is empty; ack_queue is specific for this thread
+                          so we should be the only consumer; any garbage left in the 
+                          ack_queue is from a previously expired request */
+
     if (! sending_queue.send(req.SerializeAsString())) {
         return false;
     }
     std::string ack_payload = ack_queue.receive();
     if (ack_payload.size() > 0) {
         if(! ack.ParseFromString(ack_payload)) {
+            return false;
+        }
+        if(ack.request_id() != req.request_id()) {
+            return false;
+        }
+        if(ack.client_id() != req.client_id()) {
             return false;
         }
         return true;
@@ -103,7 +85,7 @@ RequestQueueClient::request(const Request& req, Ack& ack)
 bool
 RequestQueueListener::receive(Request& req)
 {
-    BOOST_LOG_FUNCTION();
+    //BOOST_LOG_FUNCTION();
     std::string msg = receiving_queue.receive();
     if (msg.size() > 0) {
         if (! req.ParseFromString(msg)) {
@@ -127,9 +109,13 @@ RequestQueueListener::send_ack(const std::string &client_id, const Ack &ack)
 }
 
 
+//##############################################################################
+//##############################################################################
+//##############################################################################
+thread_local uint64_t WriteRequest::request_id_ = 0;
 
 
 
 
 
-} /* stored */ } /* core */ } /* range */
+} /* stored */ } /* range */

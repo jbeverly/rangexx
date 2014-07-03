@@ -1,107 +1,43 @@
-package range.core.stored;
+package range.stored;
 
 message Request {
-    enum Type { 
-        CREATE_GRAPH                                    = 0;
-        REMOVE_NODE                                     = 1;
-        CREATE_NODE                                     = 2;
-        ADD_TAG_VALUES                                  = 3;
-        REMOVE_TAG_VALUES                               = 4;
-        DELETE_TAG                                      = 5;
-        ADD_FORWARD_EDGE                                = 6;
-        ADD_REVERSE_EDGE                                = 7;
-        REMOVE_FORWARD_EDGE                             = 8;
-        REMOVE_REVERSE_EDGE                             = 9;
-    };
+	enum Type {
+		REQUEST = 0;
+		SUBMIT	= 1;
+		PREPARE = 2;
+		PROPOSE = 3;
+		LEARN   = 4;
+	}
 
-    message CreateGraph {
-        required string graph_name                      = 1;
-        optional bool prepopulate                       = 2 [default = true];
-        optional string prepopulate_source              = 3 [default = "primary"];
-    }
-
-    message RemoveNode {
-        required string graph_name                      = 1;
-        required string name                            = 2;
-    }
-
-    message CreateNode {
-        required string graph_name                      = 1;
-        required string name                            = 2;
-        required uint32 type                            = 3;
-    }
-
-    message AddTagValues {
-        message Values {
-            repeated string values                      = 1;
-        }
-
-        required string graph_name                      = 1;
-        required string node_name                       = 2;
-        required string tag_key                         = 3;
-        required Values values                          = 4;
-    }
-
-    message RemoveTagValues {
-        message Values {
-            repeated string values                      = 1;
-        }
-
-        required string graph_name                      = 1;
-        required string node_name                       = 2;
-        required string tag_key                         = 3;
-        required Values values                          = 4;
-    }
-
-    message DeleteTag {
-        required string graph_name                      = 1;
-        required string node_name                       = 2;
-        required string tag_key                         = 3;
-    }
-
-    message AddForwardEdge {
-        required string graph_name                      = 1;
-        required string node_name                       = 2;
-        required string edge_name                       = 3;
-    }
-
-    message RemoveForwardEdge {
-        required string graph_name                      = 1;
-        required string node_name                       = 2;
-        required string edge_name                       = 3;
-    }
-    
-    message AddReverseEdge {
-        required string graph_name                      = 1;
-        required string node_name                       = 2;
-        required string edge_name                       = 3;
-    }
-
-    message RemoveReverseEdge {
-        required string graph_name                      = 1;
-        required string node_name                       = 2;
-        required string edge_name                       = 3;
-    }
-    
-    required Type               request_type            = 1;
-    required bool               blocking                = 2;
-	required string             client_id               = 3;
-    optional CreateGraph        create_graph            = 4;
-    optional RemoveNode         remove_node             = 5;
-    optional CreateNode         create_node             = 6;
-    optional AddTagValues       add_tag_values          = 7;
-    optional RemoveTagValues    remove_tag_values       = 8;
-    optional DeleteTag          delete_tag              = 9;
-    optional AddForwardEdge     add_forward_edge        = 10;
-    optional RemoveForwardEdge  remove_foreward_edge    = 11;
-    optional AddReverseEdge     add_reverse_edge        = 12;
-    optional RemoveReverseEdge  remove_reverse_edge     = 13;
+	required uint32     crc                 = 1;
+	required string		client_id			= 2;
+	required uint64		request_id          = 3;
+    required string     method				= 4;
+    repeated string		args                = 5;
+	optional uint64     timestamp			= 6;
+	optional Type		type                = 7;
+	optional uint64		proposal_num		= 8;
+	optional uint32		proposer_id			= 9;
+	
 }
 
 message Ack {
-    required bool status = 1;
-    optional uint64 code = 2;
-    optional string reason = 3;
+	enum Type {
+		ACK			= 0;
+		PROMISE		= 1;
+		NACK		= 2;
+		ACCEPTED    = 3;
+	}
+
+    required bool		status				= 1;
+	required string		client_id			= 2;
+	required uint64		request_id			= 3;
+    optional uint64		code				= 4;
+    optional string		reason				= 5;
+	optional Type		type				= 6;
+	optional uint64		proposal_num		= 7;
+	optional uint32		proposer_id			= 8;
+	optional uint64		next_proposal_num	= 9;
 }
     
     

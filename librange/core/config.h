@@ -53,6 +53,9 @@ struct Config {
         virtual uint32_t reader_ack_timeout() const
         { return reader_ack_timeout_; }
 
+        virtual std::string node_id() const
+        { return node_id_; }
+
         virtual void db_backend(boost::shared_ptr<db::BackendInterface> v)
         { db_backend_ = v; }
 
@@ -77,6 +80,12 @@ struct Config {
         virtual void reader_ack_timeout(uint32_t v)
         { reader_ack_timeout_ = v; } 
 
+        virtual void node_id(const std::string &v)
+        {
+            node_id_ = v;
+        }
+
+
         Config(
                 boost::shared_ptr<db::BackendInterface> db_backend,
                 boost::shared_ptr<graph::NodeIfaceAbstractFactory> node_factory,
@@ -85,7 +94,8 @@ struct Config {
                 bool use_stored,
                 std::string stored_mq_name,
                 uint32_t stored_request_timeout,
-                uint32_t reader_ack_timeout
+                uint32_t reader_ack_timeout,
+                const std::string &node_id
               ) 
             :   db_backend_(db_backend),
                 node_factory_(node_factory),
@@ -94,7 +104,8 @@ struct Config {
                 use_stored_(use_stored),
                 stored_mq_name_(stored_mq_name),
                 stored_request_timeout_(stored_request_timeout),
-                reader_ack_timeout_(reader_ack_timeout)
+                reader_ack_timeout_(reader_ack_timeout),
+                node_id_(node_id)
         { }
     private:
         boost::shared_ptr<db::BackendInterface> db_backend_;
@@ -105,6 +116,7 @@ struct Config {
         std::string stored_mq_name_;
         uint32_t stored_request_timeout_;
         uint32_t reader_ack_timeout_;
+        std::string node_id_;
 
 
 };

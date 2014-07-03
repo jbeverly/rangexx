@@ -78,7 +78,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = test_stored$(EXEEXT)
-subdir = rangexxstored/tests
+subdir = stored/tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp $(top_srcdir)/test-driver
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -114,7 +114,8 @@ CONFIG_CLEAN_VPATH_FILES =
 test_stored_SOURCES = test_stored.cpp
 test_stored_OBJECTS = test_stored.$(OBJEXT)
 test_stored_LDADD = $(LDADD)
-test_stored_DEPENDENCIES = $(top_builddir)/librange/librange.la
+test_stored_DEPENDENCIES = $(top_builddir)/librange/librange.la \
+	$(top_builddir)/stored/libstored.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -548,8 +549,8 @@ top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = parallel-tests color-tests
 AM_CPPFLAGS = @PROTOBUF_CPPFLAGS@ @DB_STL_CPPFLAGS@ @BOOST_CPPFLAGS@ @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ -I$(top_builddir)/librange
 AM_LDFLAGS = -Wl,--copy-dt-needed-entries @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ -lpthread -lrt
-LDADD = @GTEST_LIBS@ @GMOCK_LIBS@ $(top_builddir)/librange/librange.la 
-LIBADD = @GTEST_LIBS@ @GMOCK_LIBS@ $(top_builddir)/librange/librange.la
+#LDADD = @GTEST_LIBS@ @GMOCK_LIBS@ $(top_builddir)/librange/librange.la 
+LDADD = @GTEST_LIBS@ @GMOCK_LIBS@ $(top_builddir)/librange/librange.la $(top_builddir)/stored/libstored.la
 AM_DEFAULT_SOURCE_EXT = .cpp
 TESTS = $(check_PROGRAMS)
 all: all-am
@@ -565,9 +566,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu rangexxstored/tests/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu stored/tests/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu rangexxstored/tests/Makefile
+	  $(AUTOMAKE) --gnu stored/tests/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -1013,7 +1014,7 @@ export LD_LIBRARY_PATH:=@GMOCK_LD_LIBRARY_PATH@:@GTEST_LD_LIBRARY_PATH@:@PROTOBU
 valgrind: $(TESTS)
 	for n in $(TESTS); do \
 		LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$(top_builddir)/librange/.libs/" \
-		valgrind -q --tool=memcheck --leak-check=full --leak-resolution=high --track-origins=yes --show-reachable=yes $(builddir)/.libs/$$n; \
+		$(top_builddir)/libtool --mode=execute valgrind -q --tool=memcheck --leak-check=full --leak-resolution=high --track-origins=yes --show-reachable=yes $(builddir)/.libs/$$n; \
 	done
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

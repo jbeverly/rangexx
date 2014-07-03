@@ -14,50 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGE_CORE_EXCEPTION_H
-#define _RANGE_CORE_EXCEPTION_H
+#ifndef _RANGEXXSTORED_PAXOS_H
+#define _RANGEXXSTORED_PAXOS_H
 
-#include <stdexcept>
-#include "log.h"
-#include "../util/demangle.h"
-
-namespace range {
+namespace range { namespace stored { namespace paxos {
 
 //##############################################################################
 //##############################################################################
-struct Exception : public std::runtime_error::runtime_error {
-    Exception(const std::string& what,
-        const std::string &event="Exception")
-        : std::runtime_error::runtime_error(what) 
-    { 
-        try {
-            auto log = range::Emitter("exception");
-            log.notice(event, what);
-        } catch(...) { }
-    }
-    virtual int vtable(void) { return 1; }
+class Proposer {
+//    Proposer(
 };
 
-struct InvalidTimespecException : public Exception {
-    InvalidTimespecException(const std::string &what, 
-            const std::string &event="stored.MqueueException") 
-        : Exception(what, event)
-        { }
+//##############################################################################
+//##############################################################################
+class Accepter {
 };
-
-namespace stored {
 
 //##############################################################################
 //##############################################################################
-struct MqueueException : public ::range::Exception {
-    MqueueException(const std::string& what,
-        const std::string &event="stored.MqueueException") 
-        : Exception(what, event)
-    { }
+class Learner {
 };
 
-} /* namespace stored */
 
-} // namespace range
+} /* namespace paxos */ } /* namespace stored */ } /* namespace range */
 
 #endif

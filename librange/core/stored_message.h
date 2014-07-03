@@ -27,10 +27,11 @@
 #include "mq.h"
 #include "store.pb.h"
 #include "config.h"
+#include "../util/crc32.h"
 
-namespace range { namespace core { namespace stored {
+namespace range { namespace stored {
 
-#define CLIENT_ID  boost::lexical_cast<std::string>(getpid()) + "_" \
+#define CLIENT_ID  cfg_->node_id() + "_" + boost::lexical_cast<std::string>(getpid()) + "_" \
         + boost::lexical_cast<std::string>(std::this_thread::get_id())
 
 //##############################################################################
@@ -43,15 +44,14 @@ class RequestQueue {
         bool verify_request(const Request& req);
 };
 
-
 //##############################################################################
 //##############################################################################
 class RequestQueueClient : private RequestQueue {
     public:
-        RequestQueueClient(boost::shared_ptr<Config> cfg)
+        RequestQueueClient(boost::shared_ptr<Config> cfg_)
             : client_id_(CLIENT_ID),
-                sending_queue(CreateMQ<>(request_queue), cfg->stored_request_timeout(), 100),
-                ack_queue(CreateMQ<>(ack_queue_prefix + client_id_), 100, cfg->stored_request_timeout()),
+                sending_queue(CreateMQ<>(request_queue), cfg_->stored_request_timeout(), 100),
+                ack_queue(CreateMQ<>(ack_queue_prefix + client_id_), 100, cfg_->stored_request_timeout()),
                 log("RequestQueueClient")
         { }
 
@@ -73,6 +73,7 @@ class RequestQueueListener : private RequestQueue {
         { }
 
         virtual bool receive(Request& req);
+        virtual size_t pending() { return receiving_queue.pending(); };
         virtual bool send_ack(const std::string& client_id, const Ack& ack);
 
     private:
@@ -83,8 +84,45 @@ class RequestQueueListener : private RequestQueue {
         range::Emitter log;
 };
 
+//##############################################################################
+//##############################################################################
+class WriteRequest {
+    public:
+        //######################################################################
+        WriteRequest(const boost::shared_ptr<Config> cfg, const std::string &name) 
+            : cfg_{cfg}
+        {
+            req.set_method(name);
+            req.set_request_id(request_id_++);
+        }
+
+        //######################################################################
+        void add_arg(const std::string &arg)
+        {
+            req.add_args(arg);
+        }
+
+        //######################################################################
+        Ack send()
+        {
+            RequestQueueClient reqq { cfg_ };
+            req.set_crc(0);
+            req.set_client_id(CLIENT_ID);
+            req.set_crc(range::util::crc32(req.SerializeAsString()));
+            reqq.request(req, ack);
+            return ack;
+        }
+
+    private:
+        boost::shared_ptr<Config> cfg_;
+        Request req;
+        Ack ack;
+        thread_local static uint64_t request_id_;
+};
 
 
-} /* stored */ } /* core */ } /* range */
+
+
+} /* stored */ } /* range */
 
 #endif

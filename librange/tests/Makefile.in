@@ -1199,7 +1199,7 @@ export LD_LIBRARY_PATH:=@GMOCK_LD_LIBRARY_PATH@:@GTEST_LD_LIBRARY_PATH@:@PROTOBU
 valgrind: $(check_PROGRAMS)
 	for n in $(TESTS); do \
 		LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$(top_builddir)/librange/.libs/" \
-		valgrind -q --tool=memcheck --leak-check=full --leak-resolution=high --track-origins=yes --show-reachable=yes --suppressions=$(top_builddir)/librange/tests/valrind_suppressions.txt $(builddir)/.libs/$$n; \
+		../../libtool --mode=execute valgrind -q --tool=memcheck --leak-check=full --leak-resolution=high --track-origins=yes --show-reachable=yes --suppressions=$(top_builddir)/librange/tests/valrind_suppressions.txt $(builddir)/$$n; \
 	done
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

@@ -52,6 +52,10 @@ BerkeleyDB::BerkeleyDB(const ConfigIface& config)
     RANGE_LOG_TIMED_FUNCTION();
     {
         std::lock_guard<std::mutex> guard { startlock_ };
+        if (dbstl_started_) {
+            /* FIXME need to just make this a singleton, as it cannot sanely have more than one.... */
+            THROW_STACK(DatabaseEnvironmentException("BerkeleyDB already initialized"));
+        }
         if(!dbstl_started_) {
             dbstl_started_ = true;
             try { 
@@ -126,26 +130,31 @@ BerkeleyDB::~BerkeleyDB() noexcept
 {
     try {
         std::lock_guard<std::mutex> guard { startlock_ };
-        dbstl_started_ = false;
-        try {
-            for(auto dbi : graph_db_instances) {
-                try {
-                    dbstl::close_db(dbi.second);
-                } catch(...) { }
-            }
-        } catch(...) { }
-
-        if(graph_info) {
+        if (dbstl_started_) {
+            dbstl_started_ = false;
             try {
-                if (graph_info) {
-                    dbstl::close_db(graph_info);
+                for(auto dbi : graph_db_instances) {
+                    try {
+                        dbstl::close_db(dbi.second);
+                    } catch(...) { }
                 }
             } catch(...) { }
-        }
-        if (env_) {
-            try {
-                dbstl::close_db_env(env_);
-            } catch(...) { }
+
+            if(graph_info) {
+                try {
+                    if (graph_info) {
+                        dbstl::close_db(graph_info);
+                    }
+                } catch(...) { }
+            }
+            if (env_) {
+                try {
+                    dbstl::close_db_env(env_);
+                } catch(...) { }
+            }
+            graph_db_instances.clear();
+            graph_info = nullptr;
+            env_ = nullptr;
         }
     } catch (...) { }
 }

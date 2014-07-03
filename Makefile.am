@@ -1,4 +1,4 @@
-SUBDIRS = librange rangexxstored python
+SUBDIRS = librange stored python
 ACLOCAL_AMFLAGS    = -I m4
 
 valgrind: librange/librange.la 
