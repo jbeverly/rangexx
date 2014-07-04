@@ -128,7 +128,7 @@ try : log_(log), event_(event), extrastream_ptr_(),
     std::stringstream s;
     std::time_t start_time = std::chrono::high_resolution_clock::to_time_t(s_time);
     s << " started at: " << std::ctime(&start_time);
-    log_->writelog(event_, s.str().substr(0,s.str().size()-1), Emitter::logseverity::debug1);
+    log_->writelog(event_, s.str().substr(0,s.str().size()-1), Emitter::logseverity::debug4);
 
 
 }

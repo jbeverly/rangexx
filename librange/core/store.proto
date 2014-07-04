@@ -2,11 +2,11 @@ package range.stored;
 
 message Request {
 	enum Type {
-		REQUEST = 0;
-		SUBMIT	= 1;
+		REQUEST = 1;
 		PREPARE = 2;
-		PROPOSE = 3;
-		LEARN   = 4;
+		PROPOSE = 4;
+		LEARN   = 8;
+		REPLAY  = 16;
 	}
 
 	required uint32     crc                 = 1;
@@ -18,15 +18,17 @@ message Request {
 	optional Type		type                = 7;
 	optional uint64		proposal_num		= 8;
 	optional uint32		proposer_id			= 9;
+	optional uint32     sender_addr         = 10;
+	optional uint32     sender_port         = 11;
 	
 }
 
 message Ack {
 	enum Type {
-		ACK			= 0;
-		PROMISE		= 1;
-		NACK		= 2;
-		ACCEPTED    = 3;
+		ACK			= 1;
+		PROMISE		= 2;
+		NACK		= 4;
+		ACCEPTED    = 8;
 	}
 
     required bool		status				= 1;

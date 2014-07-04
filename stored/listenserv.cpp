@@ -17,6 +17,7 @@
 
 #include "listenserv.h"
 #include "signalhandler.h"
+#include "paxos.h"
 
 
 namespace range { namespace stored {
@@ -117,11 +118,17 @@ ListenServer::receive_handler(const boost::system::error_code &error, std::size_
             << " method" << msg.method();
     }
 
+    /*
     socket_.async_send_to(
             boost::asio::buffer(ack.SerializeAsString()), endpoint_,
                 std::bind(&ListenServer::send_handler, this, _1, _2)
         );
+    */
 
+    msg.set_sender_addr(endpoint_.address().to_v4().to_ulong());
+    msg.set_sender_port(endpoint_.port());
+
+    paxos::submit(cfg_, msg);
     receive();
 }
 

@@ -21,6 +21,7 @@
 #include <rangexx/core/stored_message.h>
 
 #include "signalhandler.h"
+#include "network.h"
 
 namespace range { namespace stored {
 
@@ -49,24 +50,39 @@ MQServer::operator()()
 {
     RANGE_LOG_FUNCTION();
     ::range::stored::RequestQueueListener reqql { cfg_ };
-    while (!shutdown_) { 
+    while (!shutdown_) {
+        ::range::RangeAPI_v1 range { cfg_ };
+        ::range::RangeStruct range_proposers;
+        std::string cluster_name { cfg_->range_cell_name() + '.' + "proposers" };
+        try { 
+            range_proposers = range.simple_expand_cluster("_local_", cluster_name);
+        } catch(::range::graph::NodeNotFoundException) {
+            LOG(fatal, "_local_#" + cluster_name + " cluster not found");
+            shutdown_ = true;
+            running_ = false;
+            SignalHandler::terminate();
+            break;
+        }
+
+        std::vector<std::string> proposers; 
+        for(RangeStruct v : boost::get<::range::RangeArray>(range_proposers).values) {
+            proposers.push_back(boost::get<::range::RangeString>(v).value);
+        }
+
         do {
             ::range::stored::Request req;
-            if (reqql.receive(req)) {
-                std::cout << "method: " << req.method() << std::endl;
-                for (int n = 0; n < req.args_size(); ++n) {
-                    std::cout << "arg " << n << ": " << req.args(n) << std::endl;
+            try {
+                if (reqql.receive(req)) {
+                    range::stored::network::UDPMultiClient cl { proposers, cfg_->port() };
+                    auto res = cl.timed_send(req.SerializeAsString(), 500);
                 }
-                ::range::stored::Ack ack;
-                ack.set_status(true);
-                ack.set_client_id(req.client_id());
-                ack.set_request_id(req.request_id());
-                reqql.send_ack(req.client_id(), ack);
+            } catch (range::stored::MqueueException &e) {
+                LOG(error, "invalid_message") << e.what();
+            } catch (boost::system::system_error &e) {
+                LOG(error, "boost_error") << e.what();
             }
         }
         while(reqql.pending() > 0);
-
-        //std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 

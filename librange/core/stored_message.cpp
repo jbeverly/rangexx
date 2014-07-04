@@ -34,6 +34,9 @@ bool
 RequestQueue::verify_request(const Request& req)
 {
     BOOST_LOG_FUNCTION();
+    if(req.method() == "none") {
+        return true;
+    }
     auto it = range::RangeAPI_v1::num_arguments.find(req.method());
     if (it == range::RangeAPI_v1::num_arguments.end()) {
         return false;
@@ -104,7 +107,7 @@ RequestQueueListener::receive(Request& req)
 bool
 RequestQueueListener::send_ack(const std::string &client_id, const Ack &ack)
 {
-    MessageQueue<> ackq { CreateMQ(ack_queue_prefix + client_id), cfg_->reader_ack_timeout(), 100 };
+    MessageQueue<> ackq { CreateMQ(ack_queue_prefix + client_id), cfg_->reader_ack_timeout(), 1000 };
     return ackq.send(ack.SerializeAsString());
 }
 

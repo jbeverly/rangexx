@@ -18,6 +18,8 @@
 
 #include <map>
 
+#include <boost/asio/ip/host_name.hpp>
+
 #include "config_builder.h"
 #include "stored_config.h"
 #include "../db/berkeley_db.h"
@@ -71,6 +73,30 @@ config_builder(const std::string& filename, Consumer type)
     cfg->node_factory(boost::make_shared<graph::NodeIfaceConcreteFactory<db::ProtobufNode>>()); 
     cfg->range_symbol_table(build_symtable());
     cfg->stored_mq_name("rangexx_request");
+    std::string fqdn;
+    {
+        std::string node_name = boost::asio::ip::host_name();
+        boost::asio::io_service io_service;
+        boost::asio::ip::udp::resolver resolver {io_service};
+        boost::asio::ip::udp::resolver::query query {node_name, ""};
+        try {
+            for(auto it = resolver.resolve(query); it != decltype(it)(); ++it) {
+                boost::asio::ip::udp::endpoint ep;
+                ep.address(it->endpoint().address());
+                boost::asio::ip::udp::resolver rev_resolver {io_service};
+                try {
+                    for (auto r_it = rev_resolver.resolve(ep); r_it != decltype(r_it)(); ++r_it) {
+                        if (r_it->host_name().size() > fqdn.size()) {
+                            fqdn = r_it->host_name();
+                        }
+                    }
+                } catch (boost::system::system_error &e) { }
+            }
+        } catch (boost::system::system_error &e) { }
+    }
+
+    cfg->node_id(fqdn);
+    std::cout << cfg->node_id() << std::endl;
 
     switch (type) {
         case Consumer::CLIENT:
@@ -82,9 +108,16 @@ config_builder(const std::string& filename, Consumer type)
             cfg->use_stored(false);
             cfg->stored_request_timeout(5000);
             cfg->reader_ack_timeout(5000);
-            dynamic_cast<StoreDaemonConfig*>(cfg)->initial_peers({ "range" });
+            dynamic_cast<StoreDaemonConfig*>(cfg)->initial_peers(
+                    { 
+                        "ubuntu14-04-1.jamiebeverly.net",
+                        "ubuntu14-04-2.jamiebeverly.net",
+                        "ubuntu14-04-3.jamiebeverly.net"
+                    }
+                );
             dynamic_cast<StoreDaemonConfig*>(cfg)->heartbeat_timeout(1);
             dynamic_cast<StoreDaemonConfig*>(cfg)->port(5444);
+            dynamic_cast<StoreDaemonConfig*>(cfg)->range_cell_name("testcell");
             break;
     }
 

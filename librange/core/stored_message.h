@@ -48,12 +48,17 @@ class RequestQueue {
 //##############################################################################
 class RequestQueueClient : private RequestQueue {
     public:
-        RequestQueueClient(boost::shared_ptr<Config> cfg_)
+        RequestQueueClient(std::string queue_name, boost::shared_ptr<Config> cfg_)
             : client_id_(CLIENT_ID),
-                sending_queue(CreateMQ<>(request_queue), cfg_->stored_request_timeout(), 100),
-                ack_queue(CreateMQ<>(ack_queue_prefix + client_id_), 100, cfg_->stored_request_timeout()),
-                log("RequestQueueClient")
+                sending_queue(CreateMQ<>(queue_name), cfg_->stored_request_timeout(), 1000),
+                ack_queue(CreateMQ<>(ack_queue_prefix + client_id_), 1000, cfg_->stored_request_timeout()),
+                log("RequestQueueClient." + queue_name)
         { }
+
+        explicit RequestQueueClient(boost::shared_ptr<Config> cfg_)
+            : RequestQueueClient(request_queue, cfg_)
+        {
+        }
 
         virtual bool request(const Request& req, Ack& ack);
 
@@ -68,9 +73,14 @@ class RequestQueueClient : private RequestQueue {
 //##############################################################################
 class RequestQueueListener : private RequestQueue {
     public:
-        RequestQueueListener (boost::shared_ptr<Config> cfg)
-            : cfg_(cfg), receiving_queue(CreateMQ<>(request_queue)), log("RequestQueueListener")
+        RequestQueueListener(std::string queue_name, boost::shared_ptr<Config> cfg)
+            : cfg_(cfg), receiving_queue(CreateMQ<>(queue_name), 1000, 1000), log("RequestQueueListener." + queue_name)
         { }
+
+        explicit RequestQueueListener(boost::shared_ptr<Config> cfg)
+            : RequestQueueListener(request_queue, cfg)
+        {
+        }
 
         virtual bool receive(Request& req);
         virtual size_t pending() { return receiving_queue.pending(); };

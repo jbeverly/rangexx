@@ -39,15 +39,15 @@ class Request;
 class Ack;
 
 enum Request_Type {
-  Request_Type_REQUEST = 0,
-  Request_Type_SUBMIT = 1,
+  Request_Type_REQUEST = 1,
   Request_Type_PREPARE = 2,
-  Request_Type_PROPOSE = 3,
-  Request_Type_LEARN = 4
+  Request_Type_PROPOSE = 4,
+  Request_Type_LEARN = 8,
+  Request_Type_REPLAY = 16
 };
 bool Request_Type_IsValid(int value);
 const Request_Type Request_Type_Type_MIN = Request_Type_REQUEST;
-const Request_Type Request_Type_Type_MAX = Request_Type_LEARN;
+const Request_Type Request_Type_Type_MAX = Request_Type_REPLAY;
 const int Request_Type_Type_ARRAYSIZE = Request_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Request_Type_descriptor();
@@ -61,10 +61,10 @@ inline bool Request_Type_Parse(
     Request_Type_descriptor(), name, value);
 }
 enum Ack_Type {
-  Ack_Type_ACK = 0,
-  Ack_Type_PROMISE = 1,
-  Ack_Type_NACK = 2,
-  Ack_Type_ACCEPTED = 3
+  Ack_Type_ACK = 1,
+  Ack_Type_PROMISE = 2,
+  Ack_Type_NACK = 4,
+  Ack_Type_ACCEPTED = 8
 };
 bool Ack_Type_IsValid(int value);
 const Ack_Type Ack_Type_Type_MIN = Ack_Type_ACK;
@@ -137,10 +137,10 @@ class Request : public ::google::protobuf::Message {
 
   typedef Request_Type Type;
   static const Type REQUEST = Request_Type_REQUEST;
-  static const Type SUBMIT = Request_Type_SUBMIT;
   static const Type PREPARE = Request_Type_PREPARE;
   static const Type PROPOSE = Request_Type_PROPOSE;
   static const Type LEARN = Request_Type_LEARN;
+  static const Type REPLAY = Request_Type_REPLAY;
   static inline bool Type_IsValid(int value) {
     return Request_Type_IsValid(value);
   }
@@ -246,6 +246,20 @@ class Request : public ::google::protobuf::Message {
   inline ::google::protobuf::uint32 proposer_id() const;
   inline void set_proposer_id(::google::protobuf::uint32 value);
 
+  // optional uint32 sender_addr = 10;
+  inline bool has_sender_addr() const;
+  inline void clear_sender_addr();
+  static const int kSenderAddrFieldNumber = 10;
+  inline ::google::protobuf::uint32 sender_addr() const;
+  inline void set_sender_addr(::google::protobuf::uint32 value);
+
+  // optional uint32 sender_port = 11;
+  inline bool has_sender_port() const;
+  inline void clear_sender_port();
+  static const int kSenderPortFieldNumber = 11;
+  inline ::google::protobuf::uint32 sender_port() const;
+  inline void set_sender_port(::google::protobuf::uint32 value);
+
   // @@protoc_insertion_point(class_scope:range.stored.Request)
  private:
   inline void set_has_crc();
@@ -264,6 +278,10 @@ class Request : public ::google::protobuf::Message {
   inline void clear_has_proposal_num();
   inline void set_has_proposer_id();
   inline void clear_has_proposer_id();
+  inline void set_has_sender_addr();
+  inline void clear_has_sender_addr();
+  inline void set_has_sender_port();
+  inline void clear_has_sender_port();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -276,9 +294,11 @@ class Request : public ::google::protobuf::Message {
   ::google::protobuf::uint64 timestamp_;
   ::google::protobuf::uint64 proposal_num_;
   ::google::protobuf::uint32 proposer_id_;
+  ::google::protobuf::uint32 sender_addr_;
+  ::google::protobuf::uint32 sender_port_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
 
   friend void  protobuf_AddDesc_store_2eproto();
   friend void protobuf_AssignDesc_store_2eproto();
@@ -753,7 +773,7 @@ inline void Request::clear_has_type() {
   _has_bits_[0] &= ~0x00000040u;
 }
 inline void Request::clear_type() {
-  type_ = 0;
+  type_ = 1;
   clear_has_type();
 }
 inline ::range::stored::Request_Type Request::type() const {
@@ -807,6 +827,50 @@ inline ::google::protobuf::uint32 Request::proposer_id() const {
 inline void Request::set_proposer_id(::google::protobuf::uint32 value) {
   set_has_proposer_id();
   proposer_id_ = value;
+}
+
+// optional uint32 sender_addr = 10;
+inline bool Request::has_sender_addr() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void Request::set_has_sender_addr() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void Request::clear_has_sender_addr() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void Request::clear_sender_addr() {
+  sender_addr_ = 0u;
+  clear_has_sender_addr();
+}
+inline ::google::protobuf::uint32 Request::sender_addr() const {
+  return sender_addr_;
+}
+inline void Request::set_sender_addr(::google::protobuf::uint32 value) {
+  set_has_sender_addr();
+  sender_addr_ = value;
+}
+
+// optional uint32 sender_port = 11;
+inline bool Request::has_sender_port() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
+}
+inline void Request::set_has_sender_port() {
+  _has_bits_[0] |= 0x00000400u;
+}
+inline void Request::clear_has_sender_port() {
+  _has_bits_[0] &= ~0x00000400u;
+}
+inline void Request::clear_sender_port() {
+  sender_port_ = 0u;
+  clear_has_sender_port();
+}
+inline ::google::protobuf::uint32 Request::sender_port() const {
+  return sender_port_;
+}
+inline void Request::set_sender_port(::google::protobuf::uint32 value) {
+  set_has_sender_port();
+  sender_port_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -1030,7 +1094,7 @@ inline void Ack::clear_has_type() {
   _has_bits_[0] &= ~0x00000020u;
 }
 inline void Ack::clear_type() {
-  type_ = 0;
+  type_ = 1;
   clear_has_type();
 }
 inline ::range::stored::Ack_Type Ack::type() const {

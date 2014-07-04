@@ -51,11 +51,11 @@ main(int argc, char **argv)
 //    range::db::ProtobufNode::s_shutdown();
 //    return RUN_ALL_TESTS();
     ::range::initialize_logger("/dev/stdout", static_cast<uint8_t>(::range::Emitter::logseverity::debug9));
-    range::stored::network::UDPMultiClient cl { { "symvz11", "symvz12", "symvz13" }, "5444" };
+    range::stored::network::UDPMultiClient cl { { "ubuntu14-04-1", "ubuntu14-04-2", "ubuntu14-04-3" }, "5444" };
 
     range::stored::Request req;
     req.set_type(::range::stored::Request::REQUEST);
-    req.set_method("Some Method!");
+    req.set_method("none");
     req.set_client_id("foo");
     req.set_request_id(9);
     req.set_crc(0);

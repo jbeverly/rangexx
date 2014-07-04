@@ -52,7 +52,7 @@ class SignalHandler {
                 std::function<void()> terminator);
 
         static void block_signals();
-
+        static void terminate();
     private:
         boost::shared_ptr<::range::StoreDaemonConfig> cfg_;
         range::Emitter log;

@@ -46,7 +46,7 @@ UDPMultiClient::UDPMultiClient(const std::vector<std::string> &hostnames,
 //##############################################################################
 std::map<std::string, stored::Ack>
 UDPMultiClient::timed_send(const std::string &data,int64_t timeout_ms,
-        int break_after_n)
+        int break_after_n, uint32_t ack_types)
 {
     RANGE_LOG_FUNCTION();
     for(auto ep : endpoints_) {
@@ -57,7 +57,7 @@ UDPMultiClient::timed_send(const std::string &data,int64_t timeout_ms,
         ep.sock->send_to(boost::asio::buffer(data), ep.endpoint);
     }
 
-    auto replies = timed_receive(timeout_ms, break_after_n);
+    auto replies = timed_receive(timeout_ms, break_after_n, ack_types);
     std::map<std::string, stored::Ack> responses;
 
     for (auto r : replies) {
@@ -73,7 +73,8 @@ UDPMultiClient::timed_send(const std::string &data,int64_t timeout_ms,
 //##############################################################################
 //##############################################################################
 std::map<std::string, std::string>
-UDPMultiClient::timed_receive(int64_t timeout_ms, int break_after_n)
+UDPMultiClient::timed_receive(int64_t timeout_ms, int break_after_n,
+        uint32_t ack_types)
 {
     RANGE_LOG_FUNCTION();
     received_count = 0;
@@ -96,13 +97,15 @@ UDPMultiClient::timed_receive(int64_t timeout_ms, int break_after_n)
         using namespace std::placeholders;
 
         auto cb = std::bind(&UDPMultiClient::receive_handler, this,
-                _1, _2, &ep.ec, &ep.length);
+                _1, _2, &ep, ack_types);
 
         ep.sock->async_receive_from(
                 boost::asio::buffer(ep.response, sizeof(ep.response) - 1), ep.endpoint, cb);
     }
 
-    do io_service_.run_one(); while (received_count < break_after && !timed_out_);
+    do {
+        io_service_.run_one(); 
+    } while (wanted_count < break_after && received_count < endpoints_.size() && !timed_out_);
 
     std::map<std::string, std::string> response_strings;
     for (auto &ep : endpoints_) {
@@ -117,14 +120,20 @@ UDPMultiClient::timed_receive(int64_t timeout_ms, int break_after_n)
 //##############################################################################
 //##############################################################################
 void
-UDPMultiClient::receive_handler(const boost::system::error_code& ec, std::size_t length,
-                        boost::system::error_code* out_ec, std::size_t* out_length)
+UDPMultiClient::receive_handler(const boost::system::error_code& ec,
+        std::size_t length, EndPoint *ep, uint32_t ack_types)
 {
     RANGE_LOG_FUNCTION();
-    *out_ec = ec;
-    *out_length = length;
+    ep->ec = ec;
+    ep->length = length;
+    ++received_count;
+
     if(length > 0) {
-        ++received_count;
+        Ack ack;
+        ack.ParseFromString(std::string(ep->response, ep->length));
+        if (ack.type() & ack_types) {
+            ++wanted_count;
+        }
     }
 }
 

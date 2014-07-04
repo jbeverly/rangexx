@@ -76,6 +76,7 @@ SignalHandler::operator()()
 
     while(!shutdown_) {
         signal_handler_bottomhalf();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
@@ -198,6 +199,14 @@ SignalHandler::invoke_snapshot()
 {
 }
 
+
+//##############################################################################
+//##############################################################################
+void
+SignalHandler::terminate()
+{
+    sigstatus_ = SIGTERM;
+}
 
 } /* namespace */ } /* namespace stored */
 

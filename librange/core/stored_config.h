@@ -36,6 +36,9 @@ class StoreDaemonConfig : public Config
         virtual short port() const
         { return port_; }
 
+        virtual std::string range_cell_name() const
+        { return range_cell_name_; }
+
         virtual void initial_peers(const std::vector<std::string> v)
         { initial_peers_ = v; }
 
@@ -45,10 +48,14 @@ class StoreDaemonConfig : public Config
         virtual void port(short v)
         { port_ = v; }
 
+        virtual void range_cell_name(const std::string &v)
+        { range_cell_name_ = v; }
+
     private:
         std::vector<std::string> initial_peers_;
         uint32_t heartbeat_timeout_;
         short port_;
+        std::string range_cell_name_;
 };
 
 } /* namespace stored */

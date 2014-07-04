@@ -30,6 +30,8 @@
 #include <rangexx/core/config_builder.h>
 #include <rangexx/db/berkeley_db.h>
 
+#include "startup.h"
+#include "paxos.h"
 #include "mqserv.h"
 #include "listenserv.h"
 #include "signalhandler.h"
@@ -148,13 +150,20 @@ main(int argc, char ** argv, char ** envp)
     ::range::Emitter log { "main" };
     BOOST_LOG_FUNCTION();
 
+    using namespace range::stored;
+
     {
         auto cfg_ptr = ::range::config_builder(cfgfile, ::range::Consumer::STORED);
         boost::shared_ptr<::range::StoreDaemonConfig> cfg = boost::dynamic_pointer_cast<::range::StoreDaemonConfig>(cfg_ptr);
+        initialize_from_range(cfg);
+
 
         ::range::stored::SignalHandler hdl { cfg };
         hdl.run();
         ::range::stored::SignalHandler::block_signals();
+
+        ::range::stored::paxos::Proposer proposer { cfg };
+        proposer.run();
 
         ::range::stored::MQServer mqsrv { cfg };
         mqsrv.run();

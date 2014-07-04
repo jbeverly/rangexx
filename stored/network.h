@@ -48,25 +48,31 @@ class UDPMultiClient {
         UDPMultiClient(const std::vector<std::string> &hostnames,
                 const std::string &port_or_service);
 
+        UDPMultiClient(const std::vector<std::string> &hostnames, short port)
+            : UDPMultiClient(hostnames, boost::lexical_cast<std::string>(port))
+        {
+        }
+
         //######################################################################
         virtual std::map<std::string,stored::Ack>
             timed_send(const std::string &data, int64_t timeout_ms,
-                    int break_after_n=-1);
+                    int break_after_n=-1, uint32_t ack_types=stored::Ack::Type::Ack_Type_ACK);
 
         //######################################################################
         virtual std::map<std::string, std::string>
-            timed_receive(int64_t timeout_ms, int break_after_n=-1);
+            timed_receive(int64_t timeout_ms, int break_after_n=-1, uint32_t ack_types=stored::Ack::Type::Ack_Type_ACK);
         //######################################################################
         virtual ~UDPMultiClient() noexcept = default;
         
     private:
         void check_deadline();
-        void receive_handler(const boost::system::error_code& ec, std::size_t length,
-                boost::system::error_code* out_ec, std::size_t* out_length);
+        void receive_handler(const boost::system::error_code &ec, std::size_t length,
+                EndPoint *ep, uint32_t ack_types);
         boost::asio::io_service io_service_;
         std::vector<EndPoint> endpoints_;
         boost::asio::deadline_timer deadline_;
         size_t received_count;
+        size_t wanted_count;
         bool timed_out_;
         range::Emitter log;
 };
