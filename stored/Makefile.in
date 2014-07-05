@@ -115,9 +115,9 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libstored_la_LIBADD =
-am_libstored_la_OBJECTS = mqserv.lo network.lo listenserv.lo \
-	signalhandler.lo paxos.lo paxos_proposer.lo paxos_accepter.lo \
-	paxos_learner.lo startup.lo
+am_libstored_la_OBJECTS = worker_thread.lo mqserv.lo network.lo \
+	listenserv.lo signalhandler.lo paxos.lo paxos_proposer.lo \
+	paxos_accepter.lo paxos_learner.lo startup.lo
 libstored_la_OBJECTS = $(am_libstored_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -407,7 +407,8 @@ AM_LDFLAGS = -L$(top_builddir)/librange -Wl,--copy-dt-needed-entries -lrange -lp
 #AM_LIBADD   = $(AM_LIBADD_G)
 noinst_LTLIBRARIES = libstored.la
 libstored_la_LDFLAGS = -Wl,--no-undefined
-libstored_la_SOURCES = mqserv.cpp \
+libstored_la_SOURCES = worker_thread.cpp \
+					   mqserv.cpp \
 					   network.cpp \
 					   listenserv.cpp \
 					   signalhandler.cpp \
@@ -537,6 +538,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/signalhandler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/startup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stored.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/worker_thread.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\

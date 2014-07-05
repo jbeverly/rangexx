@@ -25,24 +25,21 @@
 #include <rangexx/core/stored_message.h>
 #include <rangexx/core/log.h>
 
+#include "worker_thread.h"
+
 namespace range { namespace stored {
 
 //##############################################################################
 //##############################################################################
-class MQServer {
+class MQServer : public WorkerThread {
     public:
         MQServer(boost::shared_ptr<::range::StoreDaemonConfig> cfg);
-        ~MQServer() noexcept;
-        void run();
-        void operator()();
-        void shutdown();
-
+    protected:
+        virtual void event_loop_init() override;
+        virtual void event_task() override;
     private:
         boost::shared_ptr<::range::StoreDaemonConfig> cfg_;
-        std::thread job_;
-        ::range::Emitter log;
-        volatile bool running_;
-        volatile bool shutdown_;
+        std::unique_ptr<::range::stored::RequestQueueListener> reqql_; 
 };
 
 } /* namespace */ } /* namespace stored */

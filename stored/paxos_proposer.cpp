@@ -29,76 +29,59 @@ const std::string Proposer::request_queue_ { "ProposerRequestQueue" };
 //##############################################################################
 //##############################################################################
 Proposer::Proposer(boost::shared_ptr<::range::StoreDaemonConfig> cfg)
-    : cfg_{cfg}, running_{false}, shutdown_{false}, log{"Proposer"}
+    : WorkerThread("Proposer"), cfg_{cfg} 
 {
-}
-
-Proposer::~Proposer() noexcept = default;
-
-//##############################################################################
-//##############################################################################
-void
-Proposer::run()
-{
-    RANGE_LOG_FUNCTION();
-    running_ = true;
-    job_ = std::thread(std::ref(*this));
-    SignalHandler::register_thread("Proposer", job_, std::bind(&Proposer::shutdown, this));
 }
 
 //##############################################################################
 //##############################################################################
 void
-Proposer::operator()()
+Proposer::event_loop_init()
 {
-    RANGE_LOG_FUNCTION();
-    ::range::stored::RequestQueueListener reqql { request_queue_, cfg_ };
+    reqql_ = std::unique_ptr<::range::stored::RequestQueueListener>(
+            new ::range::stored::RequestQueueListener(request_queue_, cfg_)
+        );
+}
 
-    while (!shutdown_) {
-        do {
-            ::range::stored::Request req;
-            try {
-                if (reqql.receive(req)) {
-                    LOG(debug1, "proposal_received") << req.method() << ": " << req.client_id();
-                    ::range::stored::Ack ack;
-                    ack.set_status(true);
-                    ack.set_client_id(req.client_id());
-                    ack.set_request_id(req.request_id());
-                    reqql.send_ack(req.client_id(), ack);
+//##############################################################################
+//##############################################################################
+void
+Proposer::event_task()
+{
+    BOOST_LOG_FUNCTION();
 
-                    if (cfg_->node_id() == distinguished_proposer()) {
-                        LOG(debug0, "handling_received_proposal") << req.method() << ": " << req.client_id();
-                        uint8_t bow_out = 1;
-                        while (bow_out < 128) {
-                            while(! prepare(req) && bow_out++ < 128) {
-                                uint32_t ms = (bow_out * (bow_out + 1)) / 2;        // Triangle number exponential backoff + semi-random thread-jitter
-                                std::chrono::milliseconds delay { ms };
-                                std::this_thread::sleep_for(delay);
-                            }
-                            if(propose(req)) {
-                                break;
-                            }
+    do {
+        ::range::stored::Request req;
+        try {
+            if (reqql_->receive(req)) {
+                LOG(debug1, "proposal_received") << req.method() << ": " << req.client_id();
+                ::range::stored::Ack ack;
+                ack.set_status(true);
+                ack.set_client_id(req.client_id());
+                ack.set_request_id(req.request_id());
+                reqql_->send_ack(req.client_id(), ack);
+
+                if (cfg_->node_id() == distinguished_proposer()) {
+                    LOG(debug0, "handling_received_proposal") << req.method() << ": " << req.client_id();
+                    uint8_t bow_out = 1;
+                    while (bow_out < 128) {
+                        while(! prepare(req) && bow_out++ < 128) {
+                            uint32_t ms = (bow_out * (bow_out + 1)) / 2;        // Triangle number exponential backoff + semi-random thread-jitter
+                            std::chrono::milliseconds delay { ms };
+                            std::this_thread::sleep_for(delay);
+                        }
+                        if(propose(req)) {
+                            break;
                         }
                     }
                 }
-            } catch (range::stored::MqueueException &e) {
-                LOG(error, "invalid_message") << e.what();
-            } catch (range::Exception &e) {
-                LOG(error, "range_exception") << e.what();
             }
-        } while(reqql.pending() > 0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-}
-
-
-//##############################################################################
-//##############################################################################
-void
-Proposer::shutdown()
-{
-    shutdown_ = true;
-    running_ = false;
+        } catch (range::stored::MqueueException &e) {
+            LOG(error, "invalid_message") << e.what();
+        } catch (range::Exception &e) {
+            LOG(error, "range_exception") << e.what();
+        }
+    } while(reqql_->pending() > 0);
 }
 
 //##############################################################################

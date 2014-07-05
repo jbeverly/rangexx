@@ -23,35 +23,35 @@
 #include <rangexx/core/log.h>
 #include <rangexx/core/mq.h>
 #include <rangexx/core/stored_config.h>
-#include <rangexx/core/store.pb.h>
+#include <rangexx/core/stored_message.h>
 
 #include "txlog.h"
+#include "worker_thread.h"
 
 namespace range { namespace stored { namespace paxos {
 
 //##############################################################################
 //##############################################################################
-class Proposer {
+class Proposer : public WorkerThread {
     public:
         Proposer(boost::shared_ptr<::range::StoreDaemonConfig> cfg);
-        ~Proposer() noexcept;
-        void run();
-        void operator()();
-        void shutdown();
+
         static void submit(stored::Request &req,
                 boost::shared_ptr<::range::StoreDaemonConfig> cfg);
+    protected:
+        virtual void event_task() override;
+        virtual void event_loop_init() override;
+        
     private:
         boost::shared_ptr<::range::StoreDaemonConfig> cfg_;
-        std::thread job_;
-        volatile bool running_;
-        volatile bool shutdown_;
         uint64_t proposal_number;
         std::string distinguished_proposer_;
-        ::range::Emitter log;
+        std::unique_ptr<::range::stored::RequestQueueListener> reqql_;
 
         static const std::string request_queue_;
 
         std::string distinguished_proposer();
+
         bool prepare(stored::Request req);
         bool propose(stored::Request req);
 };

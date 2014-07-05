@@ -28,85 +28,61 @@ namespace range { namespace stored {
 //##############################################################################
 //##############################################################################
 MQServer::MQServer(boost::shared_ptr<::range::StoreDaemonConfig> cfg) 
-            : cfg_(cfg), log("MQServer"), running_(false), shutdown_(false) 
+            : WorkerThread("MQServer"), cfg_(cfg)
 {
 }
 
 //##############################################################################
 //##############################################################################
 void
-MQServer::run()
+MQServer::event_loop_init()
 {
-    RANGE_LOG_FUNCTION();
-    running_ = true;
-    job_ = std::thread(std::ref(*this));
-    SignalHandler::register_thread("MQServer", job_, std::bind(&MQServer::shutdown, this));
+    reqql_ = std::unique_ptr<::range::stored::RequestQueueListener>(
+                new ::range::stored::RequestQueueListener(cfg_)
+            );
 }
-
 //##############################################################################
 //##############################################################################
 void
-MQServer::operator()()
+MQServer::event_task()
 {
-    RANGE_LOG_FUNCTION();
-    ::range::stored::RequestQueueListener reqql { cfg_ };
-    while (!shutdown_) {
-        ::range::RangeAPI_v1 range { cfg_ };
-        ::range::RangeStruct range_proposers;
-        std::string cluster_name { cfg_->range_cell_name() + '.' + "proposers" };
-        try { 
-            range_proposers = range.simple_expand_cluster("_local_", cluster_name);
-        } catch(::range::graph::NodeNotFoundException) {
-            LOG(fatal, "_local_#" + cluster_name + " cluster not found");
-            shutdown_ = true;
-            running_ = false;
-            SignalHandler::terminate();
-            break;
-        }
+    BOOST_LOG_FUNCTION();
 
-        std::vector<std::string> proposers; 
-        for(RangeStruct v : boost::get<::range::RangeArray>(range_proposers).values) {
-            proposers.push_back(boost::get<::range::RangeString>(v).value);
-        }
+    ::range::RangeAPI_v1 range { cfg_ };
+    ::range::RangeStruct range_proposers;
 
-        do {
-            ::range::stored::Request req;
-            try {
-                if (reqql.receive(req)) {
-                    range::stored::network::UDPMultiClient cl { proposers, cfg_->port() };
-                    auto res = cl.timed_send(req.SerializeAsString(), 500);
-                }
-            } catch (range::stored::MqueueException &e) {
-                LOG(error, "invalid_message") << e.what();
-            } catch (boost::system::system_error &e) {
-                LOG(error, "boost_error") << e.what();
-            }
-        }
-        while(reqql.pending() > 0);
+    std::string cluster_name { cfg_->range_cell_name() + '.' + "proposers" };
+    try { 
+        range_proposers = range.simple_expand_cluster("_local_", cluster_name);
+    } catch(::range::graph::NodeNotFoundException) {
+        LOG(fatal, "_local_#" + cluster_name + " cluster not found");
+        this->set_shutdown(true);
+        this->set_running(false);
+        SignalHandler::terminate();
+        return;
     }
-}
 
-//##############################################################################
-//##############################################################################
-void
-MQServer::shutdown()
-{
-    shutdown_ = true;
-    running_ = false;
-}
 
-//##############################################################################
-//##############################################################################
-MQServer::~MQServer() noexcept
-{
-    try {
-        RANGE_LOG_FUNCTION();
-    } catch(...) {}
-    try {
-        if(running_) { 
-            job_.join();
+    std::vector<std::string> proposers; 
+    for(RangeStruct v : boost::get<::range::RangeArray>(range_proposers).values) {
+        proposers.push_back(boost::get<::range::RangeString>(v).value);
+    }
+
+    do {
+        ::range::stored::Request req;
+        try {
+            if (reqql_->receive(req)) {
+                LOG(debug2, "received_message_queue_request") << req.method() << ": " << req.client_id();
+                range::stored::network::UDPMultiClient cl { proposers, cfg_->port() };
+                auto res = cl.timed_send(req.SerializeAsString(), 500);
+            }
+        } catch (range::stored::MqueueException &e) {
+            LOG(error, "invalid_message") << e.what();
+        } catch (boost::system::system_error &e) {
+            LOG(error, "boost_error") << e.what();
         }
-    } catch(...) {}
+    }
+    while(reqql_->pending() > 0);
 }
 
 } /* namespace */ } /* namespace stored */

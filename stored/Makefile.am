@@ -15,7 +15,8 @@ AM_LDFLAGS  = -L$(top_builddir)/librange -Wl,--copy-dt-needed-entries -lrange -l
 noinst_LTLIBRARIES = libstored.la
 
 libstored_la_LDFLAGS = -Wl,--no-undefined
-libstored_la_SOURCES = mqserv.cpp \
+libstored_la_SOURCES = worker_thread.cpp \
+					   mqserv.cpp \
 					   network.cpp \
 					   listenserv.cpp \
 					   signalhandler.cpp \
