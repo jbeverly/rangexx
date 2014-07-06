@@ -105,7 +105,7 @@ main(int argc, char ** argv, char ** envp)
     int lidx; 
     int ret = 0;
     std::string cfgfile;
-    int verbosity = 0;
+    int verbosity = 2;
     bool debug_flag;
     bool daemonize_flag;
 
@@ -157,7 +157,6 @@ main(int argc, char ** argv, char ** envp)
         boost::shared_ptr<::range::StoreDaemonConfig> cfg = boost::dynamic_pointer_cast<::range::StoreDaemonConfig>(cfg_ptr);
         initialize_from_range(cfg);
 
-
         ::range::stored::SignalHandler hdl { cfg };
         hdl.run();
         ::range::stored::SignalHandler::block_signals();
@@ -167,6 +166,12 @@ main(int argc, char ** argv, char ** envp)
 
         ::range::stored::paxos::Proposer proposer { cfg };
         proposer.run();
+ 
+        ::range::stored::paxos::Accepter accepter { cfg };
+        accepter.run();
+
+        ::range::stored::paxos::Learner learner { cfg };
+        learner.run();
 
         ::range::stored::MQServer mqsrv { cfg };
         mqsrv.run();

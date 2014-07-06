@@ -24,7 +24,8 @@ libstored_la_SOURCES = worker_thread.cpp \
 					   paxos_proposer.cpp \
 					   paxos_accepter.cpp \
 					   paxos_learner.cpp \
-					   startup.cpp 
+					   startup.cpp \
+					   range_client.cpp
 
 #LDADD = $(top_builddir)/librange/librange.la
 #LIBADD = $(top_builddir)/librange/librange.la

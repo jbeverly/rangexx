@@ -31,7 +31,7 @@
 
 namespace range { namespace stored {
 
-#define CLIENT_ID  cfg_->node_id() + "_" + boost::lexical_cast<std::string>(getpid()) + "_" \
+#define CLIENT_ID  cfg_->node_id() + "|" + boost::lexical_cast<std::string>(getpid()) + "|" \
         + boost::lexical_cast<std::string>(std::this_thread::get_id())
 
 //##############################################################################

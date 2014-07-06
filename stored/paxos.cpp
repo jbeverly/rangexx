@@ -33,10 +33,10 @@ submit(stored::Request &req)
             break;
         case stored::Request::Type::Request_Type_PREPARE:
         case stored::Request::Type::Request_Type_PROPOSE:
-            //Accepter::submit(req, cfg);
+            Accepter::submit(req);
             break;
         case stored::Request::Type::Request_Type_LEARN:
-            //Learner::submit(req, cfg);
+            Learner::submit(req);
             break;
     }
 }
@@ -47,8 +47,8 @@ void
 unblock_queues()
 {
     Proposer::unblock();
-    //Requester::unblock();
-    //Accepter::unblock();
+    Accepter::unblock();
+    Learner::unblock();
 }
     
 } /* namespace paxos */ } /* namespace stored */ } /* namespace range */

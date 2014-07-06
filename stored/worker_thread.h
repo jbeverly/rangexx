@@ -38,14 +38,14 @@ class WorkerThread {
         virtual void run();
         virtual void operator()();
         virtual void shutdown();
+        inline bool get_shutdown() { return shutdown_; }
+        inline bool get_running() { return running_; }
     protected:
         virtual void event_task() = 0;
         virtual void event_loop_init() { }
 
         inline void set_shutdown(bool v) { shutdown_ = v; }
         inline void set_running(bool v) { running_ = v; }
-        inline bool get_shutdown() { return shutdown_; }
-        inline bool get_running() { return running_; }
         std::thread job();
 
         ::range::Emitter log;
@@ -58,7 +58,7 @@ class WorkerThread {
 
 //##############################################################################
 //##############################################################################
-template <typename QReqType>
+template <typename QReqType, class Derived>
 class QueueWorkerThread : public WorkerThread {
     public:
         //######################################################################
@@ -69,36 +69,54 @@ class QueueWorkerThread : public WorkerThread {
         //######################################################################
         static void unblock()
         {
-            condition_.notify_one();
+            Derived::condition_.notify_all();
         }
 
         //######################################################################
         static void submit(QReqType req) 
         {
-            q_.push(req);
-            condition_.notify_one();
+            Derived::q_.push(req);
+            Derived::condition_.notify_one();
+        }
+
+        virtual void shutdown() override {
+            WorkerThread::shutdown();
+            unblock();
         }
 
     protected:
         //######################################################################
         bool q_pop(QReqType &req) 
         {
-            return q_.pop(req);
+            return Derived::q_.pop(req);
         }
 
         //######################################################################
         void q_wait()
         {
-            std::unique_lock<std::mutex> lk {blocker_};
-            condition_.wait(lk);
+            if(this->get_shutdown()) { return; }
+            std::unique_lock<std::mutex> lk {Derived::blocker_};
+            Derived::condition_.wait(lk);
         }
 
+        //######################################################################
+        template <typename Rep, typename Period>
+        void q_wait(const std::chrono::duration<Rep, Period> &timeout)
+        {
+            if(this->get_shutdown()) { return; }
+            std::unique_lock<std::mutex> lk {Derived::blocker_};
+            Derived::condition_.wait_for(lk, timeout);
+        }
+
+/*
     private:
         static boost::lockfree::spsc_queue<QReqType, boost::lockfree::capacity<1024>> q_;
         static std::mutex blocker_;
         static std::condition_variable condition_;
+        */
 };
 
+/*
 template <typename QReqType>
 boost::lockfree::spsc_queue<QReqType, boost::lockfree::capacity<1024>> QueueWorkerThread<QReqType>::q_;
 
@@ -107,6 +125,7 @@ std::mutex QueueWorkerThread<QReqType>::blocker_;
 
 template <typename QReqType>
 std::condition_variable QueueWorkerThread<QReqType>::condition_;
+*/
 
 
 

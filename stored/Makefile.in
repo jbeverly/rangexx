@@ -117,7 +117,7 @@ LTLIBRARIES = $(noinst_LTLIBRARIES)
 libstored_la_LIBADD =
 am_libstored_la_OBJECTS = worker_thread.lo mqserv.lo network.lo \
 	listenserv.lo signalhandler.lo paxos.lo paxos_proposer.lo \
-	paxos_accepter.lo paxos_learner.lo startup.lo
+	paxos_accepter.lo paxos_learner.lo startup.lo range_client.lo
 libstored_la_OBJECTS = $(am_libstored_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -416,7 +416,8 @@ libstored_la_SOURCES = worker_thread.cpp \
 					   paxos_proposer.cpp \
 					   paxos_accepter.cpp \
 					   paxos_learner.cpp \
-					   startup.cpp 
+					   startup.cpp \
+					   range_client.cpp
 
 stored_SOURCES = stored.cpp
 stored_LDADD = libstored.la
@@ -535,6 +536,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/paxos_accepter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/paxos_learner.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/paxos_proposer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/range_client.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/signalhandler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/startup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stored.Po@am__quote@

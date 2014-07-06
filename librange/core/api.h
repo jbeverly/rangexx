@@ -45,6 +45,8 @@ namespace range {
 class RangeAPI_v1
 {
     public: 
+        static const std::map<std::string, std::function<bool(RangeAPI_v1*, std::vector<std::string>)>> write_api_symtable;
+
         typedef ::range::graph::NodeIface::node_type node_type;
         //######################################################################
         explicit RangeAPI_v1(boost::shared_ptr<Config> cfg)

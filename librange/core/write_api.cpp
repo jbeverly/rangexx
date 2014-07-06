@@ -24,6 +24,26 @@
 
 namespace range {
 
+#define SYMTABLE_ENTRY1(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args) -> bool { \
+        if(args.size() != 1) throw range::IncorrectNumberOfArguments("incorrect # of arguments"); \
+        return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1)(args[0]); }
+
+#define SYMTABLE_ENTRY2(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args) -> bool { \
+        if(args.size() != 2) throw range::IncorrectNumberOfArguments("incorrect # of arguments"); \
+        return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1, std::placeholders::_2)(args[0], args[1]); }
+
+#define SYMTABLE_ENTRY3(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args) -> bool  { \
+        if(args.size() != 3) throw range::IncorrectNumberOfArguments("incorrect # of arguments"); \
+        return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1, std::placeholders::_2, \
+        std::placeholders::_3)(args[0], args[1], args[2]); }
+
+#define SYMTABLE_ENTRY4(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args) -> bool { \
+        if(args.size() != 4) throw range::IncorrectNumberOfArguments("incorrect # of arguments"); \
+        return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1, std::placeholders::_2, \
+        std::placeholders::_3, std::placeholders::_4)(args[0], args[1], args[2], args[3]); }
+
+
+//##############################################################################
 const std::map<std::string, size_t> RangeAPI_v1::num_arguments {
         { "create_env", 1 },
         { "remove_env", 1 },
@@ -41,6 +61,27 @@ const std::map<std::string, size_t> RangeAPI_v1::num_arguments {
         { "remove_key_from_node", 3 },
         { "add_node_ext_dependency", 4 },
         { "remove_node_ext_dependency", 4 },
+    };
+
+//##############################################################################
+const std::map<std::string, std::function<bool(RangeAPI_v1*, std::vector<std::string>)>>
+    RangeAPI_v1::write_api_symtable { 
+        { SYMTABLE_ENTRY1(create_env) },
+        { SYMTABLE_ENTRY1(remove_env) },
+        { SYMTABLE_ENTRY2(add_cluster_to_env) },
+        { SYMTABLE_ENTRY2(remove_cluster_from_env) },
+        { SYMTABLE_ENTRY3(add_cluster_to_cluster) },
+        { SYMTABLE_ENTRY3(remove_cluster_from_cluster) },
+        { SYMTABLE_ENTRY2(remove_cluster) },
+        { SYMTABLE_ENTRY3(add_host_to_cluster) },
+        { SYMTABLE_ENTRY3(remove_host_from_cluster) },
+        { SYMTABLE_ENTRY1(add_host) },
+        { SYMTABLE_ENTRY2(remove_host) },
+        { SYMTABLE_ENTRY4(add_node_key_value) },
+        { SYMTABLE_ENTRY4(remove_node_key_value) },
+        { SYMTABLE_ENTRY3(remove_key_from_node) },
+        { SYMTABLE_ENTRY4(add_node_ext_dependency) },
+        { SYMTABLE_ENTRY4(remove_node_ext_dependency) }
     };
 
 

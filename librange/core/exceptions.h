@@ -38,9 +38,20 @@ struct Exception : public std::runtime_error::runtime_error {
     virtual int vtable(void) { return 1; }
 };
 
+//##############################################################################
+//##############################################################################
 struct InvalidTimespecException : public Exception {
     InvalidTimespecException(const std::string &what, 
-            const std::string &event="stored.MqueueException") 
+            const std::string &event="InvalidTimespecException") 
+        : Exception(what, event)
+        { }
+};
+
+//##############################################################################
+//##############################################################################
+struct IncorrectNumberOfArguments : public Exception {
+    IncorrectNumberOfArguments(const std::string &what, 
+            const std::string &event="IncorrectNumberOfArguments")
         : Exception(what, event)
         { }
 };

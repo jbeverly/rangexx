@@ -32,46 +32,46 @@ namespace range { namespace stored { namespace paxos {
 
 //##############################################################################
 //##############################################################################
-class Proposer : public QueueWorkerThread<range::stored::Request> {
+class Proposer : public QueueWorkerThread<range::stored::Request, Proposer> {
     public:
         Proposer(boost::shared_ptr<::range::StoreDaemonConfig> cfg);
     protected:
         virtual void event_task() override;
         virtual void event_loop_init() override;
     private:
+        friend QueueWorkerThread<range::stored::Request, Proposer>;
         boost::shared_ptr<::range::StoreDaemonConfig> cfg_;
-        uint64_t proposal_number;
-        std::string distinguished_proposer_;
-        std::unique_ptr<::range::stored::RequestQueueListener> reqql_;
+        uint64_t proposal_number_;
+        std::vector<std::string> accepters_;
 
-        static const std::string request_queue_;
+        static boost::lockfree::spsc_queue<range::stored::Request, boost::lockfree::capacity<1024>> q_;
+        static std::mutex blocker_;
+        static std::condition_variable condition_;
 
         std::string distinguished_proposer();
-
+        void get_accepters();
         bool prepare(stored::Request req);
         bool propose(stored::Request req);
 };
 
 //##############################################################################
 //##############################################################################
-class Accepter {
+class Accepter : public QueueWorkerThread<range::stored::Request, Accepter> {
     public:
-        Accepter(boost::shared_ptr<::range::StoreDaemonConfig> cfg);
-        ~Accepter() noexcept;
-        void run();
-        void operator()();
-        void shutdown();
-        static void submit(stored::Request &req,
-                boost::shared_ptr<::range::StoreDaemonConfig> cfg);
+        explicit Accepter(boost::shared_ptr<::range::StoreDaemonConfig> cfg);
+    protected:
+        virtual void event_task() override;
     private:
+        friend QueueWorkerThread<range::stored::Request, Accepter>;
         boost::shared_ptr<::range::StoreDaemonConfig> cfg_;
-        std::thread job_;
-        volatile bool running_;
-        volatile bool shutdown_;
-        ::range::Emitter log;
+        uint64_t promised_proposal_num_;
+        uint64_t accepted_proposal_num_;
 
-        static const std::string request_queue_;
+        static boost::lockfree::spsc_queue<range::stored::Request, boost::lockfree::capacity<1024>> q_;
+        static std::mutex blocker_;
+        static std::condition_variable condition_;
 
+        void send_ack(uint32_t sender_addr, uint16_t sender_port, Ack &ack);
         void nack(stored::Request req);
         void promise(stored::Request req);
         void accept(stored::Request req);
@@ -79,28 +79,38 @@ class Accepter {
 
 //##############################################################################
 //##############################################################################
-class Learner {
+struct PendingLearnedRequest {
+    std::chrono::system_clock::time_point last_seen;
+    stored::Request req;
+    size_t seen_count;
+    size_t needed_count;
+};
+    
+
+//##############################################################################
+//##############################################################################
+class Learner : public QueueWorkerThread<range::stored::Request, Learner> {
     public:
         Learner(boost::shared_ptr<::range::StoreDaemonConfig> cfg);
-        ~Learner() noexcept;
-        void run();
-        void operator()();
-        void shutdown();
-        static void submit(stored::Request &req,
-                boost::shared_ptr<::range::StoreDaemonConfig> cfg);
+    protected:
+        virtual void event_task() override;
     private:
+        friend QueueWorkerThread<range::stored::Request, Learner>;
         boost::shared_ptr<::range::StoreDaemonConfig> cfg_;
-        std::thread job_;
         ::range::RangeAPI_v1 range_;
         ::range::stored::TxLog txlog_;
-        volatile bool running_;
-        volatile bool shutdown_;
-        ::range::Emitter log;
+        std::map<uint64_t, PendingLearnedRequest> pending_learned_requests;
 
         static const std::string request_queue_;
+        static boost::lockfree::spsc_queue<range::stored::Request, boost::lockfree::capacity<1024>> q_;
+        static std::mutex blocker_;
+        static std::condition_variable condition_;
 
         void ack(stored::Request req);
         void learn(stored::Request req);
+
+        void learn_completed_requests();
+        void cleanup_dead_requests();
 };
 
 

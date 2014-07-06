@@ -95,7 +95,7 @@ ListenServer::receive_handler(const boost::system::error_code &error, std::size_
             << "source addr: " << endpoint_.address().to_string() 
             << " source port: " << endpoint_.port() 
             << " type: " << msg.GetTypeName() 
-            << " method" << msg.method();
+            << " method: " << msg.method();
     }
 
     /*

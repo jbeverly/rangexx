@@ -27,19 +27,64 @@ UDPMultiClient::UDPMultiClient(const std::vector<std::string> &hostnames,
     RANGE_LOG_FUNCTION();
     for (const std::string &host : hostnames) { 
         boost::asio::ip::udp::resolver resolver { io_service_ };
-        boost::asio::ip::udp::resolver::query q { boost::asio::ip::udp::v4(),
-            host, port_or_service };
-
+        
         EndPoint ep;
-       
         ep.hostname = host; 
-        ep.endpoint = *(resolver.resolve(q));
-        ep.sock = boost::make_shared<boost::asio::ip::udp::socket>(io_service_);
+        bool resolved = true;
+        try {
+            boost::asio::ip::udp::resolver::query q { boost::asio::ip::udp::v4(),
+                host, port_or_service };
+            auto endpoint = *(resolver.resolve(q));
+            ep.endpoint = endpoint;
+        } catch(boost::system::system_error &e) {
+            try {
+                boost::asio::ip::udp::resolver::query q { boost::asio::ip::udp::v4(),
+                    host, "" };
+                auto endpoint = *(resolver.resolve(q));
+                endpoint.endpoint().port(boost::lexical_cast<short>(port_or_service));
+                ep.endpoint = endpoint;
+            } catch (boost::system::system_error &e) {
+                resolved = false;
+                continue;
+            } catch (boost::bad_lexical_cast &e) {
+                resolved = false;
+                continue;
+            }
+        }
 
-        endpoints_.push_back(ep);
+        if(resolved) {
+            LOG(debug5, "endpoint_setup") << "setting up: " << host << ":" <<
+                port_or_service << " as " << ep.endpoint.address().to_string() 
+                << ":" << ep.endpoint.port();
+            ep.sock = boost::make_shared<boost::asio::ip::udp::socket>(io_service_);
+            endpoints_.push_back(ep);
+        }
     }
     deadline_.expires_at(boost::posix_time::pos_infin);
     check_deadline();
+}
+
+void
+UDPMultiClient::send_one(const std::string &data)
+{
+    if(!endpoints_.empty()) {
+        EndPoint ep = endpoints_.front();
+        send(ep, data);
+    }
+}
+
+//##############################################################################
+//##############################################################################
+void
+UDPMultiClient::send(EndPoint &ep, const std::string &data)
+{
+    RANGE_LOG_FUNCTION();
+    LOG(debug4, "data") << ep.endpoint.address() << ":" << ep.endpoint.port();
+    if (!ep.sock->is_open()) {
+        ep.sock->open(boost::asio::ip::udp::v4());
+    }
+
+    ep.sock->send_to(boost::asio::buffer(data), ep.endpoint);
 }
 
 //##############################################################################
@@ -50,11 +95,7 @@ UDPMultiClient::timed_send(const std::string &data,int64_t timeout_ms,
 {
     RANGE_LOG_FUNCTION();
     for(auto ep : endpoints_) {
-        if (!ep.sock->is_open()) {
-            ep.sock->open(boost::asio::ip::udp::v4());
-        }
-
-        ep.sock->send_to(boost::asio::buffer(data), ep.endpoint);
+        send(ep, data);
     }
 
     auto replies = timed_receive(timeout_ms, break_after_n, ack_types);

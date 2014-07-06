@@ -48,10 +48,16 @@ class UDPMultiClient {
         UDPMultiClient(const std::vector<std::string> &hostnames,
                 const std::string &port_or_service);
 
-        UDPMultiClient(const std::vector<std::string> &hostnames, short port)
+        UDPMultiClient(const std::vector<std::string> &hostnames, uint16_t port)
             : UDPMultiClient(hostnames, boost::lexical_cast<std::string>(port))
         {
         }
+
+        //######################################################################
+        virtual void send_one(const std::string &data);
+
+        //######################################################################
+        virtual void send(EndPoint &ep, const std::string &data);
 
         //######################################################################
         virtual std::map<std::string,stored::Ack>
