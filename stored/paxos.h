@@ -32,16 +32,12 @@ namespace range { namespace stored { namespace paxos {
 
 //##############################################################################
 //##############################################################################
-class Proposer : public WorkerThread {
+class Proposer : public QueueWorkerThread<range::stored::Request> {
     public:
         Proposer(boost::shared_ptr<::range::StoreDaemonConfig> cfg);
-
-        static void submit(stored::Request &req,
-                boost::shared_ptr<::range::StoreDaemonConfig> cfg);
     protected:
         virtual void event_task() override;
         virtual void event_loop_init() override;
-        
     private:
         boost::shared_ptr<::range::StoreDaemonConfig> cfg_;
         uint64_t proposal_number;
@@ -108,7 +104,8 @@ class Learner {
 };
 
 
-void submit(boost::shared_ptr<::range::StoreDaemonConfig> cfg, stored::Request &req);
+void submit(stored::Request &req);
+void unblock_queues();
 
 } /* namespace paxos */ } /* namespace stored */ } /* namespace range */
 

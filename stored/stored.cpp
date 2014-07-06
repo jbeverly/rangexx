@@ -162,14 +162,14 @@ main(int argc, char ** argv, char ** envp)
         hdl.run();
         ::range::stored::SignalHandler::block_signals();
 
+        ::range::stored::ListenServer lserv { cfg };
+        lserv.run();
+
         ::range::stored::paxos::Proposer proposer { cfg };
         proposer.run();
 
         ::range::stored::MQServer mqsrv { cfg };
         mqsrv.run();
-
-        ::range::stored::ListenServer lserv { cfg };
-        lserv.run();
 
         hdl.join();
         LOG(critical, "shutting down");

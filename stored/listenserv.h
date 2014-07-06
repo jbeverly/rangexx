@@ -24,29 +24,27 @@
 #include <rangexx/core/stored_message.h>
 #include <rangexx/core/mq.h>
 #include <rangexx/core/log.h>
+#include "worker_thread.h"
 
 namespace range { namespace stored {
 
 //##############################################################################
 //##############################################################################
-class ListenServer {
+class ListenServer : public WorkerThread {
     public:
         ListenServer(boost::shared_ptr<::range::StoreDaemonConfig> cfg);
-        ~ListenServer() noexcept;
-        void run();
-        void operator()();
-        void shutdown();
+        virtual void shutdown() override;
+
+    protected:
+        virtual void event_task() override;
+        virtual void event_loop_init() override;
 
     private:
         boost::asio::io_service io_service_;
         boost::asio::ip::udp::endpoint endpoint_;
         boost::asio::ip::udp::socket socket_;
         boost::shared_ptr<::range::StoreDaemonConfig> cfg_;
-        std::thread job_;
-        volatile bool running_;
-        volatile bool shutdown_;
         char buf_[65508];
-        range::Emitter log;
 
         void receive();
         void receive_handler(const boost::system::error_code& error, std::size_t len);

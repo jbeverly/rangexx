@@ -25,20 +25,30 @@ namespace range { namespace stored { namespace paxos {
 //##############################################################################
 //##############################################################################
 void
-submit(boost::shared_ptr<::range::StoreDaemonConfig> cfg, stored::Request &req)
+submit(stored::Request &req)
 {
     switch (req.type()) {
         case stored::Request::Type::Request_Type_REQUEST:
-            Proposer::submit(req, cfg);
+            Proposer::submit(req);
             break;
         case stored::Request::Type::Request_Type_PREPARE:
         case stored::Request::Type::Request_Type_PROPOSE:
-            Accepter::submit(req, cfg);
+            //Accepter::submit(req, cfg);
             break;
         case stored::Request::Type::Request_Type_LEARN:
-            Learner::submit(req, cfg);
+            //Learner::submit(req, cfg);
             break;
     }
+}
+
+//##############################################################################
+//##############################################################################
+void
+unblock_queues()
+{
+    Proposer::unblock();
+    //Requester::unblock();
+    //Accepter::unblock();
 }
     
 } /* namespace paxos */ } /* namespace stored */ } /* namespace range */

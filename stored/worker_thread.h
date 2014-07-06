@@ -20,8 +20,9 @@
 #include <thread>
 #include <string>
 #include <mutex>
+#include <condition_variable>
 
-#include <boost/lockfree/queue.hpp>
+#include <boost/lockfree/spsc_queue.hpp>
 
 #include <rangexx/core/log.h>
 #include <rangexx/core/stored_config.h>
@@ -41,8 +42,10 @@ class WorkerThread {
         virtual void event_task() = 0;
         virtual void event_loop_init() { }
 
-        void set_shutdown(bool v) { shutdown_ = v; }
-        void set_running(bool v) { running_ = v; }
+        inline void set_shutdown(bool v) { shutdown_ = v; }
+        inline void set_running(bool v) { running_ = v; }
+        inline bool get_shutdown() { return shutdown_; }
+        inline bool get_running() { return running_; }
         std::thread job();
 
         ::range::Emitter log;
@@ -64,44 +67,46 @@ class QueueWorkerThread : public WorkerThread {
         { }
 
         //######################################################################
+        static void unblock()
+        {
+            condition_.notify_one();
+        }
+
+        //######################################################################
         static void submit(QReqType req) 
         {
             q_.push(req);
-            blocker_.unlock();
-            blocker_.lock();
+            condition_.notify_one();
         }
 
     protected:
         //######################################################################
-        bool q_empty()
+        bool q_pop(QReqType &req) 
         {
-            return q_.empty();
-        }
-
-        //######################################################################
-        QReqType q_pop()
-        {
-            QReqType val;
-            q_.pop(val);
-            return val;
+            return q_.pop(req);
         }
 
         //######################################################################
         void q_wait()
         {
-            blocker_.lock();
-            blocker_.unlock();
+            std::unique_lock<std::mutex> lk {blocker_};
+            condition_.wait(lk);
         }
 
     private:
-        static boost::lockfree::queue<QReqType> q_;
+        static boost::lockfree::spsc_queue<QReqType, boost::lockfree::capacity<1024>> q_;
         static std::mutex blocker_;
-
-
+        static std::condition_variable condition_;
 };
 
+template <typename QReqType>
+boost::lockfree::spsc_queue<QReqType, boost::lockfree::capacity<1024>> QueueWorkerThread<QReqType>::q_;
 
+template <typename QReqType>
+std::mutex QueueWorkerThread<QReqType>::blocker_;
 
+template <typename QReqType>
+std::condition_variable QueueWorkerThread<QReqType>::condition_;
 
 
 

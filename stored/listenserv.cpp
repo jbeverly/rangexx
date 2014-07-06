@@ -18,6 +18,7 @@
 #include "listenserv.h"
 #include "signalhandler.h"
 #include "paxos.h"
+#include "worker_thread.h"
 
 
 namespace range { namespace stored {
@@ -27,45 +28,24 @@ using boost::asio::ip::udp;
 //##############################################################################
 //##############################################################################
 ListenServer::ListenServer(boost::shared_ptr<::range::StoreDaemonConfig> cfg)
-                : socket_{io_service_, udp::endpoint(udp::v4(), cfg->port())},
-                  cfg_{cfg},
-                  running_{false},
-                  shutdown_{false},
-                  log{"ListenServer"}
+                : WorkerThread{"ListenServer"}, 
+                  socket_{io_service_, udp::endpoint(udp::v4(), cfg->port())},
+                  cfg_{cfg}
 {
     receive();
 }
 
 //##############################################################################
 //##############################################################################
-ListenServer::~ListenServer() noexcept
-{
-    try {
-        RANGE_LOG_FUNCTION();
-    } catch(...) {}
-    if(running_) {
-        try {
-            job_.join();
-        } catch(...) {}
-    }
-}
-
-
-//##############################################################################
-//##############################################################################
 void
-ListenServer::run()
+ListenServer::event_loop_init()
 {
-    RANGE_LOG_FUNCTION();
-    running_ = true;
-    job_ = std::thread(std::ref(*this));
-    SignalHandler::register_thread("ListenServer", job_, std::bind(&ListenServer::shutdown, this));
 }
 
 //##############################################################################
 //##############################################################################
 void
-ListenServer::operator()()
+ListenServer::event_task()
 {
     io_service_.run();
 }
@@ -77,9 +57,9 @@ void
 ListenServer::shutdown()
 {
     RANGE_LOG_FUNCTION();
-    running_ = false;
-    shutdown_ = true;
+    WorkerThread::shutdown();
     io_service_.stop();
+    paxos::unblock_queues();
 }
 
 //##############################################################################
@@ -88,7 +68,7 @@ void
 ListenServer::receive()
 {
     RANGE_LOG_FUNCTION();
-    if (shutdown_) { return; }
+    if (this->get_shutdown()) { return; }
 
     using namespace std::placeholders;
     socket_.async_receive_from(
@@ -104,7 +84,7 @@ ListenServer::receive_handler(const boost::system::error_code &error, std::size_
 {
     RANGE_LOG_TIMED_FUNCTION();
 
-    if (shutdown_) { return; }
+    if (this->get_shutdown()) { return; }
 
     using namespace std::placeholders;
     stored::Request msg;
@@ -128,7 +108,7 @@ ListenServer::receive_handler(const boost::system::error_code &error, std::size_
     msg.set_sender_addr(endpoint_.address().to_v4().to_ulong());
     msg.set_sender_port(endpoint_.port());
 
-    paxos::submit(cfg_, msg);
+    paxos::submit(msg);
     receive();
 }
 
