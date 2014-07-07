@@ -101,6 +101,7 @@ class BerkeleyDB : public BackendInterface {
 
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBLock>> lock_table; 
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBLock>>& weak_table; 
+        std::mutex weak_table_lock_;
         std::unique_ptr<map_t> graph_info_map;
         std::unordered_map<std::string, Db*> graph_db_instances;
         std::unordered_map<std::string, boost::shared_ptr<map_t>> graph_map_instances;

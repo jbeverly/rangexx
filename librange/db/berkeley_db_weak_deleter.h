@@ -62,19 +62,26 @@ class BerkeleyDBWeakDeleter {
             // So, we need ot make a new shared_ptr, and set the weak_ptr to this shared_ptr.
             // But this new shared_ptr can't actually attempt to cleanup after itself, so we use a null deleter.
             boost::shared_ptr<typename BackendType::weakptr_type> placeholder { rptr, [](void *) { return;} };
-            backend_.weak_table[id] = placeholder;
+            {
+                std::lock_guard<std::mutex> guard { backend_.weak_table_lock_ };
+                backend_.weak_table[id] = placeholder;
 
-            auto it = backend_.weak_table.find(id);
-            assert(it != backend_.weak_table.end());
-            placeholder = it->second.lock();
-            assert(placeholder != nullptr);
+                auto it = backend_.weak_table.find(id);
+                assert(it != backend_.weak_table.end());
+                placeholder = it->second.lock();
+                assert(placeholder != nullptr);
+            }
 
             try { 
                 delete rptr;                                                    // destructor called here
             } catch(...) { } 
 
-            if (it != backend_.weak_table.end()) {
-                backend_.weak_table.erase(it);
+            {
+                std::lock_guard<std::mutex> guard { backend_.weak_table_lock_ };
+                auto it = backend_.weak_table.find(id);
+                if (it != backend_.weak_table.end()) {
+                    backend_.weak_table.erase(it);
+                }
             }
         }
 };

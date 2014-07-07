@@ -123,21 +123,22 @@ void protobuf_AddDesc_store_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\013store.proto\022\014range.stored\"\263\002\n\007Request\022"
+    "\n\013store.proto\022\014range.stored\"\320\002\n\007Request\022"
     "\013\n\003crc\030\001 \002(\r\022\021\n\tclient_id\030\002 \002(\t\022\022\n\nreque"
     "st_id\030\003 \002(\004\022\016\n\006method\030\004 \002(\t\022\014\n\004args\030\005 \003("
     "\t\022\021\n\ttimestamp\030\006 \001(\004\022(\n\004type\030\007 \001(\0162\032.ran"
     "ge.stored.Request.Type\022\024\n\014proposal_num\030\010"
     " \001(\004\022\023\n\013proposer_id\030\t \001(\r\022\023\n\013sender_addr"
-    "\030\n \001(\r\022\023\n\013sender_port\030\013 \001(\r\"D\n\004Type\022\013\n\007R"
+    "\030\n \001(\r\022\023\n\013sender_port\030\013 \001(\r\"a\n\004Type\022\013\n\007R"
     "EQUEST\020\001\022\013\n\007PREPARE\020\002\022\013\n\007PROPOSE\020\004\022\t\n\005LE"
-    "ARN\020\010\022\n\n\006REPLAY\020\020\"\374\001\n\003Ack\022\016\n\006status\030\001 \002("
-    "\010\022\021\n\tclient_id\030\002 \002(\t\022\022\n\nrequest_id\030\003 \002(\004"
-    "\022\014\n\004code\030\004 \001(\004\022\016\n\006reason\030\005 \001(\t\022$\n\004type\030\006"
-    " \001(\0162\026.range.stored.Ack.Type\022\024\n\014proposal"
-    "_num\030\007 \001(\004\022\023\n\013proposer_id\030\010 \001(\r\022\031\n\021next_"
-    "proposal_num\030\t \001(\004\"4\n\004Type\022\007\n\003ACK\020\001\022\013\n\007P"
-    "ROMISE\020\002\022\010\n\004NACK\020\004\022\014\n\010ACCEPTED\020\010", 592);
+    "ARN\020\010\022\n\n\006REPLAY\020\020\022\014\n\010FAILOVER\020 \022\r\n\tHEART"
+    "BEAT\020@\"\374\001\n\003Ack\022\016\n\006status\030\001 \002(\010\022\021\n\tclient"
+    "_id\030\002 \002(\t\022\022\n\nrequest_id\030\003 \002(\004\022\014\n\004code\030\004 "
+    "\001(\004\022\016\n\006reason\030\005 \001(\t\022$\n\004type\030\006 \001(\0162\026.rang"
+    "e.stored.Ack.Type\022\024\n\014proposal_num\030\007 \001(\004\022"
+    "\023\n\013proposer_id\030\010 \001(\r\022\031\n\021next_proposal_nu"
+    "m\030\t \001(\004\"4\n\004Type\022\007\n\003ACK\020\001\022\013\n\007PROMISE\020\002\022\010\n"
+    "\004NACK\020\004\022\014\n\010ACCEPTED\020\010", 621);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "store.proto", &protobuf_RegisterTypes);
   Request::default_instance_ = new Request();
@@ -167,6 +168,8 @@ bool Request_Type_IsValid(int value) {
     case 4:
     case 8:
     case 16:
+    case 32:
+    case 64:
       return true;
     default:
       return false;
@@ -179,6 +182,8 @@ const Request_Type Request::PREPARE;
 const Request_Type Request::PROPOSE;
 const Request_Type Request::LEARN;
 const Request_Type Request::REPLAY;
+const Request_Type Request::FAILOVER;
+const Request_Type Request::HEARTBEAT;
 const Request_Type Request::Type_MIN;
 const Request_Type Request::Type_MAX;
 const int Request::Type_ARRAYSIZE;

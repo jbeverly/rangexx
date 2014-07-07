@@ -35,6 +35,7 @@
 #include "mqserv.h"
 #include "listenserv.h"
 #include "signalhandler.h"
+#include "worker_thread.h"
 
 #ifndef DEFAULT_CONFIG_PATH
 #define DEFAULT_CONFIG_PATH "/etc/range/range.conf"
@@ -159,10 +160,8 @@ main(int argc, char ** argv, char ** envp)
 
         ::range::stored::SignalHandler hdl { cfg };
         hdl.run();
-        ::range::stored::SignalHandler::block_signals();
 
-        ::range::stored::ListenServer lserv { cfg };
-        lserv.run();
+        ::range::stored::SignalHandler::block_signals();
 
         ::range::stored::paxos::Proposer proposer { cfg };
         proposer.run();
@@ -173,6 +172,9 @@ main(int argc, char ** argv, char ** envp)
         ::range::stored::paxos::Learner learner { cfg };
         learner.run();
 
+        ::range::stored::ListenServer lserv { cfg };
+        lserv.run();
+
         ::range::stored::MQServer mqsrv { cfg };
         mqsrv.run();
 
@@ -181,6 +183,8 @@ main(int argc, char ** argv, char ** envp)
     }
     ::range::config = nullptr;
     range::db::BerkeleyDB::s_shutdown();
+
+    ::range::stored::WorkerThread::handle_exceptions();
     return 0;
 }
 

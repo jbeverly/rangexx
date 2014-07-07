@@ -29,6 +29,7 @@
 
 namespace range { namespace stored { 
 
+
 //##############################################################################
 //##############################################################################
 class WorkerThread {
@@ -36,10 +37,11 @@ class WorkerThread {
         explicit WorkerThread(const std::string &title);
         virtual ~WorkerThread() noexcept;
         virtual void run();
-        virtual void operator()();
+        virtual void operator()() noexcept;
         virtual void shutdown();
         inline bool get_shutdown() { return shutdown_; }
         inline bool get_running() { return running_; }
+        static void handle_exceptions();
     protected:
         virtual void event_task() = 0;
         virtual void event_loop_init() { }
@@ -54,6 +56,10 @@ class WorkerThread {
         std::thread job_;
         volatile bool running_;
         volatile bool shutdown_;
+        static std::vector<std::exception_ptr> exceptions_;
+        static std::mutex exception_lock_;
+
+        void commute_exception(std::exception_ptr e);
 };
 
 //##############################################################################
@@ -107,27 +113,7 @@ class QueueWorkerThread : public WorkerThread {
             std::unique_lock<std::mutex> lk {Derived::blocker_};
             Derived::condition_.wait_for(lk, timeout);
         }
-
-/*
-    private:
-        static boost::lockfree::spsc_queue<QReqType, boost::lockfree::capacity<1024>> q_;
-        static std::mutex blocker_;
-        static std::condition_variable condition_;
-        */
 };
-
-/*
-template <typename QReqType>
-boost::lockfree::spsc_queue<QReqType, boost::lockfree::capacity<1024>> QueueWorkerThread<QReqType>::q_;
-
-template <typename QReqType>
-std::mutex QueueWorkerThread<QReqType>::blocker_;
-
-template <typename QReqType>
-std::condition_variable QueueWorkerThread<QReqType>::condition_;
-*/
-
-
 
 
 

@@ -120,6 +120,7 @@ class BerkeleyDBGraph
 
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBTxn>> transaction_table; 
         std::unordered_map<std::thread::id, boost::weak_ptr<BerkeleyDBTxn>>& weak_table; 
+        mutable std::mutex weak_table_lock_;
         range::Emitter log;
 
         //######################################################################

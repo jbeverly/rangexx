@@ -48,7 +48,7 @@ class Proposer : public QueueWorkerThread<range::stored::Request, Proposer> {
         static std::mutex blocker_;
         static std::condition_variable condition_;
 
-        std::string distinguished_proposer();
+        std::string distinguished_proposer(bool secondary=false);
         void get_accepters();
         bool prepare(stored::Request req);
         bool propose(stored::Request req);

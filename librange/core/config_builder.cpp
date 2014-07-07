@@ -96,7 +96,6 @@ config_builder(const std::string& filename, Consumer type)
     }
 
     cfg->node_id(fqdn);
-    std::cout << cfg->node_id() << std::endl;
 
     switch (type) {
         case Consumer::CLIENT:

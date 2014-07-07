@@ -89,11 +89,9 @@ StatsD::kv(const std::string &event, const std::string &val) const
 StatsD::StatsD(std::string hostname, std::string port)
 {
     if(!hostname.empty() && !port.empty()) {
-        boost::asio::ip::udp::resolver resolver(io_service);
+        boost::asio::ip::udp::resolver resolver(io_service_);
         boost::asio::ip::udp::resolver::query q { boost::asio::ip::udp::v4(), hostname, port };
-        endpoint = *(resolver.resolve(q));
-        sock = boost::make_shared<boost::asio::ip::udp::socket>(io_service);
-        sock->open(boost::asio::ip::udp::v4());
+        endpoint_ = *(resolver.resolve(q));
     }
 }
 
@@ -102,10 +100,15 @@ StatsD::StatsD(std::string hostname, std::string port)
 void
 StatsD::emit(const std::string &event, const std::string &type, const std::string &payload) const
 {
-    if(sock) {
+    std::lock_guard<std::mutex> guard { sock_lock_ };
+    if(!sock_ && !hostname_.empty() && !port_.empty()) {
+        sock_ = boost::make_shared<boost::asio::ip::udp::socket>(io_service_);
+        sock_->open(boost::asio::ip::udp::v4());
+    }
+    if(sock_) {
         std::stringstream data;
         data << event << ':' << payload << '|' << type << '\n';
-        sock->send_to(boost::asio::buffer(data.str()), endpoint);
+        sock_->send_to(boost::asio::buffer(data.str()), endpoint_);
     }
 }
 

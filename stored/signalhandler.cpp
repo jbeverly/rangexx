@@ -20,7 +20,7 @@
 namespace range { namespace stored {
 
 
-std::vector<ThreadWrapper> SignalHandler::threads_;
+std::deque<ThreadWrapper> SignalHandler::threads_;
 std::mutex SignalHandler::threads_lock_;
 volatile sig_atomic_t SignalHandler::sigstatus_ = 0;
 
@@ -92,7 +92,7 @@ SignalHandler::register_thread(const std::string &name, std::thread &t,
 
     std::lock_guard<std::mutex> guard { threads_lock_ };
     ThreadWrapper w { name, t, terminator };
-    threads_.push_back(w);
+    threads_.push_front(w);
 }
 
 //##############################################################################

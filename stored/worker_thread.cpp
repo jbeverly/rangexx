@@ -15,15 +15,21 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <exception>
+#include <stdexcept>
+
 #include "worker_thread.h"
 #include "signalhandler.h"
 
 namespace range { namespace stored {
 
+std::mutex WorkerThread::exception_lock_;
+std::vector<std::exception_ptr> WorkerThread::exceptions_;
+
 //##############################################################################
 //##############################################################################
 WorkerThread::WorkerThread(const std::string &title) 
-    : log(title), title_(title)
+    : log(title), title_(title), shutdown_(false), running_(false)
 { }
 
 //##############################################################################
@@ -40,6 +46,30 @@ WorkerThread::~WorkerThread() noexcept
     } catch(...) {}
 }
 
+
+
+//##############################################################################
+//##############################################################################
+void
+WorkerThread::commute_exception(std::exception_ptr e)
+{
+    try { 
+        std::lock_guard<std::mutex> g { exception_lock_ };
+        exceptions_.push_back(e);
+    } catch(...) {}
+}
+
+//##############################################################################
+//##############################################################################
+void
+WorkerThread::handle_exceptions()
+{
+    std::lock_guard<std::mutex> g { exception_lock_ };
+    for (auto e : exceptions_) {
+        std::rethrow_exception(e);
+    }
+}
+
 //##############################################################################
 //##############################################################################
 void
@@ -54,13 +84,18 @@ WorkerThread::run()
 //##############################################################################
 //##############################################################################
 void
-WorkerThread::operator()()
+WorkerThread::operator()() noexcept
 {
     RANGE_LOG_FUNCTION();
-    this->event_loop_init();
+    try {
+        this->event_loop_init();
 
-    while(!shutdown_) {
-        this->event_task();
+        while(!shutdown_) {
+            this->event_task();
+        }
+    } catch(...) {
+        commute_exception(std::current_exception());
+        SignalHandler::terminate();
     }
 }
 

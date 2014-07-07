@@ -43,11 +43,13 @@ enum Request_Type {
   Request_Type_PREPARE = 2,
   Request_Type_PROPOSE = 4,
   Request_Type_LEARN = 8,
-  Request_Type_REPLAY = 16
+  Request_Type_REPLAY = 16,
+  Request_Type_FAILOVER = 32,
+  Request_Type_HEARTBEAT = 64
 };
 bool Request_Type_IsValid(int value);
 const Request_Type Request_Type_Type_MIN = Request_Type_REQUEST;
-const Request_Type Request_Type_Type_MAX = Request_Type_REPLAY;
+const Request_Type Request_Type_Type_MAX = Request_Type_HEARTBEAT;
 const int Request_Type_Type_ARRAYSIZE = Request_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Request_Type_descriptor();
@@ -141,6 +143,8 @@ class Request : public ::google::protobuf::Message {
   static const Type PROPOSE = Request_Type_PROPOSE;
   static const Type LEARN = Request_Type_LEARN;
   static const Type REPLAY = Request_Type_REPLAY;
+  static const Type FAILOVER = Request_Type_FAILOVER;
+  static const Type HEARTBEAT = Request_Type_HEARTBEAT;
   static inline bool Type_IsValid(int value) {
     return Request_Type_IsValid(value);
   }

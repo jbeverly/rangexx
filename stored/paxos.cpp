@@ -28,6 +28,7 @@ void
 submit(stored::Request &req)
 {
     switch (req.type()) {
+        case stored::Request::Type::Request_Type_FAILOVER:
         case stored::Request::Type::Request_Type_REQUEST:
             Proposer::submit(req);
             break;

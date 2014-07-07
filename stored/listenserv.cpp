@@ -98,17 +98,22 @@ ListenServer::receive_handler(const boost::system::error_code &error, std::size_
             << " method: " << msg.method();
     }
 
-    /*
-    socket_.async_send_to(
-            boost::asio::buffer(ack.SerializeAsString()), endpoint_,
-                std::bind(&ListenServer::send_handler, this, _1, _2)
-        );
-    */
+    switch (msg.type()) {
+        case Request::Type::Request_Type_HEARTBEAT:
+            socket_.async_send_to(
+                    boost::asio::buffer(ack.SerializeAsString()), endpoint_,
+                    std::bind(&ListenServer::send_handler, this, _1, _2)
+                    );
+            break;
+        default:
+            if(ack.status()) {
+                msg.set_sender_addr(endpoint_.address().to_v4().to_ulong());
+                msg.set_sender_port(endpoint_.port());
 
-    msg.set_sender_addr(endpoint_.address().to_v4().to_ulong());
-    msg.set_sender_port(endpoint_.port());
-
-    paxos::submit(msg);
+                paxos::submit(msg);
+            } 
+            break;
+    }
     receive();
 }
 

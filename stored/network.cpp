@@ -119,6 +119,8 @@ UDPMultiClient::timed_receive(int64_t timeout_ms, int break_after_n,
 {
     RANGE_LOG_FUNCTION();
     received_count = 0;
+    wanted_count = 0;
+
     uint32_t break_after = break_after_n;
     if (break_after_n < 0) {
         break_after = endpoints_.size();

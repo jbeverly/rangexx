@@ -20,6 +20,7 @@
 #include <thread>
 #include <functional>
 #include <csignal>
+#include <deque>
 
 #include <rangexx/core/stored_config.h>
 #include <rangexx/core/log.h>
@@ -60,7 +61,7 @@ class SignalHandler {
         volatile bool running_;
         std::thread job_;
 
-        static std::vector<ThreadWrapper> threads_;
+        static std::deque<ThreadWrapper> threads_;
         static std::mutex threads_lock_;
         static volatile sig_atomic_t sigstatus_;
 

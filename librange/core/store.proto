@@ -7,6 +7,8 @@ message Request {
 		PROPOSE = 4;
 		LEARN   = 8;
 		REPLAY  = 16;
+		FAILOVER = 32;
+		HEARTBEAT = 64;
 	}
 
 	required uint32     crc                 = 1;

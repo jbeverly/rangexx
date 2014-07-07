@@ -59,13 +59,18 @@ Proposer::event_task()
             << ": " << req.client_id();
 
         try {
-            if (cfg_->node_id() == distinguished_proposer()) {
+            bool secondary = false;
+            if (req.type() == Request::Type::Request_Type_FAILOVER) {
+                secondary = true;
+            }
+
+            if (cfg_->node_id() == distinguished_proposer(secondary)) {
                 LOG(debug0, "handling_received_proposal") << ": " 
                     << req.method() << " : " << req.client_id();
 
                 uint8_t bow_out = 1;
-                while (bow_out < 128 && !this->get_shutdown()) {
-                    while(! prepare(req) && bow_out++ < 128
+                while (bow_out < 42 && !this->get_shutdown()) {
+                    while(! prepare(req) && bow_out++ < 42 
                             && !this->get_shutdown()) {
                         uint32_t ms = (bow_out * (bow_out + 1)) / 2;            // Triangle number exponential backoff + semi-random thread-jitter
                         std::chrono::milliseconds delay { ms * 10 };
@@ -73,7 +78,8 @@ Proposer::event_task()
                     }
                     if(this->get_shutdown()) { break; }
                     if(propose(req)) {
-                        LOG(debug0, "successfully_proposed") << req.proposal_num();
+                        LOG(debug0, "successfully_proposed") 
+                            << req.proposal_num();
                         break;
                     }
                 }
@@ -87,7 +93,7 @@ Proposer::event_task()
 //##############################################################################
 //##############################################################################
 std::string
-Proposer::distinguished_proposer()
+Proposer::distinguished_proposer(bool secondary)
 {
     RANGE_LOG_FUNCTION();
 
@@ -96,7 +102,11 @@ Proposer::distinguished_proposer()
 
     if (! proposers.empty()) {
         std::string distinguished_proposer;
-        distinguished_proposer = proposers.front();
+        if(secondary && proposers.size() > 1) {
+            distinguished_proposer = proposers[1];
+        } else {
+            distinguished_proposer = proposers.front();
+        }
         LOG(debug2, "distinguished_proposer") << distinguished_proposer;
         return distinguished_proposer;
     }
@@ -128,6 +138,7 @@ Proposer::prepare(stored::Request req) {
     req.set_proposer_id(range::util::crc32(cfg_->node_id()));
     req.set_crc(0);
     req.set_crc(range::util::crc32(req.SerializeAsString()));
+    assert(req.IsInitialized());
 
     range::stored::network::UDPMultiClient cl { accepters_, cfg_->port() };
     auto results = cl.timed_send(req.SerializeAsString(),

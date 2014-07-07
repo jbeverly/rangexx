@@ -50,12 +50,17 @@ BerkeleyDBGraph::db_put(std::string key, std::string value)
     }
     auto map_instance = it->second;
 
-    auto txn_it = backend_.lock_table.find(std::this_thread::get_id());
-    if(txn_it == backend_.lock_table.end()) {
-        THROW_STACK(UnknownTransactionException("No transaction"));
+    DbTxn * dbtxn;
+    {
+        std::lock_guard<std::mutex> guard { backend_.weak_table_lock_ };
+
+        auto txn_it = backend_.lock_table.find(std::this_thread::get_id());
+        if(txn_it == backend_.lock_table.end()) {
+            THROW_STACK(UnknownTransactionException("No transaction"));
+        }
+        dbtxn = txn_it->second.lock()->txn();
     }
 
-    DbTxn * dbtxn = txn_it->second.lock()->txn();
     return backend_.db_put(dbtxn, *map_instance, key, value);
 }
 
@@ -103,10 +108,17 @@ BerkeleyDBGraph::commit_txn(std::thread::id id)
     RANGE_LOG_TIMED_FUNCTION();
 
     BerkeleyDBTxn::changelist_t filtered_changes;
-    auto txn = transaction_table.find(id);
 
-    if (txn == transaction_table.end()) {
-        THROW_STACK(UnknownTransactionException("Transaction not found in transaction table"));
+    boost::shared_ptr<BerkeleyDBTxn> txn_item;
+    
+    {
+        std::lock_guard<std::mutex> guard { weak_table_lock_ };
+        auto txn = transaction_table.find(id);
+
+        if (txn == transaction_table.end()) {
+            THROW_STACK(UnknownTransactionException("Transaction not found in transaction table"));
+        }
+        txn_item = txn->second.lock();
     }
 
     auto it = backend_.graph_map_instances.find(name_);
@@ -115,7 +127,7 @@ BerkeleyDBGraph::commit_txn(std::thread::id id)
     }
     auto map_instance = it->second;
 
-    for (auto change : txn->second.lock()->changelist()) {
+    for (auto change : txn_item->changelist()) {
         record_type type;
         std::string object_name;
         uint64_t object_version;
@@ -216,11 +228,19 @@ BerkeleyDBGraph::n_vertices() const
 
     auto key = key_name(record_type::GRAPH_META, "n_vertices");
     std::thread::id id = std::this_thread::get_id();
-    auto txn_it = transaction_table.find(id);
+    boost::shared_ptr<BerkeleyDBTxn> txn;
 
-    if (txn_it != transaction_table.end()) {
-        auto txn = txn_it->second.lock();
-        auto inflight = boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->inflight();
+    {
+        std::lock_guard<std::mutex> guard { weak_table_lock_ };
+        auto txn_it = transaction_table.find(id);
+
+        if (txn_it != transaction_table.end()) {
+            txn = txn_it->second.lock();
+        }
+    }
+
+    if(txn) {
+        auto inflight = txn->inflight();
 
         auto inflight_it = inflight.find(key);
         if(inflight_it != inflight.end()) {
@@ -255,11 +275,19 @@ BerkeleyDBGraph::n_edges() const
 
     auto key = key_name(record_type::GRAPH_META, "n_edges");
     std::thread::id id = std::this_thread::get_id();
-    auto txn_it = transaction_table.find(id);
+    boost::shared_ptr<BerkeleyDBTxn> txn;
 
-    if (txn_it != transaction_table.end()) {
-        auto txn = txn_it->second.lock();
-        auto inflight = boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->inflight();
+    {
+        std::lock_guard<std::mutex> guard { weak_table_lock_ };
+        auto txn_it = transaction_table.find(id);
+
+        if (txn_it != transaction_table.end()) {
+            txn = txn_it->second.lock();
+        }
+    }
+
+    if(txn) {
+        auto inflight = txn->inflight();
 
         auto inflight_it = inflight.find(key);
         if(inflight_it != inflight.end()) {
@@ -294,11 +322,19 @@ BerkeleyDBGraph::n_redges() const
 
     auto key = key_name(record_type::GRAPH_META, "n_redges");
     std::thread::id id = std::this_thread::get_id();
-    auto txn_it = transaction_table.find(id);
+    boost::shared_ptr<BerkeleyDBTxn> txn;
 
-    if (txn_it != transaction_table.end()) {
-        auto txn = txn_it->second.lock();
-        auto inflight = boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->inflight();
+    {
+        std::lock_guard<std::mutex> guard { weak_table_lock_ };
+        auto txn_it = transaction_table.find(id);
+
+        if (txn_it != transaction_table.end()) {
+            auto txn = txn_it->second.lock();
+        }
+    }
+
+    if(txn) {
+        auto inflight = txn->inflight();
 
         auto inflight_it = inflight.find(key);
         if(inflight_it != inflight.end()) {
@@ -325,10 +361,13 @@ BerkeleyDBGraph::version() const
 {
     std::thread::id id = std::this_thread::get_id();
 
-    auto txn_it = transaction_table.find(id);
-    if(txn_it != transaction_table.end()) {
-        if(!txn_it->second.lock()->changelist().empty()) {
-            version_pending_ = true;
+    {
+        std::lock_guard<std::mutex> guard { weak_table_lock_ };
+        auto txn_it = transaction_table.find(id);
+        if(txn_it != transaction_table.end()) {
+            if(!txn_it->second.lock()->changelist().empty()) {
+                version_pending_ = true;
+            }
         }
     }
 
@@ -347,18 +386,6 @@ BerkeleyDBGraph::version() const
     ChangeList changes;
     auto key = key_name(record_type::GRAPH_META, "changelist");
 
-    /*
-    if (txn_it != transaction_table.end()) {
-        auto txn = txn_it->second.lock();
-        auto inflight = boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->inflight();
-
-        auto inflight_it = inflight.find(key);
-        if(inflight_it != inflight.end()) {
-            changes.ParseFromString(inflight_it->second);
-            return changes.current_version();
-        } 
-    } */
-
     auto map_instance = it->second;
     auto lock = read_lock(record_type::GRAPH_META, "changelist");
     LOG(debug5, "locked_changelist");
@@ -366,9 +393,7 @@ BerkeleyDBGraph::version() const
     if (map_instance->find(key) != map_instance->end()) {
         changes.ParseFromString(backend_.db_get(nullptr, *map_instance, key));
     }
-/*    if(changes.current_version() == 0) {
-        return 1;
-    } */
+
     current_version_ = changes.current_version();
     return current_version_;
 }
@@ -395,10 +420,18 @@ BerkeleyDBGraph::get_record(record_type type, const std::string& key) const
     }
 
     std::thread::id id = std::this_thread::get_id();
-    auto txn_it = transaction_table.find(id);
-    if (txn_it != transaction_table.end()) {
-        auto txn = txn_it->second.lock();
-        auto inflight = boost::dynamic_pointer_cast<BerkeleyDBTxn>(txn)->inflight();
+    boost::shared_ptr<BerkeleyDBTxn> txn;
+
+    {
+        std::lock_guard<std::mutex> guard { weak_table_lock_ };
+        auto txn_it = transaction_table.find(id);
+        if (txn_it != transaction_table.end()) {
+            txn = txn_it->second.lock();
+        }
+    }
+
+    if(txn) {
+        auto inflight = txn->inflight();
 
         auto inflight_it = inflight.find(key);
         if(inflight_it != inflight.end()) {
@@ -430,10 +463,13 @@ BerkeleyDBGraph::read_lock(record_type type, const std::string& key) const
     RANGE_LOG_TIMED_FUNCTION() << key;
 
     std::thread::id id = std::this_thread::get_id();
-    auto lock_it = backend_.lock_table.find(id);
-    if (lock_it != backend_.lock_table.end()) {
-        LOG(debug5, "has_existing_lock") << std::this_thread::get_id();
-        return lock_it->second.lock();
+    {
+        std::lock_guard<std::mutex> guard { backend_.weak_table_lock_ };
+        auto lock_it = backend_.lock_table.find(id);
+        if (lock_it != backend_.lock_table.end()) {
+            LOG(debug5, "has_existing_lock") << std::this_thread::get_id();
+            return lock_it->second.lock();
+        }
     }
 
     UNUSED(type);
@@ -452,7 +488,10 @@ BerkeleyDBGraph::read_lock(record_type type, const std::string& key) const
                 BerkeleyDBWeakDeleter<BerkeleyDBGraph, BerkeleyDBLock, BerkeleyDB>(backend_) 
         };
 
-    backend_.lock_table[id] = lock_ptr;
+    {
+        std::lock_guard<std::mutex> guard { backend_.weak_table_lock_ };
+        backend_.lock_table[id] = lock_ptr;
+    }
     return lock_ptr;
 }
 
@@ -464,12 +503,16 @@ BerkeleyDBGraph::write_lock(record_type type, const std::string& key)
     BOOST_LOG_FUNCTION();
 
     std::thread::id id = std::this_thread::get_id();
-    auto lock_it = backend_.lock_table.find(id);
-    if (lock_it != backend_.lock_table.end()) {
-        if (lock_it->second.lock()->readonly()) {
-            THROW_STACK(DatabaseLockingException("Already locked readonly, and this lock doesn't know how to promote itself safely"));
+    {
+        std::lock_guard<std::mutex> guard { backend_.weak_table_lock_ };
+
+        auto lock_it = backend_.lock_table.find(id);
+        if (lock_it != backend_.lock_table.end()) {
+            if (lock_it->second.lock()->readonly()) {
+                THROW_STACK(DatabaseLockingException("Already locked readonly, and this lock doesn't know how to promote itself safely"));
+            }
+            return lock_it->second.lock();
         }
-        return lock_it->second.lock();
     }
 
     UNUSED(type);
@@ -485,7 +528,10 @@ BerkeleyDBGraph::write_lock(record_type type, const std::string& key)
             BerkeleyDBWeakDeleter<BerkeleyDBGraph, BerkeleyDBLock, BerkeleyDB>(backend_) 
         };
 
-    backend_.lock_table[id] = lock_ptr;
+    { 
+        std::lock_guard<std::mutex> guard { backend_.weak_table_lock_ };
+        backend_.lock_table[id] = lock_ptr;
+    }
     return lock_ptr;
 }
 
@@ -498,10 +544,13 @@ BerkeleyDBGraph::start_txn()
 
     std::thread::id id = std::this_thread::get_id();
 
-    auto txn = transaction_table.find(id);
-    if (txn != transaction_table.end()) {
-        LOG(debug5, "existing_txn") << "Transaction already exists, reusing";
-        return txn->second.lock();
+    {
+        std::lock_guard<std::mutex> guard { weak_table_lock_ };
+        auto txn = transaction_table.find(id);
+        if (txn != transaction_table.end()) {
+            LOG(debug5, "existing_txn") << "Transaction already exists, reusing";
+            return txn->second.lock();
+        }
     }
     LOG(debug4, "new_txn") << "Creating new transaction";
 
@@ -510,7 +559,10 @@ BerkeleyDBGraph::start_txn()
                 BerkeleyDBWeakDeleter<BerkeleyDBGraph, BerkeleyDBTxn, BerkeleyDBGraph>(*this)
             };
 
-    transaction_table[id] = boost::weak_ptr<BerkeleyDBTxn>(txn_ptr);
+    {
+        std::lock_guard<std::mutex> guard { weak_table_lock_ };
+        transaction_table[id] = boost::weak_ptr<BerkeleyDBTxn>(txn_ptr);
+    }
     return txn_ptr;
 }
 

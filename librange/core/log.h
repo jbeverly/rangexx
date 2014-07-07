@@ -123,9 +123,10 @@ class StatsD {
     
     //##########################################################################
     private:
-        boost::asio::io_service io_service;
-        boost::asio::ip::udp::endpoint endpoint;
-        boost::shared_ptr<boost::asio::ip::udp::socket> sock;
+        mutable boost::asio::io_service io_service_;
+        mutable boost::asio::ip::udp::endpoint endpoint_;
+        mutable boost::shared_ptr<boost::asio::ip::udp::socket> sock_;
+        mutable std::mutex sock_lock_;
         static std::mutex getter_lock_;
         static std::unique_ptr<StatsD> inst_;
         static std::string hostname_;
