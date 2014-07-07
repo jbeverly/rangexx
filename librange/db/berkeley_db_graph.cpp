@@ -489,10 +489,10 @@ BerkeleyDBGraph::read_lock(record_type type, const std::string& key) const
         };
 
     {
-        std::lock_guard<std::mutex> guard { backend_.weak_table_lock_ };
+       std::lock_guard<std::mutex> guard { backend_.weak_table_lock_ };
         backend_.lock_table[id] = lock_ptr;
-    }
     return lock_ptr;
+    }
 }
 
 //##############################################################################
@@ -531,8 +531,8 @@ BerkeleyDBGraph::write_lock(record_type type, const std::string& key)
     { 
         std::lock_guard<std::mutex> guard { backend_.weak_table_lock_ };
         backend_.lock_table[id] = lock_ptr;
-    }
     return lock_ptr;
+    }
 }
 
 //##############################################################################

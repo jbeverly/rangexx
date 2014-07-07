@@ -22,6 +22,7 @@
 
 #include "signalhandler.h"
 #include "network.h"
+#include "range_client.h"
 
 namespace range { namespace stored {
 
@@ -47,26 +48,8 @@ void
 MQServer::event_task()
 {
     BOOST_LOG_FUNCTION();
-
-    ::range::RangeAPI_v1 range { cfg_ };
-    ::range::RangeStruct range_proposers;
-
-    std::string cluster_name { cfg_->range_cell_name() + '.' + "proposers" };
-    try { 
-        range_proposers = range.simple_expand_cluster("_local_", cluster_name);
-    } catch(::range::graph::NodeNotFoundException) {
-        LOG(fatal, "_local_#" + cluster_name + " cluster not found");
-        this->set_shutdown(true);
-        this->set_running(false);
-        SignalHandler::terminate();
-        return;
-    }
-
-
-    std::vector<std::string> proposers; 
-    for(RangeStruct v : boost::get<::range::RangeArray>(range_proposers).values) {
-        proposers.push_back(boost::get<::range::RangeString>(v).value);
-    }
+    range::stored::RangePaxosClient rcl { cfg_ };
+    std::vector<std::string> proposers = rcl.proposers();
 
     do {
         ::range::stored::Request req;

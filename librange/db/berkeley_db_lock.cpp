@@ -31,10 +31,13 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
         log("BerkeleyDBLock")
 {
     RANGE_LOG_TIMED_FUNCTION();
-    auto lit = backend_.lock_table.find(std::this_thread::get_id());
-    if(lit != backend_.lock_table.end()) {
-        THROW_STACK(DatabaseLockingException("acquired new lock when old lock existed"));
-    }
+    {
+        std::lock_guard<std::mutex> guard { backend_.weak_table_lock_ };
+        auto lit = backend_.lock_table.find(std::this_thread::get_id());
+        if(lit != backend_.lock_table.end()) {
+            THROW_STACK(DatabaseLockingException("acquired new lock when old lock existed"));
+        }
+    } 
 
     auto rmw = dbstl::ReadModifyWriteOption::no_read_modify_write();
     int flags = DB_TXN_SYNC | DB_TXN_SNAPSHOT;
@@ -49,7 +52,7 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
         txn_ = dbstl::begin_txn(flags, backend_.env_);
     } catch(dbstl::DbstlException& e) {
         try { 
-            dbstl::abort_txn(backend_.env_, txn_);
+            dbstl::abort_txn(backend_.env_); //, txn_);
         } catch(...) { }
         THROW_STACK(DatabaseLockingException("Cannot begin transaction"));
     }
@@ -66,7 +69,7 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
             iter_.close_cursor();
         } catch(...) { }
         try { 
-            dbstl::abort_txn(backend_.env_, txn_);
+            dbstl::abort_txn(backend_.env_); //, txn_);
         } catch(...) { }
         THROW_STACK(DatabaseLockingException("Cannot begin transaction"));
     }
@@ -81,7 +84,8 @@ BerkeleyDBLock::unlock()
     LOG(debug4, "unlock");
 
     iter_.close_cursor();
-    dbstl::commit_txn(backend_.env_, txn_, 0);
+    //dbstl::commit_txn(backend_.env_, txn_, 0);
+    dbstl::commit_txn(backend_.env_); //, txn_, 0);
     backend_.graph_bdbgraph_instances.clear();
 }
 
@@ -102,7 +106,7 @@ BerkeleyDBLock::~BerkeleyDBLock()
     if(std::uncaught_exception()) {                                             // An exception is active, abort txn
         try {
             iter_.close_cursor();
-            dbstl::abort_txn(backend_.env_, txn_);
+            dbstl::abort_txn(backend_.env_); //, txn_);
         } catch(...) { }
     }
     else {                                                                      // RAII cleanup

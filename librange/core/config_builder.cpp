@@ -114,7 +114,7 @@ config_builder(const std::string& filename, Consumer type)
                         "ubuntu14-04-3.jamiebeverly.net"
                     }
                 );
-            dynamic_cast<StoreDaemonConfig*>(cfg)->heartbeat_timeout(1);
+            dynamic_cast<StoreDaemonConfig*>(cfg)->heartbeat_timeout(1000);
             dynamic_cast<StoreDaemonConfig*>(cfg)->port(5444);
             dynamic_cast<StoreDaemonConfig*>(cfg)->range_cell_name("testcell");
             break;
