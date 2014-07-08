@@ -104,6 +104,13 @@ class WriteRequest {
         {
             req.set_method(name);
             req.set_request_id(request_id_++);
+            req.set_type(Request::Type::Request_Type_REQUEST);
+        }
+
+        //######################################################################
+        void set_type(Request::Type type)
+        {
+            req.set_type(type);
         }
 
         //######################################################################

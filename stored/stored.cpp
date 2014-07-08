@@ -36,6 +36,7 @@
 #include "listenserv.h"
 #include "signalhandler.h"
 #include "worker_thread.h"
+#include "heartbeat.h"
 
 #ifndef DEFAULT_CONFIG_PATH
 #define DEFAULT_CONFIG_PATH "/etc/range/range.conf"
@@ -177,6 +178,9 @@ main(int argc, char ** argv, char ** envp)
 
         ::range::stored::MQServer mqsrv { cfg };
         mqsrv.run();
+
+        ::range::stored::Heartbeat hb { cfg };
+        hb.run();
 
         hdl.join();
         LOG(critical, "shutting down");
