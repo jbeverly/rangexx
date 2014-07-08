@@ -19,8 +19,15 @@
 
 #include <unordered_map>
 
+#include <boost/weak_ptr.hpp>
+
+#include <db_cxx.h>
+
 #include "db_interface.h"
 #include "config_interface.h"
+
+#include "berkeley_dbcxx_txn.h"
+#include "berkeley_dbcxx_lock.h"
 
 namespace range { namespace db {
 
@@ -46,10 +53,13 @@ class BerkeleyDBCXXDb : public GraphInstanceInterface {
         BerkeleyDBCXXDb(const std::string &name, const db::ConfigIface &db_config);
         thread_local static std::unordered_map<std::string, boost::shared_ptr<BerkeleyDBCXXDb>> multiton_map_;
 
-        // because instances of this db RAII class are thread-local, any lock held is held by this thread, 
-        // and any txn held is held by this thread, so we don't need to coordinate these.
-        txn_t current_txn_;
-        lock_t current_lock_;
+        // because instances of this db RAII class are thread-local (because they are created in this thread
+        // if not found in the thread_local multiton map), any lock, txn, or db instance is held by this
+        // thread; so we don't need to coordinate these.
+        boost::weak_ptr<BerkeleyDBCXXTxn> current_txn_;
+        boost::weak_ptr<BerkeleyDBCXXLock> current_lock_;
+
+        std::unique_ptr<Db> inst_;
 };
 
 } /* namespace db */ } /* namespace range */
