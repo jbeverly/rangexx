@@ -68,6 +68,7 @@ class BerkeleyDBLock : public GraphInstanceLock {
     private:
         //######################################################################
         BerkeleyDB& backend_;
+        bool locked_;
         DbTxn * txn_;
         size_t refcount_;
         ::range::db::map_t::iterator iter_;

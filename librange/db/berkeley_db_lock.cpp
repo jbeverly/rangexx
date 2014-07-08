@@ -28,7 +28,7 @@ namespace db {
 BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
                                 bool read_write)
     : backend_(backend), txn_(0), iter_(0), readonly_(!read_write), 
-        log("BerkeleyDBLock")
+        log("BerkeleyDBLock"), locked_(false)
 {
     RANGE_LOG_TIMED_FUNCTION();
     {
@@ -73,6 +73,7 @@ BerkeleyDBLock::BerkeleyDBLock(BerkeleyDB& backend, ::range::db::map_t& map,
         } catch(...) { }
         THROW_STACK(DatabaseLockingException("Cannot begin transaction"));
     }
+    locked_ = true;
 }
 
 //##############################################################################
@@ -101,6 +102,7 @@ BerkeleyDBLock::readonly()
 //##############################################################################
 BerkeleyDBLock::~BerkeleyDBLock()
 {
+<<<<<<< HEAD
     BOOST_LOG_FUNCTION();
     LOG(debug5, "dtor");
     if(std::uncaught_exception()) {                                             // An exception is active, abort txn
@@ -112,11 +114,28 @@ BerkeleyDBLock::~BerkeleyDBLock()
     else {                                                                      // RAII cleanup
         try {
             unlock();
+=======
+    if(locked_) { 
+        try { 
+            BOOST_LOG_FUNCTION();
+            LOG(debug5, "dtor");
+            if(std::uncaught_exception()) {                                             // An exception is active, abort txn
+                try {
+                    iter_.close_cursor();
+                    dbstl::abort_txn(backend_.env_, txn_);
+                } catch(...) { }
+            }
+            else {                                                                      // RAII cleanup
+                try {
+                    unlock();
+                } catch(...) { }
+            }
+            /* try {
+                backend_.graph_bdbgraph_instances.clear();
+            } catch(...) { } */
+>>>>>>> master
         } catch(...) { }
     }
-    try {
-        backend_.graph_bdbgraph_instances.clear();
-    } catch(...) { }
 }
 
 
