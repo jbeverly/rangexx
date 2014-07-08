@@ -107,10 +107,10 @@ class BerkeleyDB : public BackendInterface {
         std::unordered_map<std::string, boost::shared_ptr<map_t>> graph_map_instances;
         std::unordered_map<std::string, boost::shared_ptr<BerkeleyDBGraph>> graph_bdbgraph_instances;
 
-        static const uint32_t env_open_flags = DB_CREATE | DB_INIT_MPOOL 
+        static const uint32_t env_open_flags = DB_THREAD | DB_CREATE | DB_INIT_MPOOL 
                     | DB_INIT_LOCK | DB_INIT_TXN | DB_RECOVER | DB_REGISTER |
                     DB_MULTIVERSION;
-        static const uint32_t env_set_flags = DB_REGION_INIT | DB_MULTIVERSION;
+        static const uint32_t env_set_flags = DB_THREAD | DB_REGION_INIT | DB_MULTIVERSION;
 
         range::Emitter log;
 
