@@ -21,7 +21,7 @@ namespace range { namespace db {
 
 //##############################################################################
 //##############################################################################
-BerkeleyDB::BerkeleyDB(const db::ConfigIface &db_config)
+BerkeleyDB::BerkeleyDB(const boost::shared_ptr<db::ConfigIface> db_config)
     : db_config_(db_config), env_(BerkeleyDBCXXEnv::get(db_config_)), 
         info_(BerkeleyDBCXXDb::get("graph_info", db_config_, env_)), 
         log("BerkeleyDB")
@@ -178,6 +178,14 @@ void
 BerkeleyDB::shutdown()
 {
     env_->shutdown();
+}
+
+//##############################################################################
+//##############################################################################
+std::string
+BerkeleyDB::dbhome() const
+{
+    return env_->get_dbhome();
 }
 
 

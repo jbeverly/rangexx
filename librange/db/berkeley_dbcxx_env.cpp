@@ -30,7 +30,7 @@ thread_local boost::weak_ptr<BerkeleyDBCXXLock> BerkeleyDBCXXEnv::current_lock_;
 //##############################################################################
 //##############################################################################
 boost::shared_ptr<BerkeleyDBCXXEnv>
-BerkeleyDBCXXEnv::get(const db::ConfigIface &db_config)
+BerkeleyDBCXXEnv::get(const boost::shared_ptr<db::ConfigIface> db_config)
 {
     std::lock_guard<std::mutex> guard { inst_lock_ };
     if(!inst_) {
@@ -44,22 +44,27 @@ BerkeleyDBCXXEnv::get(const db::ConfigIface &db_config)
 void
 BerkeleyDBCXXEnv::shutdown()
 {
+    range::Emitter log { "BerkeleyDBCXXEnv" };
+    RANGE_LOG_FUNCTION();
     std::lock_guard<std::mutex> guard { inst_lock_ };
-    inst_ = nullptr;
+    BerkeleyDBCXXDb::close_all_db();                                            // close any open databases in this thread; since we are a singleton
+    current_lock_.reset();
+    inst_.reset();
 }
 
 //##############################################################################
 //##############################################################################
-BerkeleyDBCXXEnv::BerkeleyDBCXXEnv(const db::ConfigIface &db_config)
-    : env_{0}, open_(false)
+BerkeleyDBCXXEnv::BerkeleyDBCXXEnv(const boost::shared_ptr<db::ConfigIface> db_config)
+    : env_{0}, log{"BerkeleyDBCXXEnv"}
 {
+    RANGE_LOG_FUNCTION();
     int rval = 0;
 
     // Setup cache_size
 
     try {
-        size_t gigs = db_config.cache_size() / 1024 / 1024 / 1024;              // the set_cachesize method takes a unmber of gigs
-        size_t remainder = db_config.cache_size()                               // and a remainder; so we need to extract those 
+        size_t gigs = db_config->cache_size() / 1024 / 1024 / 1024;              // the set_cachesize method takes a unmber of gigs
+        size_t remainder = db_config->cache_size()                               // and a remainder; so we need to extract those 
             - (gigs * 1024 * 1024 * 1024);                                      // bits into individual vars
         rval = env_.set_cachesize(gigs, remainder, 0);
     } catch (DbException &e) {
@@ -135,7 +140,7 @@ BerkeleyDBCXXEnv::BerkeleyDBCXXEnv(const db::ConfigIface &db_config)
 
     // Open the db
     try { 
-        rval = env_.open(db_config.db_home().c_str(), env_open_flags_, 0);
+        rval = env_.open(db_config->db_home().c_str(), env_open_flags_, 0);
     } 
     catch(DbException &e) {
         try { 
@@ -154,7 +159,6 @@ BerkeleyDBCXXEnv::BerkeleyDBCXXEnv(const db::ConfigIface &db_config)
 
     switch (rval) {
         case 0: 
-            open_ = true;
             break;
         case DB_RUNRECOVERY:
             THROW_STACK(
@@ -183,21 +187,25 @@ BerkeleyDBCXXEnv::BerkeleyDBCXXEnv(const db::ConfigIface &db_config)
 //##############################################################################
 BerkeleyDBCXXEnv::~BerkeleyDBCXXEnv() noexcept
 {
-    if(open_) {
-        try {
-            BerkeleyDBCXXDb::close_all_db();                                    // close any open databases in this thread; since we are a singleton
-                                                                                // we should be destructed at program exit, so hopefully we're the only
-                                                                                // thread left with open databases...
-        } catch(...) { }
-        try {
-            env_.close(DB_FORCESYNC);
-        } catch(...) { }
-        try {
-            for (auto t : this->registered_threads_) {
-                this->cleanup_thread(t.first);
-            }
-        } catch(...) { }
-    }
+    try {
+        RANGE_LOG_FUNCTION();
+    } catch(...) {}
+    try {
+        BerkeleyDBCXXDb::close_all_db();                                    // close any open databases in this thread; since we are a singleton
+        // we should be destructed at program exit, so hopefully we're the only
+        // thread left with open databases...
+    } catch(...) { }
+    try {
+        int rval = env_.close(DB_FORCESYNC);
+        if(rval != 0) {
+            LOG(error, "env_shutdown_error") << rval;
+        }
+    } catch(...) { }
+    try {
+        for (auto t : this->registered_threads_) {
+            this->cleanup_thread(t.first);
+        }
+    } catch(...) { }
 }
 
 
@@ -206,6 +214,7 @@ BerkeleyDBCXXEnv::~BerkeleyDBCXXEnv() noexcept
 void 
 BerkeleyDBCXXEnv::register_thread()
 {
+    RANGE_LOG_FUNCTION();
     std::lock_guard<std::mutex> guard { thread_registration_lock_ };
 
     std::string lockfile = this->get_lockfile(&env_, getpid(), pthread_self());
@@ -228,6 +237,8 @@ bool
 BerkeleyDBCXXEnv::get_lock(const std::string &lockfile,
         std::unordered_map<std::string, int> * registered_threads)
 {
+    range::Emitter log { "BerkeleyDBCXXEnv" };
+    RANGE_LOG_FUNCTION();
     int fd = open(lockfile.c_str(), O_CREAT | O_RDWR);
     if(fd >= 0) {
         struct flock fl = {
@@ -256,6 +267,7 @@ BerkeleyDBCXXEnv::get_lock(const std::string &lockfile,
 void
 BerkeleyDBCXXEnv::cleanup_thread()
 {
+    RANGE_LOG_FUNCTION();
     this->cleanup_thread(this->get_lockfile(&env_, getpid(), pthread_self()));
 }
 
@@ -264,6 +276,7 @@ BerkeleyDBCXXEnv::cleanup_thread()
 void
 BerkeleyDBCXXEnv::cleanup_thread(const std::string &lockfile)
 {
+    RANGE_LOG_FUNCTION();
     struct flock fl = {
         F_UNLCK,        ///< l_type
         SEEK_SET,       ///< l_whence
@@ -285,6 +298,7 @@ BerkeleyDBCXXEnv::cleanup_thread(const std::string &lockfile)
 boost::shared_ptr<BerkeleyDBCXXLock>
 BerkeleyDBCXXEnv::acquire_DbTxn_lock(bool readwrite)
 {
+    RANGE_LOG_FUNCTION();
     auto l = current_lock_.lock();                                              /* note this lock is weak_ptr's lock, not our lock */
     if(!l) {
         l = boost::make_shared<BerkeleyDBCXXLock>(&env_, readwrite);
@@ -299,17 +313,25 @@ BerkeleyDBCXXEnv::acquire_DbTxn_lock(bool readwrite)
 //##############################################################################
 //##############################################################################
 std::string
-BerkeleyDBCXXEnv::get_dbhome(DbEnv *dbenv)
+BerkeleyDBCXXEnv::get_dbhome() const
+{
+    return this->get_dbhome(&env_);
+}
+
+//##############################################################################
+//##############################################################################
+std::string
+BerkeleyDBCXXEnv::get_dbhome(const DbEnv *dbenv)
 {
     const char * dbhome;
-    dbenv->get_home(&dbhome);
+    const_cast<DbEnv*>(dbenv)->get_home(&dbhome);
     return std::string(dbhome);
 }
 
 //##############################################################################
 //##############################################################################
 std::string 
-BerkeleyDBCXXEnv::get_lockfile(DbEnv * dbenv, pid_t pid, db_threadid_t tid)
+BerkeleyDBCXXEnv::get_lockfile(const DbEnv * dbenv, pid_t pid, db_threadid_t tid)
 {
     std::string home = get_dbhome(dbenv);
     std::stringstream lockfile;
@@ -323,16 +345,23 @@ int
 BerkeleyDBCXXEnv::is_alive(DbEnv *dbenv, pid_t pid, db_threadid_t tid, u_int32_t flags)
 {
     std::string lockfile;
+    std::unordered_map<std::string, int> lockmap;
     if( (flags & DB_MUTEX_PROCESS_ONLY) != 0) {
+        if(pid == getpid()) { return 1; }
         lockfile = get_lockfile(dbenv, pid, 0);
     } 
     else {
+        if(pid == getpid() && tid == pthread_self()) { return 1; }
         lockfile = get_lockfile(dbenv, pid, tid);
     }
-    if(get_lock(lockfile, nullptr)) {
-        return 0;
+    int rval;
+    if(get_lock(lockfile, &lockmap)) {
+        rval = 0;                                                               // nobody else is holding the lock, they have died
+    } else {
+        rval = 1;                                                               // unable to acquire the lock; they are alive
     }
-    return 1;
+    close(lockmap.find(lockfile)->second);                                      // don't leak FD's 
+    return rval;
 }
 
 //##############################################################################

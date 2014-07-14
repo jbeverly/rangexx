@@ -62,7 +62,7 @@ class TestDB : public ::testing::Test {
         }
 
         static void TearDownTestCase() {
-            DIR* d = opendir(path.c_str());
+/*            DIR* d = opendir(path.c_str());
 
             struct dirent * dentry;
 
@@ -71,20 +71,22 @@ class TestDB : public ::testing::Test {
                 unlink(p.c_str());
             }
             rmdir(path.c_str()); 
-            closedir(d); 
+            closedir(d);  */
         }
 
         virtual void SetUp() override {
-            EXPECT_CALL(cfg, db_home())
+            cfg = boost::make_shared<MockDbConfig>();
+
+            EXPECT_CALL(*cfg, db_home())
                 .Times(AtLeast(0))
                 .WillRepeatedly(ReturnRef(path));
 
-            EXPECT_CALL(cfg, cache_size())
+            EXPECT_CALL(*cfg, cache_size())
                 .Times(AtLeast(0))
                 .WillRepeatedly(Return(67108864));
         }
 
-        MockDbConfig cfg;
+        boost::shared_ptr<MockDbConfig> cfg;
         static std::string path;
 };
 
@@ -92,7 +94,10 @@ class TestDB : public ::testing::Test {
 // Don't laugh, this is important!
 //##############################################################################
 TEST_F(TestDB, test_db_ctor) {
-    range::db::BerkeleyDB db { cfg };
+    range::db::BerkeleyDB db { boost::dynamic_pointer_cast<range::db::ConfigIface>(cfg) };
+    std::string cfghome = cfg->db_home();
+    std::string realhome = db.dbhome();
+    EXPECT_EQ(cfghome, realhome);
     db.register_thread();
     db.shutdown();
 }
@@ -100,7 +105,7 @@ TEST_F(TestDB, test_db_ctor) {
 //##############################################################################
 //##############################################################################
 TEST_F(TestDB, test_create_instance) {
-    range::db::BerkeleyDB db { cfg };
+    range::db::BerkeleyDB db { boost::dynamic_pointer_cast<range::db::ConfigIface>(cfg) };
     db.register_thread();
     auto instance = db.createGraphInstance("Foobar");
 
@@ -129,12 +134,13 @@ class TestGraphDB : public ::testing::Test {
             }
             std::string dbpath { p };
             path = dbpath;
+            cfg = boost::make_shared<MockDbConfig>();
 
-            EXPECT_CALL(cfg, db_home())
+            EXPECT_CALL(*cfg, db_home())
                 .Times(AtLeast(0))
                 .WillRepeatedly(ReturnRef(dbpath));
 
-            EXPECT_CALL(cfg, cache_size())
+            EXPECT_CALL(*cfg, cache_size())
                 .Times(AtLeast(0))
                 .WillRepeatedly(Return(67108864));
 
@@ -145,6 +151,7 @@ class TestGraphDB : public ::testing::Test {
 
         virtual void TearDown() override {
             backendp->shutdown();
+
             DIR* d = opendir(path.c_str());
 
             struct dirent * dentry;
@@ -161,7 +168,7 @@ class TestGraphDB : public ::testing::Test {
         
         range::db::BerkeleyDB::graph_instance_t instance; 
         boost::shared_ptr<range::db::BerkeleyDB> backendp;
-        MockDbConfig cfg;
+        boost::shared_ptr<MockDbConfig> cfg;
         std::string path;
 };
 
@@ -415,7 +422,9 @@ class TestDBCursor : public TestGraphDB {
 //##############################################################################
 TEST_F(TestDBCursor, test_first) {
     auto c = instance->get_cursor();
-
+    
+    ASSERT_NE(c, nullptr);
+    ASSERT_NE(c->first(), nullptr);
     EXPECT_EQ("foo", c->first()->name().substr(0,3));
 }
 

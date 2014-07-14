@@ -26,6 +26,7 @@
 #include "config_interface.h"
 #include "db_exceptions.h"
 #include "berkeley_dbcxx_lock.h"
+#include "../core/log.h"
 
 namespace range { namespace db {
 
@@ -33,11 +34,12 @@ namespace range { namespace db {
 //##############################################################################
 class BerkeleyDBCXXEnv {
     public:
-        static boost::shared_ptr<BerkeleyDBCXXEnv> get(const db::ConfigIface &db_config);
+        static boost::shared_ptr<BerkeleyDBCXXEnv> get(const boost::shared_ptr<db::ConfigIface> db_config);
 
         static int is_alive(DbEnv *dbenv, pid_t pid, db_threadid_t tid, u_int32_t flags);
         static void get_thread_id(DbEnv *dbenv, pid_t * pid, db_threadid_t * tid);
-        static std::string get_lockfile(DbEnv * dbenv, pid_t pid, db_threadid_t tid);
+
+        static std::string get_lockfile(const DbEnv * dbenv, pid_t pid, db_threadid_t tid);
         static bool get_lock(const std::string &lockfile,
                 std::unordered_map<std::string, int> * registered_threads);
         static void shutdown();
@@ -46,6 +48,7 @@ class BerkeleyDBCXXEnv {
         void register_thread();
         void cleanup_thread();
         void cleanup_thread(const std::string &lockfile);
+        std::string get_dbhome() const;
 
         boost::shared_ptr<BerkeleyDBCXXLock> acquire_DbTxn_lock(bool readwrite=false);
         
@@ -54,14 +57,14 @@ class BerkeleyDBCXXEnv {
         DbEnv * getEnv() { return &env_; }
         
     private:
-        static std::string get_dbhome(DbEnv *dbenv);
+        static std::string get_dbhome(const DbEnv *dbenv);
 
-        BerkeleyDBCXXEnv(const db::ConfigIface &db_config);
+        BerkeleyDBCXXEnv(const boost::shared_ptr<db::ConfigIface> db_config);
 
         std::unordered_map<std::string, int> registered_threads_;
         std::mutex thread_registration_lock_;
         DbEnv env_;
-        bool open_;
+        range::Emitter log;
 
         static const uint32_t env_open_flags_ = DB_CREATE | DB_REGISTER | DB_THREAD | DB_FAILCHK | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_TXN | DB_RECOVER | DB_INIT_MPOOL;
         static std::mutex inst_lock_;

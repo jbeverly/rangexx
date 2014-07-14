@@ -29,7 +29,8 @@ thread_local std::unordered_map<std::string, boost::shared_ptr<BerkeleyDBCXXDb>>
 //##############################################################################
 //##############################################################################
 boost::shared_ptr<BerkeleyDBCXXDb>
-BerkeleyDBCXXDb::get(const std::string &name, const db::ConfigIface &db_config)
+BerkeleyDBCXXDb::get(const std::string &name,
+        const boost::shared_ptr<db::ConfigIface> db_config)
 {
     return BerkeleyDBCXXDb::get(name, db_config, BerkeleyDBCXXEnv::get(db_config));
 }
@@ -37,14 +38,15 @@ BerkeleyDBCXXDb::get(const std::string &name, const db::ConfigIface &db_config)
 //##############################################################################
 //##############################################################################
 boost::shared_ptr<BerkeleyDBCXXDb>
-BerkeleyDBCXXDb::get(const std::string &name, const db::ConfigIface &db_config, boost::shared_ptr<BerkeleyDBCXXEnv> env)
+BerkeleyDBCXXDb::get(const std::string &name,
+        const boost::shared_ptr<db::ConfigIface> db_config,
+        boost::shared_ptr<BerkeleyDBCXXEnv> env)
 {
     auto it = multiton_map_.find(name);
     if(it != multiton_map_.end()) {
         return it->second;
     }
     auto inst = boost::shared_ptr<BerkeleyDBCXXDb>(new BerkeleyDBCXXDb(name, db_config, env));
-    //auto inst = boost::make_shared<BerkeleyDBCXXDb>(name, db_config, env);
     multiton_map_[name] = inst;
     return inst;
 }
@@ -52,7 +54,7 @@ BerkeleyDBCXXDb::get(const std::string &name, const db::ConfigIface &db_config, 
 //##############################################################################
 //##############################################################################
 BerkeleyDBCXXDb::BerkeleyDBCXXDb(const std::string &name,
-        const db::ConfigIface &db_config, boost::shared_ptr<BerkeleyDBCXXEnv> env)
+        const boost::shared_ptr<db::ConfigIface> db_config, boost::shared_ptr<BerkeleyDBCXXEnv> env)
     : name_(name), env_(env), db_config_(db_config), log("BerkeleyDBCXXDb")
 {
     RANGE_LOG_FUNCTION();

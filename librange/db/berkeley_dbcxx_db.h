@@ -36,10 +36,17 @@
 
 namespace range { namespace db {
 
-class BerkeleyDBCXXDb : public GraphInstanceInterface, public boost::enable_shared_from_this<BerkeleyDBCXXDb> {
+//##############################################################################
+//##############################################################################
+class BerkeleyDBCXXDb : public GraphInstanceInterface,
+    public boost::enable_shared_from_this<BerkeleyDBCXXDb> 
+{
     public:
-        static boost::shared_ptr<BerkeleyDBCXXDb> get(const std::string &name, const db::ConfigIface &db_config);
-        static boost::shared_ptr<BerkeleyDBCXXDb> get(const std::string &name, const db::ConfigIface &db_config, boost::shared_ptr<BerkeleyDBCXXEnv> env);
+        static boost::shared_ptr<BerkeleyDBCXXDb> get(const std::string &name,
+                const boost::shared_ptr<db::ConfigIface> db_config);
+        static boost::shared_ptr<BerkeleyDBCXXDb> get(const std::string &name,
+                const boost::shared_ptr<db::ConfigIface> db_config,
+                boost::shared_ptr<BerkeleyDBCXXEnv> env);
         static void close_all_db() { multiton_map_.clear(); };
 
         virtual size_t n_vertices() const override;
@@ -65,7 +72,7 @@ class BerkeleyDBCXXDb : public GraphInstanceInterface, public boost::enable_shar
         static record_type get_type_from_keyname(const std::string &fullkey);
         static std::string unprefix(const std::string &fullkey);
     private:
-        BerkeleyDBCXXDb(const std::string &name, const db::ConfigIface &db_config, boost::shared_ptr<BerkeleyDBCXXEnv> env);
+        BerkeleyDBCXXDb(const std::string &name, const boost::shared_ptr<db::ConfigIface> db_config, boost::shared_ptr<BerkeleyDBCXXEnv> env);
 
         thread_local static std::unordered_map<std::string, boost::shared_ptr<BerkeleyDBCXXDb>> multiton_map_;
 
@@ -77,7 +84,7 @@ class BerkeleyDBCXXDb : public GraphInstanceInterface, public boost::enable_shar
         boost::shared_ptr<Db> inst_;
         std::string name_;
         boost::shared_ptr<BerkeleyDBCXXEnv> env_;
-        const db::ConfigIface db_config_;
+        const boost::shared_ptr<db::ConfigIface> db_config_;
         range::Emitter log;
 };
 

@@ -62,7 +62,7 @@ class TestIntegration : public ::testing::Test {
 
             Config * cfg = new Config();
 
-            auto db_conf = db::ConfigIface(path, 67108864);
+            auto db_conf = boost::make_shared<db::ConfigIface>(path, 67108864);
             auto db = boost::make_shared<range::db::BerkeleyDB>( db_conf );
             cfg->db_backend(db);
             cfg->graph_factory(boost::make_shared<graph::GraphdbConcreteFactory<graph::GraphDB>>());

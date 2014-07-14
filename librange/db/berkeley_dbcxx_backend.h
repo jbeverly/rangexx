@@ -29,7 +29,7 @@ namespace range { namespace db {
 
 class BerkeleyDB : public BackendInterface {
     public:
-        BerkeleyDB(const db::ConfigIface &db_config);
+        BerkeleyDB(const boost::shared_ptr<db::ConfigIface> db_config);
 
         virtual graph_instance_t getGraphInstance(const std::string& name) override;
         virtual graph_instance_t createGraphInstance(const std::string& name) override;
@@ -40,8 +40,9 @@ class BerkeleyDB : public BackendInterface {
         virtual range_changelist_t get_changelist() override;
         virtual uint64_t get_graph_wanted_version(const std::string &graph_name) const override;
         virtual void shutdown() override;
+        std::string dbhome() const;
     private:
-        const db::ConfigIface db_config_;
+        const boost::shared_ptr<db::ConfigIface> db_config_;
         boost::shared_ptr<BerkeleyDBCXXEnv> env_;
         boost::shared_ptr<BerkeleyDBCXXDb> info_;
         range::Emitter log;
