@@ -28,7 +28,7 @@
 #include <rangexx/core/log.h>
 #include <rangexx/core/stored_config.h>
 #include <rangexx/core/config_builder.h>
-#include <rangexx/db/berkeley_db.h>
+#include <rangexx/db/berkeley_dbcxx_backend.h>
 
 #include "startup.h"
 #include "paxos.h"
@@ -186,8 +186,6 @@ main(int argc, char ** argv, char ** envp)
         LOG(critical, "shutting down");
     }
     ::range::config = nullptr;
-    range::db::BerkeleyDB::s_shutdown();
-
     ::range::stored::WorkerThread::handle_exceptions();
     return 0;
 }

@@ -22,7 +22,7 @@
 
 #include "config_builder.h"
 #include "stored_config.h"
-#include "../db/berkeley_db.h"
+#include "../db/berkeley_dbcxx_backend.h"
 #include "../db/config_interface.h"
 #include "../db/pbuff_node.h"
 #include "../graph/node_factory.h"

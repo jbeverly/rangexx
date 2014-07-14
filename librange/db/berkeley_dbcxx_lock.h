@@ -17,12 +17,46 @@
 #ifndef _RANGE_DB_BERKELEY_DBCXX_LOCK
 #define _RANGE_DB_BERKELEY_DBCXX_LOCK
 
+#include <db_cxx.h>
+
+#include "../core/log.h"
+
 #include "db_interface.h"
 
 namespace range { namespace db {
 
+//##############################################################################
+//##############################################################################
 class BerkeleyDBCXXLock : public GraphInstanceLock {
+    public:
+        BerkeleyDBCXXLock(DbEnv * env, bool readwrite=false);
+        virtual ~BerkeleyDBCXXLock() noexcept override;
+        virtual void unlock() override;
+        virtual bool readonly() override { return !readwrite_; };
+        void promote() { readwrite_ = true; }
+    private:
+        friend class BerkeleyDBCXXLockTxnGetter;
+        bool readwrite_;
+        DbEnv * env_;
+        DbTxn * txn_;
+        bool initialized_;
+        range::Emitter log;
 };
+
+//##############################################################################
+//##############################################################################
+class BerkeleyDBCXXLockTxnGetter {
+    friend class BerkeleyDBCXXDb;
+    
+    explicit BerkeleyDBCXXLockTxnGetter(boost::shared_ptr<BerkeleyDBCXXLock> lock) 
+        : lck_(lock)
+    {
+    }
+
+    DbTxn * txn() { return lck_->txn_; }
+    boost::shared_ptr<BerkeleyDBCXXLock> lck_;
+};
+
 
 } /* namespace db */ } /* namespace range */
 

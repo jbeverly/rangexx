@@ -77,10 +77,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = test_integration$(EXEEXT) \
+check_PROGRAMS = test_integration$(EXEEXT) test_db$(EXEEXT) \
 	test_graph_iterator$(EXEEXT) test_pbuff_node$(EXEEXT) \
-	test_db$(EXEEXT) test_graphdb$(EXEEXT) \
-	test_compiler_range_scanner_v1$(EXEEXT) \
+	test_graphdb$(EXEEXT) test_compiler_range_scanner_v1$(EXEEXT) \
 	test_compiler_range_parser_v1$(EXEEXT) \
 	test_compiler_expanding_visitor$(EXEEXT) test_mq$(EXEEXT) \
 	test_write_api$(EXEEXT) test_read_api$(EXEEXT)
@@ -951,6 +950,13 @@ test_integration.log: test_integration$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_db.log: test_db$(EXEEXT)
+	@p='test_db$(EXEEXT)'; \
+	b='test_db'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 test_graph_iterator.log: test_graph_iterator$(EXEEXT)
 	@p='test_graph_iterator$(EXEEXT)'; \
 	b='test_graph_iterator'; \
@@ -961,13 +967,6 @@ test_graph_iterator.log: test_graph_iterator$(EXEEXT)
 test_pbuff_node.log: test_pbuff_node$(EXEEXT)
 	@p='test_pbuff_node$(EXEEXT)'; \
 	b='test_pbuff_node'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-test_db.log: test_db$(EXEEXT)
-	@p='test_db$(EXEEXT)'; \
-	b='test_db'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

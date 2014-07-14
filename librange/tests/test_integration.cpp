@@ -36,7 +36,7 @@
 #include "../core/api.h"
 #include "../core/config_builder.h"
 
-#include "../db/berkeley_db.h"
+#include "../db/berkeley_dbcxx_backend.h"
 #include "../db/pbuff_node.h"
 #include "../graph/node_factory.h"
 #include "../graph/graphdb.h"
@@ -653,7 +653,7 @@ main(int argc, char **argv)
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     ::testing::InitGoogleTest(&argc, argv);
     int rval = RUN_ALL_TESTS();
-    range::db::BerkeleyDB::s_shutdown();
+    //range::db::BerkeleyDB::s_shutdown();
     //range::cleanup_logger();
     return rval;
 }

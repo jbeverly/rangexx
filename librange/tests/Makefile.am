@@ -9,9 +9,9 @@ LIBADD = @GTEST_LIBS@ @GMOCK_LIBS@ $(top_builddir)/librange/librange.la
 AM_DEFAULT_SOURCE_EXT = .cpp
 
 check_PROGRAMS = test_integration \
+				 test_db \
 				 test_graph_iterator \
 				 test_pbuff_node \
-				 test_db \
 				 test_graphdb \
 				 test_compiler_range_scanner_v1 \
 				 test_compiler_range_parser_v1 \

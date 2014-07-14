@@ -23,6 +23,7 @@
 namespace range {
 namespace db {
 
+
 //##############################################################################
 //##############################################################################
 struct Exception : public ::range::Exception {
@@ -50,6 +51,7 @@ explicit DatabaseEnvironmentException(const std::string &what,
     { }
 };
 
+
 //##############################################################################
 //##############################################################################
 struct DatabaseLockingException : public Exception {
@@ -76,6 +78,16 @@ struct UnknownTransactionException : public Exception {
         : Exception(what, event)
     { }
 };
+
+//##############################################################################
+//##############################################################################
+struct CursorException : public Exception {
+    explicit CursorException(const std::string& what,
+        const std::string &event="db.CursorException")
+        : Exception(what, event)
+    { }
+};
+
 
 
 } // namespace db

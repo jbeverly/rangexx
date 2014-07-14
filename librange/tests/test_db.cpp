@@ -35,11 +35,11 @@
 #include "../db/config_interface.h"
 #include "../db/db_exceptions.h"
 
-#include "../db/berkeley_db.h"
-#include "../db/berkeley_db_graph.h"
-#include "../db/berkeley_db_txn.h"
-#include "../db/berkeley_db_lock.h"
-#include "../db/berkeley_db_cursor.h"
+#include "../db/berkeley_dbcxx_backend.h"
+#include "../db/berkeley_dbcxx_db.h"
+#include "../db/berkeley_dbcxx_txn.h"
+#include "../db/berkeley_dbcxx_lock.h"
+#include "../db/berkeley_dbcxx_cursor.h"
 
 using namespace ::testing;
 
@@ -84,13 +84,6 @@ class TestDB : public ::testing::Test {
                 .WillRepeatedly(Return(67108864));
         }
 
-        std::string get_db_home(const range::db::BerkeleyDB& db) {
-            const char * dbhome;
-            db.env_->get_home(&dbhome);
-            return std::string(dbhome);
-        }
-
-
         MockDbConfig cfg;
         static std::string path;
 };
@@ -100,17 +93,20 @@ class TestDB : public ::testing::Test {
 //##############################################################################
 TEST_F(TestDB, test_db_ctor) {
     range::db::BerkeleyDB db { cfg };
-    EXPECT_EQ(path, get_db_home(db));
+    db.register_thread();
+    db.shutdown();
 }
 
 //##############################################################################
 //##############################################################################
 TEST_F(TestDB, test_create_instance) {
     range::db::BerkeleyDB db { cfg };
+    db.register_thread();
     auto instance = db.createGraphInstance("Foobar");
 
     EXPECT_EQ(1, db.listGraphInstances().size());
     ASSERT_THAT(db.listGraphInstances(), ElementsAre("Foobar"));
+    db.shutdown();
 }
 
 
@@ -134,7 +130,7 @@ class TestGraphDB : public ::testing::Test {
             std::string dbpath { p };
             path = dbpath;
 
-            EXPECT_CALL(TestGraphDB::cfg, db_home())
+            EXPECT_CALL(cfg, db_home())
                 .Times(AtLeast(0))
                 .WillRepeatedly(ReturnRef(dbpath));
 
@@ -144,13 +140,12 @@ class TestGraphDB : public ::testing::Test {
 
             backendp = boost::make_shared<range::db::BerkeleyDB>(cfg);
             instance = backendp->createGraphInstance("primary");
-            auto inst = boost::dynamic_pointer_cast<range::db::BerkeleyDBGraph>(instance);
-            transaction_table_p = &inst->transaction_table;
-            lock_table_p = &backendp->lock_table;
+            auto inst = boost::dynamic_pointer_cast<range::db::BerkeleyDBCXXDb>(instance);
         }
 
         virtual void TearDown() override {
-           DIR* d = opendir(path.c_str());
+            backendp->shutdown();
+            DIR* d = opendir(path.c_str());
 
             struct dirent * dentry;
 
@@ -163,8 +158,6 @@ class TestGraphDB : public ::testing::Test {
             backendp = nullptr;
         }
 
-        std::unordered_map<std::thread::id, boost::weak_ptr<range::db::BerkeleyDBLock>> * lock_table_p;
-        std::unordered_map<std::thread::id, boost::weak_ptr<range::db::BerkeleyDBTxn>> * transaction_table_p;
         
         range::db::BerkeleyDB::graph_instance_t instance; 
         boost::shared_ptr<range::db::BerkeleyDB> backendp;
@@ -183,77 +176,6 @@ TEST_F(TestGraphDB, test_get_instance) {
 
 //##############################################################################
 //##############################################################################
-TEST_F(TestGraphDB, test_txn_cleanup) {
-    { 
-        auto txn = instance->start_txn();
-        ASSERT_NE(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
-        auto txn2 = instance->start_txn();
-        EXPECT_EQ(txn, txn2);
-        EXPECT_EQ(txn.get(), txn2.get());
-    }
-    ASSERT_EQ(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
-    { 
-        auto txn3 = instance->start_txn();
-        ASSERT_NE(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
-    }
-    ASSERT_EQ(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
-}
-
-//##############################################################################
-//##############################################################################
-TEST_F(TestGraphDB, test_txn_abort) {
-    try { 
-        auto txn = instance->start_txn();
-        ASSERT_NE(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
-        auto txn2 = instance->start_txn();
-        EXPECT_EQ(txn, txn2);
-        EXPECT_EQ(txn.get(), txn2.get());
-        ASSERT_NE(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
-        throw range::Exception("Hello world!");
-    } catch(range::Exception& e) { /* pass */ }
-    ASSERT_EQ(transaction_table_p->find(std::this_thread::get_id()), transaction_table_p->end());
-}
-
-
-//##############################################################################
-//##############################################################################
-TEST_F(TestGraphDB, test_read_lock_cleanup) {
-    {
-        auto lock = instance->read_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
-        ASSERT_NE(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
-        auto lock2 = instance->read_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
-        EXPECT_EQ(lock, lock2);
-        EXPECT_EQ(lock.get(), lock2.get());
-    }
-    ASSERT_EQ(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
-    {
-        auto lock = instance->read_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
-        ASSERT_NE(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
-    }
-    ASSERT_EQ(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
-}
-
-//##############################################################################
-//##############################################################################
-TEST_F(TestGraphDB, test_write_lock_cleanup) {
-    {
-        auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
-        ASSERT_NE(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
-        auto lock2 = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
-        EXPECT_EQ(lock, lock2);
-        EXPECT_EQ(lock.get(), lock2.get());
-    }
-    ASSERT_EQ(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
-    {
-        auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
-        ASSERT_NE(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
-    }
-    ASSERT_EQ(lock_table_p->find(std::this_thread::get_id()), lock_table_p->end());
-}
-
-
-//##############################################################################
-//##############################################################################
 TEST_F(TestGraphDB, test_writelock_before_readlock) {
     auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
     auto lock2 = instance->read_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
@@ -266,7 +188,9 @@ TEST_F(TestGraphDB, test_writelock_before_readlock) {
 //##############################################################################
 TEST_F(TestGraphDB, test_readlock_before_writelock) {
     auto lock = instance->read_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
-    ASSERT_THROW(instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar"), range::db::DatabaseLockingException);
+    ASSERT_TRUE(lock->readonly());
+    instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+    ASSERT_FALSE(lock->readonly());
 }
 
 //##############################################################################
@@ -509,7 +433,7 @@ TEST_F(TestDBCursor, test_next) {
     auto c = instance->get_cursor();
     std::map<std::string, bool> found;
 
-    range::db::BerkeleyDBCursor::node_t node;
+    range::db::BerkeleyDBCXXCursor::node_t node;
 
     while( (node = c->next()) != nullptr ) {
         found[node->name()] = true;
@@ -527,7 +451,7 @@ TEST_F(TestDBCursor, test_prev) {
     auto c = instance->get_cursor();
     std::map<std::string, bool> found;
 
-    range::db::BerkeleyDBCursor::node_t node;
+    range::db::BerkeleyDBCXXCursor::node_t node;
 
     while( (node = c->prev()) != nullptr ) {
         found[node->name()] = true;
@@ -667,7 +591,5 @@ main(int argc, char **argv)
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     ::testing::InitGoogleTest(&argc, argv);
     int rval = RUN_ALL_TESTS();
-    range::db::BerkeleyDB::s_shutdown();
-    range::cleanup_logger();
     return rval;
 }

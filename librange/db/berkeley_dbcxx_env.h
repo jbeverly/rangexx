@@ -18,29 +18,55 @@
 #define _RANGEXX_DB_BERKELEY_DBCXX_ENV_H
 
 #include <thread>
+#include <unordered_map>
 #include <mutex>
 #include <db_cxx.h>
 #include <boost/make_shared.hpp>
 
 #include "config_interface.h"
 #include "db_exceptions.h"
+#include "berkeley_dbcxx_lock.h"
 
 namespace range { namespace db {
 
+//##############################################################################
+//##############################################################################
 class BerkeleyDBCXXEnv {
     public:
-        boost::shared_ptr<BerkeleyDBCXXEnv> get(const db::ConfigIface &db_config);
+        static boost::shared_ptr<BerkeleyDBCXXEnv> get(const db::ConfigIface &db_config);
+
+        static int is_alive(DbEnv *dbenv, pid_t pid, db_threadid_t tid, u_int32_t flags);
+        static void get_thread_id(DbEnv *dbenv, pid_t * pid, db_threadid_t * tid);
+        static std::string get_lockfile(DbEnv * dbenv, pid_t pid, db_threadid_t tid);
+        static bool get_lock(const std::string &lockfile,
+                std::unordered_map<std::string, int> * registered_threads);
+        static void shutdown();
+
         ~BerkeleyDBCXXEnv() noexcept;
+        void register_thread();
+        void cleanup_thread();
+        void cleanup_thread(const std::string &lockfile);
+
+        boost::shared_ptr<BerkeleyDBCXXLock> acquire_DbTxn_lock(bool readwrite=false);
+        
+        //######################################################################
+        //######################################################################
+        DbEnv * getEnv() { return &env_; }
         
     private:
+        static std::string get_dbhome(DbEnv *dbenv);
+
         BerkeleyDBCXXEnv(const db::ConfigIface &db_config);
+
+        std::unordered_map<std::string, int> registered_threads_;
+        std::mutex thread_registration_lock_;
         DbEnv env_;
         bool open_;
-        std::mutex env_lock_;
 
-        static const uint32_t env_open_flags_ = DB_REGISTER | DB_THREAD | DB_FAILCHK | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_TXN | DB_RECOVER | DB_INIT_MPOOL;
+        static const uint32_t env_open_flags_ = DB_CREATE | DB_REGISTER | DB_THREAD | DB_FAILCHK | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_TXN | DB_RECOVER | DB_INIT_MPOOL;
         static std::mutex inst_lock_;
         static boost::shared_ptr<BerkeleyDBCXXEnv> inst_;
+        thread_local static boost::weak_ptr<BerkeleyDBCXXLock> current_lock_;
 
 };
 

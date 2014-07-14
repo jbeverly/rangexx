@@ -18,10 +18,38 @@
 #define _RANGE_DB_BERKELEY_DBCXX_TXN
 
 #include "db_interface.h"
+#include "berkeley_db_types.h"
+
+#include "../core/log.h"
+
+#include "changelist.pb.h"
 
 namespace range { namespace db {
+class BerkeleyDBCXXDb;
 
+//##############################################################################
+//##############################################################################
 class BerkeleyDBCXXTxn : public GraphTransaction {
+    public:
+        typedef GraphInstanceInterface::change_t change_t;
+        typedef GraphInstanceInterface::changelist_t changelist_t;
+
+        BerkeleyDBCXXTxn(boost::shared_ptr<BerkeleyDBCXXDb> db);
+        virtual ~BerkeleyDBCXXTxn() noexcept override;
+
+        virtual void abort(void) override;
+        virtual void commit(void) override;
+        virtual void flush(void) override;
+
+        size_t pending() const;
+        bool add_change(change_t);
+        bool get_record(record_type type, const std::string &key, std::string &value) const;
+    private:
+        bool add_graph_changelist(ChangeList &changes);
+
+        std::unordered_map<std::string, change_t> pending_changes_;
+        boost::shared_ptr<BerkeleyDBCXXDb> db_;
+        range::Emitter log;
 };
 
 } /* namespace db */ } /* namespace range */

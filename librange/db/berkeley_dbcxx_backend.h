@@ -17,9 +17,13 @@
 #ifndef _RANGEXX_DB_BERKELEY_DBCPP_BACKEND_H
 #define _RANGEXX_DB_BERKELEY_DBCPP_BACKEND_H
 
+#include <unordered_set>
+
 #include "db_interface.h"
 #include "config_interface.h"
-#include "berkeley_dbcpp_env.h"
+#include "berkeley_dbcxx_env.h"
+#include "berkeley_dbcxx_db.h"
+#include "../core/log.h"
 
 namespace range { namespace db {
 
@@ -37,7 +41,13 @@ class BerkeleyDB : public BackendInterface {
         virtual uint64_t get_graph_wanted_version(const std::string &graph_name) const override;
         virtual void shutdown() override;
     private:
-        boost::shared_ptr<BerkeleyDBCPPEnv> env_;
+        const db::ConfigIface db_config_;
+        boost::shared_ptr<BerkeleyDBCXXEnv> env_;
+        boost::shared_ptr<BerkeleyDBCXXDb> info_;
+        range::Emitter log;
+        mutable std::unordered_set<std::string> graph_instances_;
+        std::unordered_map<std::string, uint64_t> graph_wanted_version_map_;
+
 
 };
 

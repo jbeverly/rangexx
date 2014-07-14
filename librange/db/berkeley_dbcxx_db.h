@@ -14,26 +14,33 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGEXX_DB_BERKELEY_DBCPP_DB_H
-#define _RANGEXX_DB_BERKELEY_DBCPP_DB_H
+#ifndef _RANGEXX_DB_BERKELEY_DBCXX_DB_H
+#define _RANGEXX_DB_BERKELEY_DBCXX_DB_H
 
 #include <unordered_map>
 
 #include <boost/weak_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #include <db_cxx.h>
 
+#include "../core/log.h"
+
 #include "db_interface.h"
 #include "config_interface.h"
+#include "changelist.pb.h"
 
+#include "berkeley_dbcxx_env.h"
 #include "berkeley_dbcxx_txn.h"
 #include "berkeley_dbcxx_lock.h"
 
 namespace range { namespace db {
 
-class BerkeleyDBCXXDb : public GraphInstanceInterface {
+class BerkeleyDBCXXDb : public GraphInstanceInterface, public boost::enable_shared_from_this<BerkeleyDBCXXDb> {
     public:
         static boost::shared_ptr<BerkeleyDBCXXDb> get(const std::string &name, const db::ConfigIface &db_config);
+        static boost::shared_ptr<BerkeleyDBCXXDb> get(const std::string &name, const db::ConfigIface &db_config, boost::shared_ptr<BerkeleyDBCXXEnv> env);
+        static void close_all_db() { multiton_map_.clear(); };
 
         virtual size_t n_vertices() const override;
         virtual size_t n_edges() const override;
@@ -49,17 +56,29 @@ class BerkeleyDBCXXDb : public GraphInstanceInterface {
         virtual history_list_t get_change_history() const override;
 
         virtual ~BerkeleyDBCXXDb() noexcept override;
+
+        bool commit_record(change_t);
+        ChangeList read_changelist() const;
+
+        static std::string key_prefix(record_type type);
+        static std::string key_name(record_type type, const std::string &name);
+        static record_type get_type_from_keyname(const std::string &fullkey);
+        static std::string unprefix(const std::string &fullkey);
     private:
-        BerkeleyDBCXXDb(const std::string &name, const db::ConfigIface &db_config);
+        BerkeleyDBCXXDb(const std::string &name, const db::ConfigIface &db_config, boost::shared_ptr<BerkeleyDBCXXEnv> env);
+
         thread_local static std::unordered_map<std::string, boost::shared_ptr<BerkeleyDBCXXDb>> multiton_map_;
 
         // because instances of this db RAII class are thread-local (because they are created in this thread
-        // if not found in the thread_local multiton map), any lock, txn, or db instance is held by this
+        // if not found in the thread_local multiton map), any txn or db instance is held by this
         // thread; so we don't need to coordinate these.
         boost::weak_ptr<BerkeleyDBCXXTxn> current_txn_;
-        boost::weak_ptr<BerkeleyDBCXXLock> current_lock_;
 
-        std::unique_ptr<Db> inst_;
+        boost::shared_ptr<Db> inst_;
+        std::string name_;
+        boost::shared_ptr<BerkeleyDBCXXEnv> env_;
+        const db::ConfigIface db_config_;
+        range::Emitter log;
 };
 
 } /* namespace db */ } /* namespace range */

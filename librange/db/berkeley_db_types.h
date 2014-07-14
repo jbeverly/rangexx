@@ -25,15 +25,11 @@
 #include <boost/weak_ptr.hpp>
 
 #include <db_cxx.h>
-#include <dbstl_common.h>
-#include <dbstl_map.h>
-
 #include "db_interface.h"
 
 namespace range {
 namespace db {
 
-typedef dbstl::db_map<std::string, std::string> map_t;
 typedef db::GraphInstanceInterface::record_type record_type;
 typedef db::GraphInstanceInterface::change_t change_t;
 typedef db::GraphInstanceInterface::changelist_t changelist_t;
