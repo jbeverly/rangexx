@@ -27,6 +27,7 @@
 #include "db_exceptions.h"
 #include "berkeley_dbcxx_lock.h"
 #include "../core/log.h"
+#include "../util/fdraii.h"
 
 namespace range { namespace db {
 
@@ -41,7 +42,7 @@ class BerkeleyDBCXXEnv {
 
         static std::string get_lockfile(const DbEnv * dbenv, pid_t pid, db_threadid_t tid);
         static bool get_lock(const std::string &lockfile,
-                std::unordered_map<std::string, int> * registered_threads);
+                range::util::FdRAII *registration_fd);
         static void shutdown();
 
         ~BerkeleyDBCXXEnv() noexcept;
@@ -61,15 +62,19 @@ class BerkeleyDBCXXEnv {
 
         BerkeleyDBCXXEnv(const boost::shared_ptr<db::ConfigIface> db_config);
 
-        std::unordered_map<std::string, int> registered_threads_;
         std::mutex thread_registration_lock_;
         DbEnv env_;
         range::Emitter log;
 
-        static const uint32_t env_open_flags_ = DB_CREATE | DB_REGISTER | DB_THREAD | DB_FAILCHK | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_TXN | DB_RECOVER | DB_INIT_MPOOL;
+        static const uint32_t env_open_flags_ = DB_CREATE | DB_REGISTER
+            | DB_THREAD | DB_FAILCHK | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_TXN
+            | DB_RECOVER | DB_INIT_MPOOL;
+
         static std::mutex inst_lock_;
         static boost::shared_ptr<BerkeleyDBCXXEnv> inst_;
         thread_local static boost::weak_ptr<BerkeleyDBCXXLock> current_lock_;
+        static range::util::FdRAII process_registration_fd_;
+        thread_local static range::util::FdRAII thread_registration_fd_;
 
 };
 

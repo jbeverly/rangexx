@@ -19,13 +19,50 @@
 
 namespace range { namespace db {
 
+boost::shared_ptr<BerkeleyDB> BerkeleyDB::inst_;
+std::mutex BerkeleyDB::inst_lock_;
+thread_local boost::shared_ptr<BerkeleyDBCXXDb> BerkeleyDB::info_;              // All BerkeleyDBCXXDb instances expect to be thread-local; we must not break that
+                                                                                // promise.
+
+
+//##############################################################################
+//##############################################################################
+boost::shared_ptr<BerkeleyDB>
+BerkeleyDB::get(const boost::shared_ptr<db::ConfigIface> db_config)
+{
+    std::lock_guard<std::mutex> guard { inst_lock_ };
+    if(!inst_) {
+        inst_ = boost::shared_ptr<BerkeleyDB>(new BerkeleyDB(db_config));
+    }
+    return inst_;
+}
+
 //##############################################################################
 //##############################################################################
 BerkeleyDB::BerkeleyDB(const boost::shared_ptr<db::ConfigIface> db_config)
-    : db_config_(db_config), env_(BerkeleyDBCXXEnv::get(db_config_)), 
-        info_(BerkeleyDBCXXDb::get("graph_info", db_config_, env_)), 
+    :   db_config_(db_config),
+        env_(BerkeleyDBCXXEnv::get(db_config_)), 
         log("BerkeleyDB")
 {
+}
+
+//##############################################################################
+//##############################################################################
+BerkeleyDB::~BerkeleyDB() noexcept
+{
+}
+
+//##############################################################################
+//##############################################################################
+inline void
+BerkeleyDB::init_info() const
+{
+    auto mutable_self = boost::const_pointer_cast<BerkeleyDB>(
+            shared_from_this());
+
+    if(!info_) {
+        info_ = BerkeleyDBCXXDb::get("graph_info", mutable_self, db_config_, env_);
+    }
 }
 
 //##############################################################################
@@ -33,12 +70,13 @@ BerkeleyDB::BerkeleyDB(const boost::shared_ptr<db::ConfigIface> db_config)
 BerkeleyDB::graph_instance_t
 BerkeleyDB::getGraphInstance(const std::string& name)
 {
+    RANGE_LOG_TIMED_FUNCTION();
     this->listGraphInstances();
     auto it = graph_instances_.find(name);
     if(it == graph_instances_.end()) {
         return nullptr;
     }
-    return BerkeleyDBCXXDb::get(name, db_config_, env_);
+    return BerkeleyDBCXXDb::get(name, shared_from_this(), db_config_, env_);
 }
 
 //##############################################################################
@@ -46,6 +84,8 @@ BerkeleyDB::getGraphInstance(const std::string& name)
 BerkeleyDB::graph_instance_t
 BerkeleyDB::createGraphInstance(const std::string& name)
 {
+    RANGE_LOG_TIMED_FUNCTION();
+    this->init_info();
     info_->write_lock(record_type::GRAPH_META, "graph_list");
 
     this->listGraphInstances();
@@ -71,6 +111,8 @@ BerkeleyDB::createGraphInstance(const std::string& name)
 std::vector<std::string>
 BerkeleyDB::listGraphInstances() const
 {
+    RANGE_LOG_TIMED_FUNCTION();
+    this->init_info();
     info_->read_lock(record_type::GRAPH_META, "graph_list");
     std::string buf = info_->get_record(record_type::GRAPH_META, "graph_list");
     GraphList listbuf;
@@ -91,6 +133,8 @@ BerkeleyDB::listGraphInstances() const
 uint64_t
 BerkeleyDB::range_version() const
 {
+    RANGE_LOG_FUNCTION();
+    this->init_info();
     std::string buf = info_->get_record(record_type::GRAPH_META,
             "range_changelist");
     if(!buf.empty()) {
@@ -105,6 +149,9 @@ BerkeleyDB::range_version() const
 //##############################################################################
 void
 BerkeleyDB::set_wanted_version(uint64_t version) {
+    RANGE_LOG_FUNCTION();
+    this->init_info();
+
     std::string buf = info_->get_record(record_type::GRAPH_META,
             "range_changelist");
     ChangeList changes;
@@ -126,6 +173,8 @@ BerkeleyDB::set_wanted_version(uint64_t version) {
 BerkeleyDB::range_changelist_t
 BerkeleyDB::get_changelist()
 {
+    RANGE_LOG_FUNCTION();
+    this->init_info();
     std::string buf = info_->get_record(record_type::GRAPH_META,
             "range_changelist");
 
@@ -167,6 +216,46 @@ BerkeleyDB::get_graph_wanted_version(const std::string &graph_name) const
 //##############################################################################
 //##############################################################################
 void
+BerkeleyDB::add_new_range_version()
+{
+    RANGE_LOG_FUNCTION();
+    this->init_info();
+    auto lock = info_->write_lock(record_type::GRAPH_META, "graph_list");
+
+    std::string buf = info_->get_record(record_type::GRAPH_META,
+            "range_changelist");
+    ChangeList changes;
+    if(!buf.empty()) {
+        changes.ParseFromString(buf);
+    }
+
+    std::unordered_map<std::string, uint64_t> vermap;
+    for (auto &gname : listGraphInstances()) {
+        auto ginst = getGraphInstance(gname);
+        vermap[gname] = ginst->version();
+    }
+
+    ChangeList_Change *c = changes.add_change();
+
+    for(auto &verinfo : vermap) {
+        auto item = c->add_items();
+        item->set_key(verinfo.first);
+        item->set_version(verinfo.second);
+    }
+
+    struct timeval cur_time;
+    gettimeofday(&cur_time, NULL);
+
+    auto ts = c->mutable_timestamp();
+    ts->set_seconds(cur_time.tv_sec);
+    ts->set_msec(cur_time.tv_usec / 1000);
+
+    changes.set_current_version(changes.current_version() + 1);
+}
+
+//##############################################################################
+//##############################################################################
+void
 BerkeleyDB::register_thread() const
 {
     env_->register_thread();
@@ -177,7 +266,9 @@ BerkeleyDB::register_thread() const
 void
 BerkeleyDB::shutdown()
 {
+    info_.reset();
     env_->shutdown();
+    inst_.reset();
 }
 
 //##############################################################################

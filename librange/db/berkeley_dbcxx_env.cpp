@@ -21,11 +21,14 @@
 #include "berkeley_dbcxx_env.h"
 #include "berkeley_dbcxx_db.h"
 
+
 namespace range { namespace db {
 
 std::mutex BerkeleyDBCXXEnv::inst_lock_;
 boost::shared_ptr<BerkeleyDBCXXEnv> BerkeleyDBCXXEnv::inst_;
 thread_local boost::weak_ptr<BerkeleyDBCXXLock> BerkeleyDBCXXEnv::current_lock_;
+range::util::FdRAII BerkeleyDBCXXEnv::process_registration_fd_;
+thread_local range::util::FdRAII BerkeleyDBCXXEnv::thread_registration_fd_;
 
 //##############################################################################
 //##############################################################################
@@ -188,6 +191,7 @@ BerkeleyDBCXXEnv::BerkeleyDBCXXEnv(const boost::shared_ptr<db::ConfigIface> db_c
 BerkeleyDBCXXEnv::~BerkeleyDBCXXEnv() noexcept
 {
     try {
+        range::Emitter log { "BerkeleyDBCXXEnv.dtor" };
         RANGE_LOG_FUNCTION();
     } catch(...) {}
     try {
@@ -201,11 +205,6 @@ BerkeleyDBCXXEnv::~BerkeleyDBCXXEnv() noexcept
             LOG(error, "env_shutdown_error") << rval;
         }
     } catch(...) { }
-    try {
-        for (auto t : this->registered_threads_) {
-            this->cleanup_thread(t.first);
-        }
-    } catch(...) { }
 }
 
 
@@ -217,30 +216,27 @@ BerkeleyDBCXXEnv::register_thread()
     RANGE_LOG_FUNCTION();
     std::lock_guard<std::mutex> guard { thread_registration_lock_ };
 
+    if(thread_registration_fd_) { return; }
     std::string lockfile = this->get_lockfile(&env_, getpid(), pthread_self());
-    if(registered_threads_.find(lockfile) == registered_threads_.end()) {
-        return;
-    }
-    this->get_lock(lockfile, &registered_threads_);
+    this->get_lock(lockfile, &thread_registration_fd_);
 
     // Process lock
+    if(process_registration_fd_) { return; }
     lockfile = this->get_lockfile(&env_, getpid(), 0);
-    if(registered_threads_.find(lockfile) == registered_threads_.end()) {
-        return;
-    }
-    this->get_lock(lockfile, &registered_threads_);
+    this->get_lock(lockfile, &process_registration_fd_);
 }
 
 //##############################################################################
 //##############################################################################
-bool
+bool 
 BerkeleyDBCXXEnv::get_lock(const std::string &lockfile,
-        std::unordered_map<std::string, int> * registered_threads)
+        range::util::FdRAII *registration_fd)
 {
     range::Emitter log { "BerkeleyDBCXXEnv" };
     RANGE_LOG_FUNCTION();
-    int fd = open(lockfile.c_str(), O_CREAT | O_RDWR);
-    if(fd >= 0) {
+    range::util::FdRAII fd { lockfile, O_CREAT | O_RDWR };
+
+    if(fd) {
         struct flock fl = {
             F_WRLCK,        ///< l_type
             SEEK_SET,       ///< l_whence
@@ -251,8 +247,8 @@ BerkeleyDBCXXEnv::get_lock(const std::string &lockfile,
 
         if(fcntl(fd, F_SETLK, &fl) < 0) { return false; }                             // Already locked
 
-        if(registered_threads) {
-            (*registered_threads)[lockfile] = fd;
+        if(registration_fd) {
+            (*registration_fd) = fd;
         }
         return true;
     }
@@ -277,6 +273,8 @@ void
 BerkeleyDBCXXEnv::cleanup_thread(const std::string &lockfile)
 {
     RANGE_LOG_FUNCTION();
+    unlink(lockfile.c_str());
+    /*
     struct flock fl = {
         F_UNLCK,        ///< l_type
         SEEK_SET,       ///< l_whence
@@ -284,13 +282,15 @@ BerkeleyDBCXXEnv::cleanup_thread(const std::string &lockfile)
         0,              ///< l_len
         getpid()        ///< l_pid
     };
+    */
 
+    /*
     auto it = this->registered_threads_.find(lockfile);
-    if(it != this->registered_threads_.end()) {
-        fcntl(it->second, F_SETLK, &fl);
-        close(it->second);
-        unlink(it->first.c_str());
-    }
+    if(it != this->registered_threads_.end() && it->second.lock()) {
+        fcntl(*it->second.lock(), F_SETLK, &fl);
+        registered_threads_.erase(it);
+    } 
+    */
 }
 
 //##############################################################################
@@ -345,7 +345,6 @@ int
 BerkeleyDBCXXEnv::is_alive(DbEnv *dbenv, pid_t pid, db_threadid_t tid, u_int32_t flags)
 {
     std::string lockfile;
-    std::unordered_map<std::string, int> lockmap;
     if( (flags & DB_MUTEX_PROCESS_ONLY) != 0) {
         if(pid == getpid()) { return 1; }
         lockfile = get_lockfile(dbenv, pid, 0);
@@ -355,12 +354,11 @@ BerkeleyDBCXXEnv::is_alive(DbEnv *dbenv, pid_t pid, db_threadid_t tid, u_int32_t
         lockfile = get_lockfile(dbenv, pid, tid);
     }
     int rval;
-    if(get_lock(lockfile, &lockmap)) {
+    if(get_lock(lockfile, nullptr)) {
         rval = 0;                                                               // nobody else is holding the lock, they have died
     } else {
         rval = 1;                                                               // unable to acquire the lock; they are alive
     }
-    close(lockmap.find(lockfile)->second);                                      // don't leak FD's 
     return rval;
 }
 

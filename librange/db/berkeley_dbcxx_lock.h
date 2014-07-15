@@ -47,6 +47,7 @@ class BerkeleyDBCXXLock : public GraphInstanceLock {
 //##############################################################################
 class BerkeleyDBCXXLockTxnGetter {
     friend class BerkeleyDBCXXDb;
+    friend class BerkeleyDBCXXCursor;
     
     explicit BerkeleyDBCXXLockTxnGetter(boost::shared_ptr<BerkeleyDBCXXLock> lock) 
         : lck_(lock)

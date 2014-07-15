@@ -26,12 +26,16 @@ namespace range { namespace db {
 //##############################################################################
 //##############################################################################
 BerkeleyDBCXXCursor::BerkeleyDBCXXCursor(
-        boost::shared_ptr<GraphInstanceInterface> inst, boost::shared_ptr<Db> db, DbTxn * txn)
-    : inst_(inst), db_(db), txn_(txn), log("BerkeleyDBCXXCursor")
+        boost::shared_ptr<GraphInstanceInterface> inst,
+        boost::shared_ptr<Db> db,
+        boost::shared_ptr<BerkeleyDBCXXLock> lock
+        )
+    : inst_(inst), db_(db), lock_(lock), 
+        txn_(BerkeleyDBCXXLockTxnGetter(lock).txn()), log("BerkeleyDBCXXCursor")
 {
     int rval = 0;
     try {
-        rval = db_->cursor(txn, &cur_, DB_TXN_SNAPSHOT);
+        rval = db_->cursor(txn_, &cur_, DB_TXN_SNAPSHOT);
     }
     catch(DbException &e) {
         THROW_STACK(CursorException(e.what()));
@@ -144,9 +148,11 @@ BerkeleyDBCXXCursor::next() const
 {
     std::string key;
     std::string data;
-    if(this->fetch_from_dbc("", DB_NEXT, key, data)) {
-        auto n = boost::make_shared<ProtobufNode>(key, inst_);
-        return n;
+    while(this->fetch_from_dbc("", DB_NEXT, key, data)) {
+        if(BerkeleyDBCXXDb::get_type_from_keyname(key) == record_type::NODE) {
+            auto n = boost::make_shared<ProtobufNode>(BerkeleyDBCXXDb::unprefix(key), inst_);
+            return n;
+        }
     }
     return nullptr;
 }
@@ -167,9 +173,11 @@ BerkeleyDBCXXCursor::prev() const
 {
     std::string key;
     std::string data;
-    if(this->fetch_from_dbc("", DB_PREV, key, data)) {
-        auto n = boost::make_shared<ProtobufNode>(key, inst_);
-        return n;
+    while(this->fetch_from_dbc("", DB_PREV, key, data)) {
+        if(BerkeleyDBCXXDb::get_type_from_keyname(key) == record_type::NODE) {
+            auto n = boost::make_shared<ProtobufNode>(BerkeleyDBCXXDb::unprefix(key), inst_);
+            return n;
+        }
     }
     return nullptr;
 }
@@ -191,8 +199,12 @@ BerkeleyDBCXXCursor::first() const
     std::string key;
     std::string data;
     if(this->fetch_from_dbc("", DB_FIRST, key, data)) {
-        auto n = boost::make_shared<ProtobufNode>(key, inst_);
-        return n;
+        if(BerkeleyDBCXXDb::get_type_from_keyname(key) == record_type::NODE) {
+            auto n = boost::make_shared<ProtobufNode>(BerkeleyDBCXXDb::unprefix(key), inst_);
+            return n;
+        } else {
+            return this->next();
+        }
     }
     return nullptr;
 }
@@ -205,8 +217,12 @@ BerkeleyDBCXXCursor::last() const
     std::string key;
     std::string data;
     if(this->fetch_from_dbc("", DB_LAST, key, data)) {
-        auto n = boost::make_shared<ProtobufNode>(key, inst_);
-        return n;
+        if(BerkeleyDBCXXDb::get_type_from_keyname(key) == record_type::NODE) {
+            auto n = boost::make_shared<ProtobufNode>(BerkeleyDBCXXDb::unprefix(key), inst_);
+            return n;
+        } else {
+            return this->prev();
+        }
     }
     return nullptr;
 }

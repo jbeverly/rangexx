@@ -19,6 +19,8 @@
 
 #include <unordered_set>
 
+#include <boost/enable_shared_from_this.hpp>
+
 #include "db_interface.h"
 #include "config_interface.h"
 #include "berkeley_dbcxx_env.h"
@@ -27,9 +29,14 @@
 
 namespace range { namespace db {
 
-class BerkeleyDB : public BackendInterface {
+//##############################################################################
+//##############################################################################
+class BerkeleyDB : public BackendInterface,
+   public boost::enable_shared_from_this<BerkeleyDB> 
+{
     public:
-        BerkeleyDB(const boost::shared_ptr<db::ConfigIface> db_config);
+        static boost::shared_ptr<BerkeleyDB> get(const boost::shared_ptr<db::ConfigIface> db_config);
+        virtual ~BerkeleyDB() noexcept override;
 
         virtual graph_instance_t getGraphInstance(const std::string& name) override;
         virtual graph_instance_t createGraphInstance(const std::string& name) override;
@@ -41,10 +48,18 @@ class BerkeleyDB : public BackendInterface {
         virtual uint64_t get_graph_wanted_version(const std::string &graph_name) const override;
         virtual void shutdown() override;
         std::string dbhome() const;
+        void add_new_range_version();
     private:
+        BerkeleyDB(const boost::shared_ptr<db::ConfigIface> db_config);
+        inline void init_info() const;
+
+        static boost::shared_ptr<BerkeleyDB> inst_;
+        static std::mutex inst_lock_;
+
+        thread_local static boost::shared_ptr<BerkeleyDBCXXDb> info_;
+
         const boost::shared_ptr<db::ConfigIface> db_config_;
         boost::shared_ptr<BerkeleyDBCXXEnv> env_;
-        boost::shared_ptr<BerkeleyDBCXXDb> info_;
         range::Emitter log;
         mutable std::unordered_set<std::string> graph_instances_;
         std::unordered_map<std::string, uint64_t> graph_wanted_version_map_;

@@ -95,7 +95,7 @@ class StatsD {
         //######################################################################
         /// StatsD is a singleton, call get() for the global instance
         /// @return the global singleton instance
-        static inline const StatsD& get();
+        static inline const std::shared_ptr<StatsD> get();
         
         //######################################################################
         /// emit a timing event
@@ -128,7 +128,7 @@ class StatsD {
         mutable boost::shared_ptr<boost::asio::ip::udp::socket> sock_;
         mutable std::mutex sock_lock_;
         static std::mutex getter_lock_;
-        static std::unique_ptr<StatsD> inst_;
+        static std::shared_ptr<StatsD> inst_;
         static std::string hostname_;
         static std::string port_;
 
@@ -312,6 +312,7 @@ class Emitter {
         std::string module_;
         mutable logger_mt log;
         static logseverity loglevel_;
+        std::shared_ptr<StatsD> statsd_;
 };
 
 

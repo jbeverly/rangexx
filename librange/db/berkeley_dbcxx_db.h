@@ -35,7 +35,7 @@
 #include "berkeley_dbcxx_lock.h"
 
 namespace range { namespace db {
-
+class BerkeleyDB;
 //##############################################################################
 //##############################################################################
 class BerkeleyDBCXXDb : public GraphInstanceInterface,
@@ -43,8 +43,10 @@ class BerkeleyDBCXXDb : public GraphInstanceInterface,
 {
     public:
         static boost::shared_ptr<BerkeleyDBCXXDb> get(const std::string &name,
+                boost::shared_ptr<BerkeleyDB> backend,
                 const boost::shared_ptr<db::ConfigIface> db_config);
         static boost::shared_ptr<BerkeleyDBCXXDb> get(const std::string &name,
+                boost::shared_ptr<BerkeleyDB> backend,
                 const boost::shared_ptr<db::ConfigIface> db_config,
                 boost::shared_ptr<BerkeleyDBCXXEnv> env);
         static void close_all_db() { multiton_map_.clear(); };
@@ -72,9 +74,13 @@ class BerkeleyDBCXXDb : public GraphInstanceInterface,
         static record_type get_type_from_keyname(const std::string &fullkey);
         static std::string unprefix(const std::string &fullkey);
     private:
-        BerkeleyDBCXXDb(const std::string &name, const boost::shared_ptr<db::ConfigIface> db_config, boost::shared_ptr<BerkeleyDBCXXEnv> env);
+        BerkeleyDBCXXDb(const std::string &name,
+                boost::shared_ptr<BerkeleyDB> backend, 
+                const boost::shared_ptr<db::ConfigIface> db_config,
+                boost::shared_ptr<BerkeleyDBCXXEnv> env);
 
         thread_local static std::unordered_map<std::string, boost::shared_ptr<BerkeleyDBCXXDb>> multiton_map_;
+        thread_local static bool thread_registered_;
 
         // because instances of this db RAII class are thread-local (because they are created in this thread
         // if not found in the thread_local multiton map), any txn or db instance is held by this
@@ -83,6 +89,7 @@ class BerkeleyDBCXXDb : public GraphInstanceInterface,
 
         boost::shared_ptr<Db> inst_;
         std::string name_;
+        boost::shared_ptr<BerkeleyDB> backend_;
         boost::shared_ptr<BerkeleyDBCXXEnv> env_;
         const boost::shared_ptr<db::ConfigIface> db_config_;
         range::Emitter log;

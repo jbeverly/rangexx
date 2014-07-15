@@ -20,7 +20,7 @@
 namespace range {
 
 std::mutex StatsD::getter_lock_;
-std::unique_ptr<StatsD> StatsD::inst_;
+std::shared_ptr<StatsD> StatsD::inst_;
 std::string StatsD::hostname_;
 std::string StatsD::port_;
 
@@ -41,14 +41,14 @@ StatsD::initialize(std::string hostname, std::string port)
 
 //##############################################################################
 //##############################################################################
-const StatsD& 
+const std::shared_ptr<StatsD> 
 StatsD::get()
 {
     std::lock_guard<std::mutex> lock {getter_lock_};
     if(!inst_) {
-        inst_ = std::unique_ptr<StatsD>(new StatsD(hostname_, port_));
+        inst_ = std::shared_ptr<StatsD>(new StatsD(hostname_, port_));
     }
-    return *inst_;
+    return inst_;
 }
 
 //##############################################################################
@@ -178,7 +178,8 @@ Emitter::Timer::~Timer()
 
 Emitter::Emitter(std::string module)
     : sevstr_("unknown"), module_(module),
-        log(boost::log::keywords::channel = module)
+        log(boost::log::keywords::channel = module),
+        statsd_(StatsD::get())
 {
     log.add_attribute("SevString", sevstr_); 
 }
@@ -366,7 +367,7 @@ void
 Emitter::timetaken(std::string event, double ms) const
 {
     normalize_event(event);
-    StatsD::get().ms("rangexx." + module_ + '.' + event, ms);
+    statsd_->ms("rangexx." + module_ + '.' + event, ms);
 }
 
 //######################################################################
@@ -375,7 +376,7 @@ void
 Emitter::gauge(std::string event, double n) const
 {
     normalize_event(event);
-    StatsD::get().gauge("rangexx." + module_ + '.' + event, n);
+    statsd_->gauge("rangexx." + module_ + '.' + event, n);
 }
 
 //######################################################################
@@ -384,7 +385,7 @@ void
 Emitter::count(std::string event, uint64_t n) const
 {
     normalize_event(event);
-    StatsD::get().count("rangexx." + module_ + '.' + event, n);
+    statsd_->count("rangexx." + module_ + '.' + event, n);
 }
 
 //######################################################################

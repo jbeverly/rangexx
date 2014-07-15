@@ -25,20 +25,23 @@
 namespace range { namespace db {
 
 thread_local std::unordered_map<std::string, boost::shared_ptr<BerkeleyDBCXXDb>> BerkeleyDBCXXDb::multiton_map_;
+thread_local bool BerkeleyDBCXXDb::thread_registered_ = false;
 
 //##############################################################################
 //##############################################################################
 boost::shared_ptr<BerkeleyDBCXXDb>
 BerkeleyDBCXXDb::get(const std::string &name,
+        boost::shared_ptr<BerkeleyDB> backend,
         const boost::shared_ptr<db::ConfigIface> db_config)
 {
-    return BerkeleyDBCXXDb::get(name, db_config, BerkeleyDBCXXEnv::get(db_config));
+    return BerkeleyDBCXXDb::get(name, backend, db_config, BerkeleyDBCXXEnv::get(db_config));
 }
 
 //##############################################################################
 //##############################################################################
 boost::shared_ptr<BerkeleyDBCXXDb>
 BerkeleyDBCXXDb::get(const std::string &name,
+        boost::shared_ptr<BerkeleyDB> backend,
         const boost::shared_ptr<db::ConfigIface> db_config,
         boost::shared_ptr<BerkeleyDBCXXEnv> env)
 {
@@ -46,7 +49,11 @@ BerkeleyDBCXXDb::get(const std::string &name,
     if(it != multiton_map_.end()) {
         return it->second;
     }
-    auto inst = boost::shared_ptr<BerkeleyDBCXXDb>(new BerkeleyDBCXXDb(name, db_config, env));
+    if(!thread_registered_) {
+        env->register_thread();
+        thread_registered_ = true;
+    }
+    auto inst = boost::shared_ptr<BerkeleyDBCXXDb>(new BerkeleyDBCXXDb(name, backend, db_config, env));
     multiton_map_[name] = inst;
     return inst;
 }
@@ -54,8 +61,9 @@ BerkeleyDBCXXDb::get(const std::string &name,
 //##############################################################################
 //##############################################################################
 BerkeleyDBCXXDb::BerkeleyDBCXXDb(const std::string &name,
+        boost::shared_ptr<BerkeleyDB> backend,
         const boost::shared_ptr<db::ConfigIface> db_config, boost::shared_ptr<BerkeleyDBCXXEnv> env)
-    : name_(name), env_(env), db_config_(db_config), log("BerkeleyDBCXXDb")
+    : name_(name), backend_(backend), env_(env), db_config_(db_config), log("BerkeleyDBCXXDb")
 {
     RANGE_LOG_FUNCTION();
     inst_ = boost::make_shared<Db>(env_->getEnv(), 0);
@@ -118,7 +126,7 @@ BerkeleyDBCXXDb::start_txn()
     RANGE_LOG_FUNCTION();
     auto txn = current_txn_.lock();
     if(!txn) {
-        txn = boost::make_shared<BerkeleyDBCXXTxn>(shared_from_this());
+        txn = boost::make_shared<BerkeleyDBCXXTxn>(backend_, shared_from_this());
         current_txn_ = txn;
     }
     return boost::dynamic_pointer_cast<range::db::GraphTransaction>(txn);
@@ -132,10 +140,11 @@ BerkeleyDBCXXDb::get_cursor() const
     auto mutable_self = boost::const_pointer_cast<BerkeleyDBCXXDb>(
             shared_from_this()
             );
+    auto lck = env_->acquire_DbTxn_lock(false);
     auto c = boost::make_shared<BerkeleyDBCXXCursor>(
             boost::dynamic_pointer_cast<GraphInstanceInterface>(mutable_self),
-            inst_, BerkeleyDBCXXLockTxnGetter(env_->acquire_DbTxn_lock(false)).txn()
-            );
+            inst_, 
+            lck);
     return boost::dynamic_pointer_cast<range::graph::GraphCursorInterface>(c);
 }
 //##############################################################################
@@ -148,29 +157,46 @@ BerkeleyDBCXXDb::get_record(record_type type, const std::string& key) const
     auto txn = current_txn_.lock();
     if(txn) {
         std::string data;
-        if(txn->get_record(type, fullkey, data)) {
+        if(txn->get_record(type, key, data)) {
             return data;
         }
     }
     auto lck = boost::dynamic_pointer_cast<BerkeleyDBCXXLock>(this->read_lock(type, key));
     DbTxn * dbtxn = BerkeleyDBCXXLockTxnGetter(lck).txn();
     Dbt dbkey { (void*) fullkey.c_str(), (uint32_t) fullkey.size() };
-    char buf[1048576] = { 0 };
-    Dbt dbdata { buf, sizeof(buf) };
-    dbdata.set_ulen(sizeof(buf));
-    dbdata.set_flags(DB_DBT_USERMEM);
 
-    int flags = lck->readonly() ? 0 : DB_RMW;
+    size_t bufsize = 131072;
+    std::unique_ptr<char[]> buf { nullptr };
+    Dbt dbdata;
     int dbrval = 0;
-    try {
-        dbrval = inst_->get(dbtxn, &dbkey, &dbdata, flags);
-    }
-    catch (DbException &e) {
-        THROW_STACK(DatabaseEnvironmentException(std::string("Unable to read record") + e.what()));
-    }
-    catch (std::exception &e) {
-        THROW_STACK(DatabaseEnvironmentException(std::string("Unable to read record") + e.what()));
-    }
+  
+    do {
+        if(buf) { LOG(debug0, "resizing_record_buffer") << bufsize; }
+        buf = std::unique_ptr<char[]>(new char[bufsize]);
+
+        if(!buf) {
+            std::stringstream s;
+            s << "Unable to allocate buffer of size: " << bufsize;
+            THROW_STACK(DatabaseEnvironmentException(s.str()));
+        }
+
+        dbdata = Dbt(buf.get(), bufsize);
+        dbdata.set_ulen(bufsize);
+        dbdata.set_flags(DB_DBT_USERMEM);
+        bufsize *= 2;
+
+        int flags = lck->readonly() ? 0 : DB_RMW;
+        try {
+            dbrval = inst_->get(dbtxn, &dbkey, &dbdata, flags);
+        }
+        catch (DbException &e) {
+            THROW_STACK(DatabaseEnvironmentException(std::string("Unable to read record") + e.what()));
+        }
+        catch (std::exception &e) {
+            THROW_STACK(DatabaseEnvironmentException(std::string("Unable to read record") + e.what()));
+        }
+    } while(dbrval == DB_BUFFER_SMALL);
+
     switch(dbrval) {
         case 0:
             break;
@@ -188,6 +214,8 @@ BerkeleyDBCXXDb::get_record(record_type type, const std::string& key) const
         case DB_REP_HANDLE_DEAD:
             THROW_STACK(DatabaseEnvironmentException("Dead handle"));
             break;
+        default:
+            LOG(error, "unknown dbrval") << dbrval;
     }
 
     std::string rval { (char *) dbdata.get_data(), dbdata.get_size() };
@@ -239,6 +267,7 @@ BerkeleyDBCXXDb::commit_record(change_t change)
             THROW_STACK(DatabaseEnvironmentException("Database read-only"));
             break;
         default:
+            LOG(error, "unknown_rval_from_Db_put") << dbrval;
             return false;
     }
 }

@@ -26,6 +26,7 @@
 
 namespace range { namespace db {
 class BerkeleyDBCXXDb;
+class BerkeleyDB;
 
 //##############################################################################
 //##############################################################################
@@ -34,7 +35,8 @@ class BerkeleyDBCXXTxn : public GraphTransaction {
         typedef GraphInstanceInterface::change_t change_t;
         typedef GraphInstanceInterface::changelist_t changelist_t;
 
-        BerkeleyDBCXXTxn(boost::shared_ptr<BerkeleyDBCXXDb> db);
+        BerkeleyDBCXXTxn(boost::shared_ptr<BerkeleyDB> backend, 
+                boost::shared_ptr<BerkeleyDBCXXDb> db);
         virtual ~BerkeleyDBCXXTxn() noexcept override;
 
         virtual void abort(void) override;
@@ -48,6 +50,7 @@ class BerkeleyDBCXXTxn : public GraphTransaction {
         bool add_graph_changelist(ChangeList &changes);
 
         std::unordered_map<std::string, change_t> pending_changes_;
+        boost::shared_ptr<BerkeleyDB> backend_;
         boost::shared_ptr<BerkeleyDBCXXDb> db_;
         range::Emitter log;
 };

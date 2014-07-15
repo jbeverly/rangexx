@@ -202,7 +202,7 @@ ProtobufNode::init_info() const
             }
             else                                                                    // new node
             {                                            
-                LOG(debug5, "uninitialized") << name_ << "is NOT initialized";
+                LOG(debug5, "uninitialized") << name_ << " is NOT initialized";
                 init_default_nodeinfo(info); //, instance_->version());
                 info_initialized = info.IsInitialized();
             }

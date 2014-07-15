@@ -62,7 +62,7 @@ class TestDB : public ::testing::Test {
         }
 
         static void TearDownTestCase() {
-/*            DIR* d = opendir(path.c_str());
+            DIR* d = opendir(path.c_str());
 
             struct dirent * dentry;
 
@@ -71,7 +71,7 @@ class TestDB : public ::testing::Test {
                 unlink(p.c_str());
             }
             rmdir(path.c_str()); 
-            closedir(d);  */
+            closedir(d);
         }
 
         virtual void SetUp() override {
@@ -94,24 +94,24 @@ class TestDB : public ::testing::Test {
 // Don't laugh, this is important!
 //##############################################################################
 TEST_F(TestDB, test_db_ctor) {
-    range::db::BerkeleyDB db { boost::dynamic_pointer_cast<range::db::ConfigIface>(cfg) };
+    boost::shared_ptr<range::db::BerkeleyDB> db = range::db::BerkeleyDB::get(boost::dynamic_pointer_cast<range::db::ConfigIface>(cfg));
+    db->register_thread();
     std::string cfghome = cfg->db_home();
-    std::string realhome = db.dbhome();
+    std::string realhome = db->dbhome();
     EXPECT_EQ(cfghome, realhome);
-    db.register_thread();
-    db.shutdown();
+    db->shutdown();
 }
 
 //##############################################################################
 //##############################################################################
 TEST_F(TestDB, test_create_instance) {
-    range::db::BerkeleyDB db { boost::dynamic_pointer_cast<range::db::ConfigIface>(cfg) };
-    db.register_thread();
-    auto instance = db.createGraphInstance("Foobar");
+    boost::shared_ptr<range::db::BerkeleyDB> db = range::db::BerkeleyDB::get(boost::dynamic_pointer_cast<range::db::ConfigIface>(cfg));
+    db->register_thread();
+    auto instance = db->createGraphInstance("Foobar");
 
-    EXPECT_EQ(1, db.listGraphInstances().size());
-    ASSERT_THAT(db.listGraphInstances(), ElementsAre("Foobar"));
-    db.shutdown();
+    EXPECT_EQ(1, db->listGraphInstances().size());
+    ASSERT_THAT(db->listGraphInstances(), ElementsAre("Foobar"));
+    db->shutdown();
 }
 
 
@@ -144,7 +144,7 @@ class TestGraphDB : public ::testing::Test {
                 .Times(AtLeast(0))
                 .WillRepeatedly(Return(67108864));
 
-            backendp = boost::make_shared<range::db::BerkeleyDB>(cfg);
+            backendp = range::db::BerkeleyDB::get(boost::dynamic_pointer_cast<range::db::ConfigIface>(cfg));
             instance = backendp->createGraphInstance("primary");
             auto inst = boost::dynamic_pointer_cast<range::db::BerkeleyDBCXXDb>(instance);
         }
@@ -213,6 +213,35 @@ TEST_F(TestGraphDB, test_db_readwrite) {
     auto dataz = instance->get_record(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
     EXPECT_EQ(test_data, dataz);
 }
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestGraphDB, test_db_rewrite) {
+
+    {    
+        auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+        auto txn = instance->start_txn();
+
+        std::string test_data { "I like Cheese!" };
+        EXPECT_EQ(0, instance->version());
+        instance->write_record(range::db::GraphInstanceInterface::record_type::NODE, "foobar", 5, test_data);
+        EXPECT_EQ(1, instance->version());
+        auto dataz = instance->get_record(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+        EXPECT_EQ(test_data, dataz);
+    }
+
+    {
+        auto lock = instance->write_lock(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+        auto txn = instance->start_txn();
+
+        std::string test_data { "I really really really like Cheese!" };
+        instance->write_record(range::db::GraphInstanceInterface::record_type::NODE, "foobar", 5, test_data);
+        EXPECT_EQ(2, instance->version());
+        auto dataz = instance->get_record(range::db::GraphInstanceInterface::record_type::NODE, "foobar");
+        EXPECT_EQ(test_data, dataz);
+    }
+}
+
 
 //##############################################################################
 //##############################################################################
@@ -583,20 +612,12 @@ TEST_F(TestDBCursor, test_fetch_nonexisting) {
 }
 
 
-
-
-
-
-namespace range {
-   void cleanup_logger(void);
-} 
-
 //##############################################################################
 //##############################################################################
 int
 main(int argc, char **argv)
 {
-    range::initialize_logger("/dev/null", 0);
+    range::initialize_logger("test_db.debug.log", 99);
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     ::testing::InitGoogleTest(&argc, argv);
     int rval = RUN_ALL_TESTS();

@@ -21,16 +21,19 @@
 #include "../core/log.h"
 
 #include "db_interface.h"
+#include "berkeley_dbcxx_lock.h"
 #include "berkeley_db_types.h"
 
 
 namespace range { namespace db {
+class BerkeleyDB;
 
 class BerkeleyDBCXXCursor : public graph::GraphCursorInterface {
     public:
         //######################################################################
         BerkeleyDBCXXCursor(boost::shared_ptr<GraphInstanceInterface> inst,
-                boost::shared_ptr<Db> db, DbTxn * txn);
+                boost::shared_ptr<Db> db,
+                boost::shared_ptr<BerkeleyDBCXXLock> lock);
 
         //######################################################################
         virtual ~BerkeleyDBCXXCursor() noexcept override;
@@ -54,6 +57,7 @@ class BerkeleyDBCXXCursor : public graph::GraphCursorInterface {
 
         mutable boost::shared_ptr<GraphInstanceInterface> inst_;
         boost::shared_ptr<Db> db_;
+        boost::shared_ptr<BerkeleyDBCXXLock> lock_;
         DbTxn * txn_;
         Dbc * cur_;
         range::Emitter log;

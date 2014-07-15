@@ -65,7 +65,7 @@ config_builder(const std::string& filename, Consumer type)
 
     
     auto db_conf = boost::make_shared<db::ConfigIface>("/var/lib/rangexx", 67108864);
-    auto db = boost::make_shared<range::db::BerkeleyDB>( db_conf );
+    auto db = range::db::BerkeleyDB::get( db_conf );
 
     cfg->db_backend(db);
     cfg->db_backend()->register_thread();
