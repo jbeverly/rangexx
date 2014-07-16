@@ -42,7 +42,7 @@ class BerkeleyDBCXXEnv {
 
         static std::string get_lockfile(const DbEnv * dbenv, pid_t pid, db_threadid_t tid);
         static bool get_lock(const std::string &lockfile,
-                range::util::FdRAII *registration_fd);
+                std::shared_ptr<range::util::FdRAII> registration_fd);
         static void shutdown();
 
         ~BerkeleyDBCXXEnv() noexcept;
@@ -73,8 +73,8 @@ class BerkeleyDBCXXEnv {
         static std::mutex inst_lock_;
         static boost::shared_ptr<BerkeleyDBCXXEnv> inst_;
         thread_local static boost::weak_ptr<BerkeleyDBCXXLock> current_lock_;
-        static range::util::FdRAII process_registration_fd_;
-        thread_local static range::util::FdRAII thread_registration_fd_;
+        static std::shared_ptr<range::util::FdRAII> process_registration_fd_;
+        thread_local static std::shared_ptr<range::util::FdRAII> thread_registration_fd_;
 
 };
 

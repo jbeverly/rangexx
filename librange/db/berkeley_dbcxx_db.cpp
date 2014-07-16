@@ -96,8 +96,21 @@ BerkeleyDBCXXDb::BerkeleyDBCXXDb(const std::string &name,
 BerkeleyDBCXXDb::~BerkeleyDBCXXDb() noexcept
 {
     RANGE_LOG_FUNCTION();
-    if( auto t = current_txn_.lock() ) { t->abort(); }
-    inst_->close(0);
+    try {
+        if( auto t = current_txn_.lock() ) { t->abort(); }
+        inst_->close(0);
+    } 
+    catch(DbException &e) {
+        try {
+            LOG(error, "dbclose exception") << e.what();
+        } catch(...) { }
+    }
+    catch(std::exception &e) {
+        try {
+            LOG(error, "dbclose exception") << e.what();
+        } catch(...) { }
+    }
+    catch(...) { }
 }
 
 //##############################################################################

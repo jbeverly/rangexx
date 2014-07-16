@@ -21,6 +21,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "../core/log.h"
+
 namespace range { namespace util {
 
 //##############################################################################
@@ -29,9 +31,23 @@ class FdRAII {
     public:
         //######################################################################
         //######################################################################
-        FdRAII() : fd_(-1) { }
+        FdRAII() : fd_(-1), log("FdRAII") { }
         FdRAII(const std::string &filename, int mode = O_CREAT | O_RDWR)
-            : filename_(filename), fd_(open(filename.c_str(), mode)) { }
+            : filename_(filename), fd_(open(filename.c_str(), mode)), 
+                log("FdRAII")
+        { 
+            LOG(debug4, "create") << filename << " : " << fd_; 
+        }
+
+        //######################################################################
+        //######################################################################
+        FdRAII& operator=(FdRAII &&rhs)
+        {
+            std::swap(this->filename_, rhs.filename_);
+            std::swap(this->fd_, rhs.fd_);
+            std::swap(this->log, rhs.log);
+            return *this;
+        }
 
         //######################################################################
         //######################################################################
@@ -45,6 +61,9 @@ class FdRAII {
         ~FdRAII() noexcept
         {
             try {
+                LOG(debug4, "cleanup") << filename_ << " : " << fd_;
+            } catch(...) { }
+            try {
                 if(fd_ >= 0) {
                     close(fd_);
                     unlink(filename_.c_str());
@@ -54,6 +73,7 @@ class FdRAII {
     private:
         std::string filename_;
         int fd_;
+        range::Emitter log;
 };
 
 } /*namespace util*/ } /*namespace range*/

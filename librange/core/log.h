@@ -294,6 +294,29 @@ class Emitter {
         Timer start_timer(std::string event, std::string extra="") const;
 
         static inline logseverity loglevel() { return loglevel_; }
+       
+        //######################################################################
+        //######################################################################
+        Emitter& operator=(Emitter &&rhs)
+        {
+            std::swap(this->sevstr_, rhs.sevstr_);
+            std::swap(this->module_, rhs.module_);
+            std::swap(this->log, rhs.log);
+            std::swap(this->statsd_, rhs.statsd_);
+            return *this;
+        }
+
+        //######################################################################
+        //######################################################################
+        Emitter(Emitter &&other)
+            : sevstr_(other.sevstr_)
+        {
+            std::swap(this->sevstr_, other.sevstr_);
+            std::swap(this->module_, other.module_);
+            std::swap(this->log, other.log);
+            std::swap(this->statsd_, other.statsd_);
+        }
+
 
     private:
         friend void initialize_logger(const std::string &, uint8_t);
