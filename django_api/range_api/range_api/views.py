@@ -6,10 +6,14 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from serializers import NodeSerializer, ListField
 from django.http import HttpResponse
+import atexit
+
 
 import sys
 
 r = Range('')
+atexit.register(lambda: r.shutdown())
+
 
 CURRENT_VERSION = 2**64 - 1
 MAX_DEPTH = 1000
