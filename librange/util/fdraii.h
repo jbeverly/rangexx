@@ -20,28 +20,65 @@
 #include <string>
 #include <fcntl.h>
 #include <unistd.h>
+#include <cerrno>
+#include <cstring>
 
 #include "../core/log.h"
+#include "../core/exceptions.h"
 
 namespace range { namespace util {
 
 //##############################################################################
 //##############################################################################
-class FdRAII {
+struct LockFdRAIIOpenException : public range::Exception {
+    LockFdRAIIOpenException(const std::string& what,
+        const std::string &event="util.LockFdRAIIOpenException")
+        : Exception(what, event)
+    { }
+};
+
+//##############################################################################
+//##############################################################################
+struct LockFdRAIILockException : public range::Exception {
+    LockFdRAIILockException(const std::string& what,
+        const std::string &event="util.LockFdRAIILockException")
+        : Exception(what, event)
+    { }
+};
+
+//##############################################################################
+//##############################################################################
+class LockFdRAII {
     public:
         //######################################################################
         //######################################################################
-        FdRAII() : fd_(-1), log("FdRAII") { }
-        FdRAII(const std::string &filename, int mode = O_CREAT | O_RDWR)
-            : filename_(filename), fd_(open(filename.c_str(), mode)), 
-                log("FdRAII")
+        LockFdRAII() : fd_(-1), log("FdRAII") { }
+        LockFdRAII(const std::string &filename, int mode = O_CREAT | O_RDWR)
+            : filename_(filename), fd_(-1), log("FdRAII")
         { 
-            LOG(debug4, "create") << filename << " : " << fd_; 
+            errno = 0;
+            fd_ = open(filename.c_str(), mode);
+            if(fd_ < 0) {
+                THROW_STACK(LockFdRAIIOpenException(std::strerror(errno)));
+            }
+            LOG(debug4, "created") << filename << " : " << fd_; 
+
+            struct flock fl = {
+                F_WRLCK,        ///< l_type
+                SEEK_SET,       ///< l_whence
+                0,              ///< l_start
+                0,              ///< l_len
+                getpid()        ///< l_pid
+            };
+
+            if(fcntl(fd_, F_SETLK, &fl) < 0) { 
+                THROW_STACK(LockFdRAIILockException(std::strerror(errno)));
+            }
         }
 
         //######################################################################
         //######################################################################
-        FdRAII& operator=(FdRAII &&rhs)
+        LockFdRAII& operator=(LockFdRAII &&rhs)
         {
             std::swap(this->filename_, rhs.filename_);
             std::swap(this->fd_, rhs.fd_);
@@ -51,17 +88,27 @@ class FdRAII {
 
         //######################################################################
         //######################################################################
-        bool operator==(const FdRAII &rhs) { return rhs.fd_ == fd_; }
+        bool operator==(const LockFdRAII &rhs) { return rhs.fd_ == fd_; }
         bool operator==(int rhs) { return rhs == fd_; }
         operator bool() { return fd_ >= 0; }
         operator int() { return fd_; }
 
         //######################################################################
         //######################################################################
-        ~FdRAII() noexcept
+        ~LockFdRAII() noexcept
         {
             try {
                 LOG(debug4, "cleanup") << filename_ << " : " << fd_;
+            } catch(...) { }
+            try {
+                struct flock fl = {
+                    F_UNLCK,        ///< l_type
+                    SEEK_SET,       ///< l_whence
+                    0,              ///< l_start
+                    0,              ///< l_len
+                    getpid()        ///< l_pid
+                };
+                fcntl(fd_, F_SETLK, &fl);
             } catch(...) { }
             try {
                 if(fd_ >= 0) {

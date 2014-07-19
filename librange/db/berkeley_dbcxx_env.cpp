@@ -27,8 +27,8 @@ namespace range { namespace db {
 std::mutex BerkeleyDBCXXEnv::inst_lock_;
 boost::shared_ptr<BerkeleyDBCXXEnv> BerkeleyDBCXXEnv::inst_;
 thread_local boost::weak_ptr<BerkeleyDBCXXLock> BerkeleyDBCXXEnv::current_lock_;
-std::shared_ptr<range::util::FdRAII> BerkeleyDBCXXEnv::process_registration_fd_;
-thread_local std::shared_ptr<range::util::FdRAII> BerkeleyDBCXXEnv::thread_registration_fd_;
+std::shared_ptr<range::util::LockFdRAII> BerkeleyDBCXXEnv::process_registration_fd_;
+thread_local std::shared_ptr<range::util::LockFdRAII> BerkeleyDBCXXEnv::thread_registration_fd_;
 
 //##############################################################################
 //##############################################################################
@@ -218,46 +218,36 @@ BerkeleyDBCXXEnv::register_thread()
 
     if(thread_registration_fd_) { return; }
     std::string lockfile = this->get_lockfile(&env_, getpid(), pthread_self());
-    this->get_lock(lockfile, thread_registration_fd_);
+    this->get_lock(lockfile, &thread_registration_fd_);
 
     // Process lock
     if(process_registration_fd_) { return; }
     lockfile = this->get_lockfile(&env_, getpid(), 0);
-    this->get_lock(lockfile, process_registration_fd_);
+    this->get_lock(lockfile, &process_registration_fd_);
 }
 
 //##############################################################################
 //##############################################################################
 bool 
 BerkeleyDBCXXEnv::get_lock(const std::string &lockfile,
-        std::shared_ptr<range::util::FdRAII> registration_fd)
+        std::shared_ptr<range::util::LockFdRAII> * registration_fd)
 {
     range::Emitter log { "BerkeleyDBCXXEnv" };
     RANGE_LOG_FUNCTION();
-    std::shared_ptr<range::util::FdRAII> fd { new range::util::FdRAII(lockfile, O_CREAT | O_RDWR) };
-
-    if(fd) {
-        struct flock fl = {
-            F_WRLCK,        ///< l_type
-            SEEK_SET,       ///< l_whence
-            0,              ///< l_start
-            0,              ///< l_len
-            getpid()        ///< l_pid
-        };
-
-        if(fcntl(*fd, F_SETLK, &fl) < 0) { return false; }                             // Already locked
-
-        if(registration_fd) {
-            registration_fd = fd;
-        }
-        return true;
+    std::shared_ptr<range::util::LockFdRAII> fd;
+    try {
+        fd = std::make_shared<range::util::LockFdRAII>(lockfile, O_CREAT | O_RDWR);
+    } catch(range::util::LockFdRAIILockException &e) {
+        return false;
     }
-    else {
-        THROW_STACK(DatabaseEnvironmentException("Unable to create lockfile"));
+
+    if(registration_fd) {
+        *registration_fd = fd;
     }
+    return true;
 }
 
-
+/*
 //##############################################################################
 //##############################################################################
 void
@@ -274,6 +264,7 @@ BerkeleyDBCXXEnv::cleanup_thread(const std::string &lockfile)
 {
     RANGE_LOG_FUNCTION();
     unlink(lockfile.c_str());
+    */
     /*
     struct flock fl = {
         F_UNLCK,        ///< l_type
@@ -290,9 +281,8 @@ BerkeleyDBCXXEnv::cleanup_thread(const std::string &lockfile)
         fcntl(*it->second.lock(), F_SETLK, &fl);
         registered_threads_.erase(it);
     } 
-    */
 }
-
+    */
 //##############################################################################
 //##############################################################################
 boost::shared_ptr<BerkeleyDBCXXLock>
