@@ -75,29 +75,48 @@ bool
 BerkeleyDBCXXCursor::fetch_from_dbc(const std::string& fullkey, int flags,
         std::string &keybuf, std::string &databuf) const
 {
-    char localkeybuf[131072] = { 0 };
-    char localdatabuf[1048576] = { 0 };
-    Dbt dbkey { localkeybuf, sizeof(localkeybuf) };
-    dbkey.set_ulen(sizeof(localkeybuf));
-    dbkey.set_flags(DB_DBT_USERMEM);
-
-    if(!fullkey.empty()) {
-        dbkey = Dbt( (void *) fullkey.c_str(), (uint32_t) fullkey.size());
-    }
-
-    Dbt dbdata { localdatabuf, sizeof(localdatabuf) };
-    dbdata.set_ulen(sizeof(localdatabuf));
-    dbdata.set_flags(DB_DBT_USERMEM);
+    size_t localdatabuf_size = 131072;
+    size_t localkeybuf_size = 131072;
+    std::unique_ptr<char[]> localkeybuf { nullptr };
+    std::unique_ptr<char[]> localdatabuf { nullptr };
+    //char localkeybuf[131072] = { 0 };
+    //char localdatabuf[1048576] = { 0 };
+    
+    Dbt dbkey; 
+    Dbt dbdata;
     int dbrval = 0;
-    try {
-        dbrval = cur_->get(&dbkey, &dbdata, flags);
-    }
-    catch (DbException &e) {
-        THROW_STACK(CursorException(e.what()));
-    }
-    catch (std::exception &e) {
-        THROW_STACK(CursorException(e.what()));
-    }
+
+    do { 
+        if(localdatabuf) { 
+            LOG(debug0, "resizing_record_buffer") << localdatabuf_size;
+        }
+        if(!fullkey.empty()) {
+            dbkey = Dbt( (void *) fullkey.c_str(), (uint32_t) fullkey.size());
+        } else { 
+            localkeybuf = std::unique_ptr<char[]>(new char[localkeybuf_size]);
+            dbkey = Dbt(localkeybuf.get(), localkeybuf_size);
+            dbkey.set_ulen(localkeybuf_size);
+            dbkey.set_flags(DB_DBT_USERMEM);
+            localkeybuf_size *= 2;
+        }
+
+        localdatabuf = std::unique_ptr<char[]>(new char[localdatabuf_size]);
+        dbdata = Dbt(localdatabuf.get(), localdatabuf_size);
+        dbdata.set_ulen(localdatabuf_size);
+        dbdata.set_flags(DB_DBT_USERMEM);
+        localdatabuf_size *= 2;
+
+        try {
+            dbrval = cur_->get(&dbkey, &dbdata, flags);
+        }
+        catch (DbException &e) {
+            if(e.get_errno() == DB_BUFFER_SMALL) { continue; }
+            THROW_STACK(CursorException(e.what()));
+        }
+        catch (std::exception &e) {
+            THROW_STACK(CursorException(e.what()));
+        }
+    } while(dbrval == DB_BUFFER_SMALL);
 
     switch(dbrval) {
         case 0:

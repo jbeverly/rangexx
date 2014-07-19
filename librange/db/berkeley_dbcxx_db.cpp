@@ -203,6 +203,7 @@ BerkeleyDBCXXDb::get_record(record_type type, const std::string& key) const
             dbrval = inst_->get(dbtxn, &dbkey, &dbdata, flags);
         }
         catch (DbException &e) {
+            if(e.get_errno() == DB_BUFFER_SMALL) { continue; }
             THROW_STACK(DatabaseEnvironmentException(std::string("Unable to read record") + e.what()));
         }
         catch (std::exception &e) {
