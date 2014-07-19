@@ -653,7 +653,6 @@ main(int argc, char **argv)
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     ::testing::InitGoogleTest(&argc, argv);
     int rval = RUN_ALL_TESTS();
-    //range::db::BerkeleyDB::s_shutdown();
-    //range::cleanup_logger();
+    range::db::BerkeleyDB::backend_shutdown();
     return rval;
 }

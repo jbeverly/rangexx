@@ -16,6 +16,7 @@
  */
 #include "berkeley_dbcxx_backend.h"
 #include "graph_list.pb.h"
+#include <google/protobuf/message.h>
 
 namespace range { namespace db {
 
@@ -35,6 +36,19 @@ BerkeleyDB::get(const boost::shared_ptr<db::ConfigIface> db_config)
         inst_ = boost::shared_ptr<BerkeleyDB>(new BerkeleyDB(db_config));
     }
     return inst_;
+}
+
+//##############################################################################
+//##############################################################################
+void
+BerkeleyDB::backend_shutdown()
+{
+    std::lock_guard<std::mutex> guard { inst_lock_ };
+    if(inst_) {
+        inst_->shutdown();
+        inst_ = nullptr;
+    }
+    google::protobuf::ShutdownProtobufLibrary();
 }
 
 //##############################################################################
