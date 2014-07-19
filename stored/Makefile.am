@@ -8,7 +8,7 @@ AM_LDFLAGS_G = $(LDFLAGS)
 #AM_LIBADD_G = $(LIBADD)
 
 
-AM_CPPFLAGS = @PROTOBUF_CPPFLAGS@ @DB_STL_CPPFLAGS@ @BOOST_CPPFLAGS@ @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ -I$(top_builddir)/librange $(AM_CPPFLAGS_G)
+AM_CPPFLAGS = @PROTOBUF_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @BOOST_CPPFLAGS@ @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ -I$(top_builddir)/librange $(AM_CPPFLAGS_G)
 AM_LDFLAGS  = -L$(top_builddir)/librange -Wl,--copy-dt-needed-entries -lrange -lpthread -lrt $(AM_LDFLAGS_G)
 #AM_LIBADD   = $(AM_LIBADD_G)
 

@@ -676,10 +676,10 @@ PROTOBUF_CPPFLAGS
 PROTOBUF_LD_LIBRARY_PATH
 PROTOBUF_LDFLAGS
 PROTOBUF_LIBS
-DB_STL_CPPFLAGS
-DB_STL_LD_LIBRARY_PATH
-DB_STL_LDFLAGS
-DB_STL_LIBS
+DB_CXX_CPPFLAGS
+DB_CXX_LD_LIBRARY_PATH
+DB_CXX_LDFLAGS
+DB_CXX_LIBS
 HAVE_CXX11
 PKG_CONFIG
 AM_BACKSLASH
@@ -812,7 +812,7 @@ with_sysroot
 enable_libtool_lock
 enable_dependency_tracking
 enable_silent_rules
-with_db_stl
+with_db_cxx
 with_protobuf
 with_gmock
 with_gtest
@@ -1483,7 +1483,7 @@ Optional Packages:
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
   --with-sysroot=DIR Search for dependent libraries within DIR
                         (or the compiler's sysroot if not specified).
-  --with-db_stl=PATH      specify path to db_stl library installation
+  --with-db_cxx=PATH      specify path to db_cxx library installation
                           [default=auto]
   --with-protobuf=PATH    specify path to protobuf library installation
                           [default=auto]
@@ -16436,9 +16436,9 @@ $as_echo "#define HAVE_CXX11 1" >>confdefs.h
 
 #AX_CHECK_EXT_LIB_CLASS([db_cxx], [<db_cxx.h>], [DbStream], [], [AC_MSG_ERROR([Berkeley db6 is required])])
 
-tmp_stl_LDFLAGS="$LDFLAGS"
+tmp_cxx_LDFLAGS="$LDFLAGS"
 LDFLAGS="$LDFLAGS $DB_CXX_LDFLAGS"
-tmp_stl_CPPFLAGS="$CPPFLAGS"
+tmp_cxx_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $DB_CXX_CPPFLAGS"
 
 
@@ -16472,11 +16472,11 @@ rm -f core conftest.err conftest.$ac_objext \
 
 
 
-# Check whether --with-db_stl was given.
-if test "${with_db_stl+set}" = set; then :
-  withval=$with_db_stl; ax_with_db_stl=$withval
+# Check whether --with-db_cxx was given.
+if test "${with_db_cxx+set}" = set; then :
+  withval=$with_db_cxx; ax_with_db_cxx=$withval
 else
-  ax_with_db_stl=auto
+  ax_with_db_cxx=auto
 fi
 
 
@@ -16485,40 +16485,40 @@ fi
 
 
 
-        if test "x$ax_with_db_stl" = xauto; then :
+        if test "x$ax_with_db_cxx" = xauto; then :
   :
 else
-              ax_with_db_stl=`echo $ax_with_db_stl | sed -e 's,/$,,'`
-            case "$ax_with_db_stl" in #(
+              ax_with_db_cxx=`echo $ax_with_db_cxx | sed -e 's,/$,,'`
+            case "$ax_with_db_cxx" in #(
   ./*|../*) :
-    ax_with_db_stl="`pwd`/$ax_with_db_stl" ;; #(
+    ax_with_db_cxx="`pwd`/$ax_with_db_cxx" ;; #(
   *) :
      ;;
 esac #''
-            if test -d "${ax_with_db_stl}/lib"; then :
-  				DB_STL_LD_LIBRARY_PATH="${ax_with_db_stl}/lib"
-                DB_STL_LDFLAGS="-L${ax_with_db_stl}/lib"
+            if test -d "${ax_with_db_cxx}/lib"; then :
+  				DB_CXX_LD_LIBRARY_PATH="${ax_with_db_cxx}/lib"
+                DB_CXX_LDFLAGS="-L${ax_with_db_cxx}/lib"
 
 fi
-            if test -d "${ax_with_db_stl}/lib64"; then :
+            if test -d "${ax_with_db_cxx}/lib64"; then :
   				if test 0`echo $target | grep -c 64` -gt 0; then :
 
-					DB_STL_LD_LIBRARY_PATH="${ax_with_db_stl}/lib64"
-                    DB_STL_LDFLAGS="-L${ax_with_db_stl}/lib64"
+					DB_CXX_LD_LIBRARY_PATH="${ax_with_db_cxx}/lib64"
+                    DB_CXX_LDFLAGS="-L${ax_with_db_cxx}/lib64"
 
 else
   					if test 0`echo $build | grep -c 64` -gt 0 ; then :
 
-						DB_STL_LD_LIBRARY_PATH="${ax_with_db_stl}/lib64"
-						DB_STL_LDFLAGS="-L${ax_with_db_stl}/lib64"
+						DB_CXX_LD_LIBRARY_PATH="${ax_with_db_cxx}/lib64"
+						DB_CXX_LDFLAGS="-L${ax_with_db_cxx}/lib64"
 
 fi
 
 fi
 
 fi
-            if test -d "${ax_with_db_stl}/include"; then :
-                  DB_STL_CPPFLAGS="-I${ax_with_db_stl}/include"
+            if test -d "${ax_with_db_cxx}/include"; then :
+                  DB_CXX_CPPFLAGS="-I${ax_with_db_cxx}/include"
 
 fi
 
@@ -16527,18 +16527,18 @@ fi
 
 
           tmp_LDFLAGS="$LDFLAGS"
-          LDFLAGS="$LDFLAGS $DB_STL_LDFLAGS"
+          LDFLAGS="$LDFLAGS $DB_CXX_LDFLAGS"
           tmp_CPPFLAGS="$CPPFLAGS"
-          CPPFLAGS="$CPPFLAGS $DB_STL_CPPFLAGS"
+          CPPFLAGS="$CPPFLAGS $DB_CXX_CPPFLAGS"
 
 
           cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#include <dbstl_map.h>
+#include <db_cxx.h>
 int
 main ()
 {
-typedef dbstl::db_map<int, int> foo;
+typedef Db foo;
   ;
   return 0;
 }
@@ -16546,41 +16546,41 @@ _ACEOF
 if ac_fn_cxx_try_link "$LINENO"; then :
 
 
-$as_echo "#define HAVE_LIBDB_STL 1" >>confdefs.h
+$as_echo "#define HAVE_LIBDB_CXX 1" >>confdefs.h
 
-          DB_STL_LIBS=-ldb_stl
-                                 if ${DB_STL_LIBS+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_stl flags DB_STL_LIBS" >&5
-$as_echo_n "checking db_stl flags DB_STL_LIBS... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_STL_LIBS" >&5
-$as_echo "$DB_STL_LIBS" >&6; }
-
-
-fi
-
-                       if ${DB_STL_LDFLAGS+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_stl flags DB_STL_LDFLAGS" >&5
-$as_echo_n "checking db_stl flags DB_STL_LDFLAGS... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_STL_LDFLAGS" >&5
-$as_echo "$DB_STL_LDFLAGS" >&6; }
+          DB_CXX_LIBS=-ldb_cxx
+                                 if ${DB_CXX_LIBS+:} false; then :
+                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_cxx flags DB_CXX_LIBS" >&5
+$as_echo_n "checking db_cxx flags DB_CXX_LIBS... " >&6; }
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_CXX_LIBS" >&5
+$as_echo "$DB_CXX_LIBS" >&6; }
 
 
 fi
 
-                       if ${DB_STL_LD_LIBRARY_PATH+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_stl flags DB_STL_LD_LIBRARY_PATH" >&5
-$as_echo_n "checking db_stl flags DB_STL_LD_LIBRARY_PATH... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_STL_LD_LIBRARY_PATH" >&5
-$as_echo "$DB_STL_LD_LIBRARY_PATH" >&6; }
+                       if ${DB_CXX_LDFLAGS+:} false; then :
+                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_cxx flags DB_CXX_LDFLAGS" >&5
+$as_echo_n "checking db_cxx flags DB_CXX_LDFLAGS... " >&6; }
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_CXX_LDFLAGS" >&5
+$as_echo "$DB_CXX_LDFLAGS" >&6; }
 
 
 fi
 
-                       if ${DB_STL_CPPFLAGS+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_stl flags DB_STL_CPPFLAGS" >&5
-$as_echo_n "checking db_stl flags DB_STL_CPPFLAGS... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_STL_CPPFLAGS" >&5
-$as_echo "$DB_STL_CPPFLAGS" >&6; }
+                       if ${DB_CXX_LD_LIBRARY_PATH+:} false; then :
+                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_cxx flags DB_CXX_LD_LIBRARY_PATH" >&5
+$as_echo_n "checking db_cxx flags DB_CXX_LD_LIBRARY_PATH... " >&6; }
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_CXX_LD_LIBRARY_PATH" >&5
+$as_echo "$DB_CXX_LD_LIBRARY_PATH" >&6; }
+
+
+fi
+
+                       if ${DB_CXX_CPPFLAGS+:} false; then :
+                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_cxx flags DB_CXX_CPPFLAGS" >&5
+$as_echo_n "checking db_cxx flags DB_CXX_CPPFLAGS... " >&6; }
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_CXX_CPPFLAGS" >&5
+$as_echo "$DB_CXX_CPPFLAGS" >&6; }
 
 
 fi
@@ -16589,12 +16589,12 @@ fi
 
 
 else
-  			   DB_STL_LIBS=-ldb_stl
-			                          if ${DB_STL_LIBS+:} false; then :
-                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_stl flags DB_STL_LIBS" >&5
-$as_echo_n "checking db_stl flags DB_STL_LIBS... " >&6; }
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_STL_LIBS" >&5
-$as_echo "$DB_STL_LIBS" >&6; }
+  			   DB_CXX_LIBS=-ldb_cxx
+			                          if ${DB_CXX_LIBS+:} false; then :
+                            { $as_echo "$as_me:${as_lineno-$LINENO}: checking db_cxx flags DB_CXX_LIBS" >&5
+$as_echo_n "checking db_cxx flags DB_CXX_LIBS... " >&6; }
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DB_CXX_LIBS" >&5
+$as_echo "$DB_CXX_LIBS" >&6; }
 
 
 fi
@@ -16610,10 +16610,8 @@ rm -f core conftest.err conftest.$ac_objext \
           CPPFLAGS="$tmp_CPPFLAGS"
 
 
-#AS_VAR_SET([LDFLAGS], ["$LDFLAGS -ldb"])
-#AX_CHECK_EXT_LIB([evpaxos], [evproposer_init], [], [AC_MSG_ERROR([libevpaxos3 is required])])
-LDFLAGS="$tmp_stl_LDFLAGS"
-CPPFLAGS="$tmp_stl_CPPFLAGS"
+LDFLAGS="$tmp_cxx_LDFLAGS"
+CPPFLAGS="$tmp_cxx_CPPFLAGS"
 
 
 

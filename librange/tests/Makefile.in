@@ -476,10 +476,10 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DB_STL_CPPFLAGS = @DB_STL_CPPFLAGS@
-DB_STL_LDFLAGS = @DB_STL_LDFLAGS@
-DB_STL_LD_LIBRARY_PATH = @DB_STL_LD_LIBRARY_PATH@
-DB_STL_LIBS = @DB_STL_LIBS@
+DB_CXX_CPPFLAGS = @DB_CXX_CPPFLAGS@
+DB_CXX_LDFLAGS = @DB_CXX_LDFLAGS@
+DB_CXX_LD_LIBRARY_PATH = @DB_CXX_LD_LIBRARY_PATH@
+DB_CXX_LIBS = @DB_CXX_LIBS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
@@ -611,9 +611,9 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = parallel-tests color-tests 
-AM_CPPFLAGS = @PROTOBUF_CPPFLAGS@ @DB_STL_CPPFLAGS@ @BOOST_CPPFLAGS@ @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ -I$(top_builddir)/librange
+AM_CPPFLAGS = @PROTOBUF_CPPFLAGS@ @DB_CXX_CPPFLAGS@ @BOOST_CPPFLAGS@ @GMOCK_CPPFLAGS@ @GTEST_CPPFLAGS@ -I$(top_builddir)/librange
 AM_LDFLAGS = -Wl,--copy-dt-needed-entries @GMOCK_LDFLAGS@ @GTEST_CPPFLAGS@ -lpthread -lrt
-LDADD = @GTEST_LIBS@ @GMOCK_LIBS@ $(top_builddir)/librange/librange.la ## @DB_STL_LIBS@ @BOOST_REGEX_LIB@
+LDADD = @GTEST_LIBS@ @GMOCK_LIBS@ $(top_builddir)/librange/librange.la ## @DB_CXX_LIBS@ @BOOST_REGEX_LIB@
 LIBADD = @GTEST_LIBS@ @GMOCK_LIBS@ $(top_builddir)/librange/librange.la
 AM_DEFAULT_SOURCE_EXT = .cpp
 TESTS = $(check_PROGRAMS) 
@@ -1191,7 +1191,7 @@ uninstall-am:
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	recheck tags tags-am uninstall uninstall-am
 
-export LD_LIBRARY_PATH:=@GMOCK_LD_LIBRARY_PATH@:@GTEST_LD_LIBRARY_PATH@:@PROTOBUF_LD_LIBRARY_PATH@:@DB_STL_LD_LIBRARY_PATH@:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH:=@GMOCK_LD_LIBRARY_PATH@:@GTEST_LD_LIBRARY_PATH@:@PROTOBUF_LD_LIBRARY_PATH@:@DB_CXX_LD_LIBRARY_PATH@:${LD_LIBRARY_PATH}
 
 .PHONY: valgrind
 

@@ -71,6 +71,16 @@ class RangeAPI_v1
                 LOGBACKTRACE(e);
             } catch(...) { }
         }
+
+        //######################################################################
+        //######################################################################
+        /// After calling this, all subsequent attempts to use range will
+        /// fail miserably. Only call this before exiting (to cleanup reachable
+        /// memory for valgrind, and to avoid race-conditions with various
+        /// singleton exits that can cause segfaults)
+        void shutdown() {
+            cfg_->db_backend()->shutdown();
+        }
         
         //######################################################################
         //######################################################################

@@ -50,6 +50,12 @@ class APIWrap
         }
 
         //######################################################################
+        void shutdown() const
+        {
+            api_->shutdown();
+        }
+
+        //######################################################################
         object get_range_version(const std::string &timespec) const
         {
             RangeStruct top = api_->get_range_version(timespec);
@@ -455,6 +461,7 @@ BOOST_PYTHON_MODULE(librange_python) {
     range::initialize_logger("/tmp/testlog",99);
 
     class_<APIWrap>("Range", init<std::string>())
+        .def("shutdown", &APIWrap::shutdown)
         .def("get_range_version", &APIWrap::get_range_version)
         .def("all_clusters", &APIWrap::all_clusters, overloads_all_clusters())
         .def("all_environments", &APIWrap::all_environments, overloads_all_environments())
