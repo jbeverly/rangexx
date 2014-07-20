@@ -34,7 +34,7 @@ namespace range { namespace stored {
 //##############################################################################
 class WorkerThread {
     public:
-        explicit WorkerThread(const std::string &title);
+        explicit WorkerThread(const EmitterModuleRegistration &title);
         virtual ~WorkerThread() noexcept;
         virtual void run();
         virtual void operator()() noexcept;
@@ -68,7 +68,7 @@ template <typename QReqType, class Derived>
 class QueueWorkerThread : public WorkerThread {
     public:
         //######################################################################
-        QueueWorkerThread(const std::string &title) 
+        QueueWorkerThread(const EmitterModuleRegistration &title) 
             : WorkerThread(title)
         { }
 

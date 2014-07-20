@@ -30,10 +30,11 @@ boost::lockfree::spsc_queue<range::stored::Request, boost::lockfree::capacity<10
 std::mutex Proposer::blocker_;
 std::condition_variable Proposer::condition_;
 
+static ::range::EmitterModuleRegistration ProposerLogModule { "stored.paxos.Proposer" };
 //##############################################################################
 //##############################################################################
 Proposer::Proposer(boost::shared_ptr<::range::StoreDaemonConfig> cfg)
-    : QueueWorkerThread("Proposer"), cfg_{cfg} 
+    : QueueWorkerThread(ProposerLogModule), cfg_{cfg} 
 {
 }
 
@@ -59,12 +60,11 @@ Proposer::event_task()
             << ": " << req.client_id();
 
         try {
-            bool secondary = false;
-            if (req.type() == Request::Type::Request_Type_FAILOVER) {
-                secondary = true;
-            }
+            bool secondary = (req.type() == Request::Type::Request_Type_FAILOVER) ? true : false;
+            if(secondary) { LOG(info, "handling failover request"); }
 
             if (cfg_->node_id() == distinguished_proposer(secondary)) {
+                if(secondary) { LOG(info, "handling failover request"); }
                 LOG(debug0, "handling_received_proposal") << ": " 
                     << req.method() << " : " << req.client_id();
 

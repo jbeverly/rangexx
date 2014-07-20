@@ -16456,7 +16456,7 @@ CPPFLAGS="$CPPFLAGS $DB_CXX_CPPFLAGS"
 int
 main ()
 {
-typedef  foo;
+typedef  foo; foo * bar; (void)(bar);
   ;
   return 0;
 }
@@ -16538,7 +16538,7 @@ fi
 int
 main ()
 {
-typedef Db foo;
+typedef Db foo; foo * bar; (void)(bar);
   ;
   return 0;
 }
@@ -16684,7 +16684,7 @@ fi
 int
 main ()
 {
-typedef google::protobuf::Message foo;
+typedef google::protobuf::Message foo; foo * bar; (void)(bar);
   ;
   return 0;
 }
@@ -16899,7 +16899,7 @@ fi
 int
 main ()
 {
-typedef testing::MatchResultListener foo;
+typedef testing::MatchResultListener foo; foo * bar; (void)(bar);
   ;
   return 0;
 }
@@ -17043,7 +17043,7 @@ fi
 int
 main ()
 {
-typedef testing::Test foo;
+typedef testing::Test foo; foo * bar; (void)(bar);
   ;
   return 0;
 }

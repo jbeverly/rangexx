@@ -36,8 +36,8 @@ class BerkeleyDBCXXLock : public GraphInstanceLock {
         void promote() { readwrite_ = true; }
     private:
         friend class BerkeleyDBCXXLockTxnGetter;
-        bool readwrite_;
         DbEnv * env_;
+        bool readwrite_;
         DbTxn * txn_;
         bool initialized_;
         range::Emitter log;

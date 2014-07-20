@@ -69,7 +69,8 @@ librange_util_la_includedir = $(includedir)/rangexx
 nobase_librange_util_la_include_HEADERS = util/crc32.h \
 										  ./util/demangle.h
 librange_util_la_SOURCES = util/crc32.cpp \
-						   ./util/demangle.cpp
+						   ./util/demangle.cpp \
+						   ./util/fdraii.cpp
 
 #librange_util_la_LIBADD = # $(AM_LIBADD)
 
@@ -157,7 +158,7 @@ nobase_librange_core_la_include_HEADERS = ./core/api.h \
 										  ./core/store.pb.h \
 										  ./core/log.h \
 										  ./core/builtins.h \
-										  ./core/range_function.h
+										  ./core/range_function.h 
 
 
 librange_core_la_SOURCES = ./core/config_builder.cpp \
@@ -167,7 +168,8 @@ librange_core_la_SOURCES = ./core/config_builder.cpp \
 						   ./core/store.pb.cpp \
 						   ./core/write_api.cpp \
 						   ./core/log.cpp \
-						   ./core/builtins.cpp
+						   ./core/builtins.cpp \
+						   ./core/exceptions.cpp
 	
 #librange_core_la_LIBADD = # $(AM_LIBADD)
 

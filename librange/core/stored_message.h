@@ -44,6 +44,7 @@ class RequestQueue {
         bool verify_request(const Request& req);
 };
 
+static ::range::EmitterModuleRegistration RequestQueueClientLogModule { "stored.RequestQueueClient" };
 //##############################################################################
 //##############################################################################
 class RequestQueueClient : private RequestQueue {
@@ -52,7 +53,7 @@ class RequestQueueClient : private RequestQueue {
             : client_id_(CLIENT_ID),
                 sending_queue(CreateMQ<>(queue_name), cfg_->stored_request_timeout(), 1000),
                 ack_queue(CreateMQ<>(ack_queue_prefix + client_id_), 1000, cfg_->stored_request_timeout()),
-                log("RequestQueueClient." + queue_name)
+                log(RequestQueueClientLogModule)
         { }
 
         explicit RequestQueueClient(boost::shared_ptr<Config> cfg_)
@@ -69,12 +70,13 @@ class RequestQueueClient : private RequestQueue {
         range::Emitter log;
 };
 
+static ::range::EmitterModuleRegistration RequestQueueListenerLogModule { "stored.RequestQueueListener" };
 //##############################################################################
 //##############################################################################
 class RequestQueueListener : private RequestQueue {
     public:
         RequestQueueListener(std::string queue_name, boost::shared_ptr<Config> cfg)
-            : cfg_(cfg), receiving_queue(CreateMQ<>(queue_name), 1000, 1000), log("RequestQueueListener." + queue_name)
+            : cfg_(cfg), receiving_queue(CreateMQ<>(queue_name), 1000, 1000), log(RequestQueueListenerLogModule)
         { }
 
         explicit RequestQueueListener(boost::shared_ptr<Config> cfg)

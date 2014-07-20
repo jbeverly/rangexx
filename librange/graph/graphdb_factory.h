@@ -44,13 +44,14 @@ class GraphdbAbstractFactory {
 
 };
 
+extern ::range::EmitterModuleRegistration GraphdbConcreteFactoryLogModule;
 //##############################################################################
 //##############################################################################
 template <class T>
 class GraphdbConcreteFactory : public GraphdbAbstractFactory
 {
     public:
-        GraphdbConcreteFactory() : log("GraphdbConcreteFactory") { }
+        GraphdbConcreteFactory() : log(GraphdbConcreteFactoryLogModule) { }
         virtual ~GraphdbConcreteFactory() = default;
         virtual graphdb_t createGraphdb(const std::string& name,
                                         backend_t backend,

@@ -24,10 +24,11 @@ std::deque<ThreadWrapper> SignalHandler::threads_;
 std::mutex SignalHandler::threads_lock_;
 volatile sig_atomic_t SignalHandler::sigstatus_ = 0;
 
+static ::range::EmitterModuleRegistration SignalHandlerLogModule { "stored.SignalHandler" };
 //##############################################################################
 //##############################################################################
 SignalHandler::SignalHandler(boost::shared_ptr<::range::StoreDaemonConfig> cfg)
-                : cfg_(cfg), log("SignalHandler"), shutdown_(false), running_(false)
+                : cfg_(cfg), log(SignalHandlerLogModule), shutdown_(false), running_(false)
 {
 }
 
@@ -87,7 +88,7 @@ void
 SignalHandler::register_thread(const std::string &name, std::thread &t,
                         std::function<void()> terminator)
 {
-    ::range::Emitter log { "SignalHandler" };
+    ::range::Emitter log { SignalHandlerLogModule };
     RANGE_LOG_FUNCTION();
 
     std::lock_guard<std::mutex> guard { threads_lock_ };

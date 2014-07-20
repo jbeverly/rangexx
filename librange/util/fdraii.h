@@ -46,15 +46,16 @@ struct LockFdRAIILockException : public range::Exception {
     { }
 };
 
+extern ::range::EmitterModuleRegistration LockFdRAIILogModule;
 //##############################################################################
 //##############################################################################
 class LockFdRAII {
     public:
         //######################################################################
         //######################################################################
-        LockFdRAII() : fd_(-1), log("FdRAII") { }
+        LockFdRAII() : fd_(-1), log(LockFdRAIILogModule) { }
         LockFdRAII(const std::string &filename, int mode = O_CREAT | O_RDWR)
-            : filename_(filename), fd_(-1), log("FdRAII")
+            : filename_(filename), fd_(-1), log(LockFdRAIILogModule)
         { 
             errno = 0;
             fd_ = open(filename.c_str(), mode);
@@ -97,9 +98,10 @@ class LockFdRAII {
         //######################################################################
         ~LockFdRAII() noexcept
         {
-            try {
-                LOG(debug4, "cleanup") << filename_ << " : " << fd_;
-            } catch(...) { }
+            /* try {
+                LOG(debug4, "cleanup") << filename_ << " : " << fd_;            // cannot safely invoke logger in destructor, as the boost.log library's static 
+                                                                                // storage can (and does) get destroyed before us
+            } catch(...) { } */
             try {
                 struct flock fl = {
                     F_UNLCK,        ///< l_type

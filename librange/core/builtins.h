@@ -23,11 +23,12 @@
 
 namespace range { namespace builtins {
 
+static ::range::EmitterModuleRegistration ExpandFnLogModule { "builtins.ExpandFn" };
 //##############################################################################
 //##############################################################################
 struct ExpandFn : public ::range::RangeFunction
 {
-    ExpandFn() : log("ExpandFn") { }
+    ExpandFn() : log(ExpandFnLogModule) { }
     virtual std::vector<std::string> operator()(
             const std::string &env_name_,
             const std::vector<std::vector<std::string>> &args) override;
@@ -36,11 +37,12 @@ struct ExpandFn : public ::range::RangeFunction
     ::range::Emitter log;
 };
 
+static ::range::EmitterModuleRegistration ExpandHostsFnLogModule { "builtins.ExpandHostsFn" };
 //##############################################################################
 //##############################################################################
 struct ExpandHostsFn : public ::range::RangeFunction
 {
-    ExpandHostsFn() : log("ExpandHostsFn") { }
+    ExpandHostsFn() : log(ExpandHostsFnLogModule) { }
     virtual std::vector<std::string> operator()(
             const std::string &env_name_,
             const std::vector<std::vector<std::string>> &args) override;
@@ -49,11 +51,12 @@ struct ExpandHostsFn : public ::range::RangeFunction
     ::range::Emitter log;
 };
 
+static ::range::EmitterModuleRegistration ClustersFnLogModule { "builtins.ClustersFn" };
 //##############################################################################
 //##############################################################################
 struct ClustersFn : public ::range::RangeFunction
 {
-    ClustersFn() : log("ClustersFn") { }
+    ClustersFn() : log(ClustersFnLogModule) { }
     virtual std::vector<std::string> operator()(
             const std::string &env_name_,
             const std::vector<std::vector<std::string>> &args) override;
@@ -62,11 +65,12 @@ struct ClustersFn : public ::range::RangeFunction
     ::range::Emitter log;
 };
 
+static ::range::EmitterModuleRegistration AllClustersFnLogModule { "builtins.AllClustersFn" };
 //##############################################################################
 //##############################################################################
 struct AllClustersFn : public ::range::RangeFunction
 {
-    AllClustersFn() : log("AllClustersFn") { }
+    AllClustersFn() : log(AllClustersFnLogModule) { }
     virtual std::vector<std::string> operator()(
             const std::string &env_name_,
             const std::vector<std::vector<std::string>> &args) override;

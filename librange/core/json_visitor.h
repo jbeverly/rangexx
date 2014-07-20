@@ -27,6 +27,7 @@
 
 namespace range {
 
+static ::range::EmitterModuleRegistration JSONVisitorLogModule { "JSONVisitor" };
 //##############################################################################
 //##############################################################################
 class JSONVisitor : public boost::static_visitor<std::string>
@@ -34,7 +35,7 @@ class JSONVisitor : public boost::static_visitor<std::string>
     public:
         JSONVisitor(bool pretty=false, uint32_t indent=4, uint32_t cur_indent=0) 
             : pretty_(pretty), indent_(indent), cur_indent_(cur_indent),
-                log("JSONVisitor")
+                log(JSONVisitorLogModule)
         {
         }
         std::string operator()(const RangeObject &obj) const;

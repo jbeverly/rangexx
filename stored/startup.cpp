@@ -52,13 +52,13 @@ get_peers(boost::shared_ptr<::range::StoreDaemonConfig> &cfg)
 }
 
 
+static ::range::EmitterModuleRegistration get_peer_addressesLogModule { "stored.get_peer_addresses" };
 //##############################################################################
 //##############################################################################
-
 static std::vector<boost::asio::ip::address>
 get_peer_addresses(std::vector<std::string> peers)
 {
-    range::Emitter log { "get_peer_addresses" };
+    range::Emitter log { get_peer_addressesLogModule };
     RANGE_LOG_FUNCTION();
 
     std::sort(peers.begin(), peers.end());
@@ -89,12 +89,13 @@ get_peer_addresses(std::vector<std::string> peers)
     return addrs;
 }
 
+static ::range::EmitterModuleRegistration resolve_peer_namesLogModule { "stored.resolve_peer_names" };
 //##############################################################################
 //##############################################################################
 static std::vector<std::string>
 resolve_peer_names(const std::vector<std::string> &addrs)
 {
-    range::Emitter log { "resolve_peer_names" };
+    range::Emitter log { resolve_peer_namesLogModule };
     RANGE_LOG_FUNCTION();
 
     std::vector<std::string> peer_names;
@@ -113,13 +114,14 @@ resolve_peer_names(const std::vector<std::string> &addrs)
     return peer_names;
 }
 
+static ::range::EmitterModuleRegistration initialize_range_clusterLogModule { "stored.initialize_range_cluster" };
 //##############################################################################
 //##############################################################################
 static void
 initialize_range_cluster(boost::shared_ptr<::range::StoreDaemonConfig> &cfg,
         std::vector<std::string> peer_names)
 {
-    range::Emitter log { "initialize_range_cluster" };
+    range::Emitter log { initialize_range_clusterLogModule };
     RANGE_LOG_FUNCTION();
 
     ::range::RangeAPI_v1 r { cfg };
@@ -174,12 +176,13 @@ get_random_peer(boost::shared_ptr<::range::StoreDaemonConfig> &cfg_,
     return responders.front();
 }
 
+static ::range::EmitterModuleRegistration initialize_from_rangeLogModule { "stored.initialize_from_range" };
 //##############################################################################
 //##############################################################################
 void
 initialize_from_range(boost::shared_ptr<::range::StoreDaemonConfig> cfg)
 {
-    range::Emitter log { "initialize_from_range" };
+    range::Emitter log { initialize_from_rangeLogModule };
     RANGE_LOG_FUNCTION();
 
     std::vector<std::string> peers = get_peers(cfg);

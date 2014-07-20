@@ -18,11 +18,12 @@
 #include "network.h"
 namespace range { namespace stored { namespace network {
 
+static ::range::EmitterModuleRegistration UDPMultiClientLogModule { "stored.network.UDPMultiClient" };
 //##############################################################################
 //##############################################################################
 UDPMultiClient::UDPMultiClient(const std::vector<std::string> &hostnames,
         const std::string &port_or_service)
-    : deadline_(io_service_), timed_out_(false), log("UDPMultiClient")
+    : deadline_(io_service_), timed_out_(false), log(UDPMultiClientLogModule)
 {
     RANGE_LOG_FUNCTION();
     for (const std::string &host : hostnames) { 

@@ -58,12 +58,13 @@ BerkeleyDBCXXDb::get(const std::string &name,
     return inst;
 }
 
+static ::range::EmitterModuleRegistration BerkeleyDBCXXDbLogModule { "db.BerkeleyDBCXXDb" };
 //##############################################################################
 //##############################################################################
 BerkeleyDBCXXDb::BerkeleyDBCXXDb(const std::string &name,
         boost::shared_ptr<BerkeleyDB> backend,
         const boost::shared_ptr<db::ConfigIface> db_config, boost::shared_ptr<BerkeleyDBCXXEnv> env)
-    : name_(name), backend_(backend), env_(env), db_config_(db_config), log("BerkeleyDBCXXDb")
+    : name_(name), backend_(backend), env_(env), db_config_(db_config), log(BerkeleyDBCXXDbLogModule)
 {
     RANGE_LOG_FUNCTION();
     inst_ = boost::make_shared<Db>(env_->getEnv(), 0);
@@ -87,6 +88,12 @@ BerkeleyDBCXXDb::BerkeleyDBCXXDb(const std::string &name,
     catch(std::exception &e) {
         txn->abort();
         THROW_STACK(DatabaseEnvironmentException(e.what()));
+    }
+    switch(rval) {
+        case 0:
+            break;
+        case ENOMEM:
+            THROW_STACK(DatabaseEnvironmentException("The maximum number of concurrent transactions has been reached."));
     }
     txn->commit(0);
 }

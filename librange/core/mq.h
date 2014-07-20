@@ -35,6 +35,7 @@ namespace range { namespace stored {
 namespace ipc = boost::interprocess;
 namespace bpt = boost::posix_time;
 
+static ::range::EmitterModuleRegistration MessageQueueLogModule { "stored.MessageQueue" };
 //##############################################################################
 //##############################################################################
 template <typename mqImpl = ipc::message_queue>
@@ -45,7 +46,7 @@ class MessageQueue {
         //######################################################################
         //######################################################################
         MessageQueue(boost::shared_ptr<mqImpl> mq, uint32_t send_timeout=100, uint32_t recv_timeout=100)
-            : log("MessageQueue"), q_(mq), send_timeout_(send_timeout), recv_timeout_(recv_timeout) 
+            : log(MessageQueueLogModule), q_(mq), send_timeout_(send_timeout), recv_timeout_(recv_timeout) 
         {
         } 
 
@@ -176,7 +177,7 @@ const uint32_t MessageQueue<mqImpl>::msg_ordinal = 0xAAAAAAAA;
 //##############################################################################
 template <typename T = ipc::message_queue>
 boost::shared_ptr<T> CreateMQ(std::string name, size_t qlen=512) {
-    range::Emitter log {"CreateMQ"};
+    range::Emitter log {MessageQueueLogModule};
     RANGE_LOG_FUNCTION();
     return boost::make_shared<T>( ipc::open_or_create, name.c_str(), qlen,
                     MessageQueue<T>::bufsize);

@@ -26,10 +26,11 @@ boost::lockfree::spsc_queue<range::stored::Request, boost::lockfree::capacity<10
 std::mutex Learner::blocker_;
 std::condition_variable Learner::condition_;
 
+static ::range::EmitterModuleRegistration LearnerLogModule { "stored.paxos.Learner" };
 //##############################################################################
 //##############################################################################
 Learner::Learner(boost::shared_ptr<::range::StoreDaemonConfig> cfg)
-    : QueueWorkerThread("Learner"), cfg_(cfg), range_(cfg_)
+    : QueueWorkerThread(LearnerLogModule), cfg_(cfg), range_(cfg_)
 {
 }
 
@@ -75,6 +76,7 @@ Learner::event_task()
 void
 Learner::learn_completed_requests()
 {
+    RANGE_LOG_FUNCTION();
     if(pending_learned_requests.empty()) { return; }
 
     auto it = pending_learned_requests.begin();
@@ -89,6 +91,7 @@ Learner::learn_completed_requests()
 void
 Learner::cleanup_dead_requests()
 {
+    RANGE_LOG_FUNCTION();
     if(pending_learned_requests.empty()) { return; }
 
     auto it = pending_learned_requests.begin();

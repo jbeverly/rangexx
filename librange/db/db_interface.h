@@ -193,7 +193,7 @@ class BackendInterface {
         virtual range_changelist_t get_changelist() = 0;
         virtual uint64_t get_graph_wanted_version(const std::string &graph_name) const = 0;
 
-        virtual void shutdown() = 0;
+        virtual void shutdown(bool terminal=false) = 0;
 
     //##########################################################################
     //##########################################################################

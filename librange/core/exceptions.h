@@ -23,6 +23,8 @@
 
 namespace range {
 
+extern EmitterModuleRegistration ExceptionLogModule;
+
 //##############################################################################
 //##############################################################################
 struct Exception : public std::runtime_error::runtime_error {
@@ -31,7 +33,7 @@ struct Exception : public std::runtime_error::runtime_error {
         : std::runtime_error::runtime_error(what) 
     { 
         try {
-            auto log = range::Emitter("exception");
+            auto log = range::Emitter(ExceptionLogModule);
             log.notice(event, what);
         } catch(...) { }
     }

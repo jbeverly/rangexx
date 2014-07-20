@@ -28,7 +28,7 @@
 
 namespace range { namespace compiler {
 
-
+static EmitterModuleRegistration RangeExpandingVisitorModule { "compiler.RangeExpandingVisitorModule" };
 //##############################################################################
 //##############################################################################
 class RangeExpandingVisitor : public boost::static_visitor<>
@@ -38,8 +38,8 @@ class RangeExpandingVisitor : public boost::static_visitor<>
         //######################################################################
         RangeExpandingVisitor(boost::shared_ptr<graph::GraphInterface> graph, 
                 std::string env_name = "", std::string prefix = "") 
-            : graph_(graph), env_name_(env_name), prefix_(prefix),
-            log("RangeExpandingVisitor")
+            : graph_(graph), prefix_(prefix), env_name_(env_name), 
+            log(RangeExpandingVisitorModule)
         {
         }
         
@@ -72,12 +72,13 @@ class RangeExpandingVisitor : public boost::static_visitor<>
         
 };
 
+static EmitterModuleRegistration FetchChildrenVisitorModule { "compiler.FetchChildrenVisitor" };
 //##############################################################################
 //##############################################################################
 class FetchChildrenVisitor : public boost::static_visitor<std::vector<std::string>>
 {
     public:
-        FetchChildrenVisitor() : log("FetchChildrenVisitor") {}
+        FetchChildrenVisitor() : log(FetchChildrenVisitorModule) {}
         //######################################################################
         //######################################################################
         template <typename ChildType>

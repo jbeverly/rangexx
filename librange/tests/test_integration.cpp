@@ -643,6 +643,46 @@ TEST_F(TestIntegration, test_remove_node_ext_dependency) {
     EXPECT_EQ(0, resultlist.size());
 }
 
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, test_reordering_nodes) {
+    using namespace ::range;
+    //bool req;
+    range::RangeStruct result;
+    std::vector<std::string> resultlist;
+
+    result = range->simple_expand("testenv1", "secondcluster1_1_2");
+    resultlist = get_value_list(result, false);
+
+    ASSERT_THAT(resultlist, ElementsAre("host3.example.com", "host2.example.com", "host1.example.com"));
+
+    range->remove_host_from_cluster("testenv1", "secondcluster1_1_2", "host3.example.com");
+    range->add_host_to_cluster("testenv1", "secondcluster1_1_2", "host3.example.com");
+
+    result = range->simple_expand("testenv1", "secondcluster1_1_2");
+    resultlist = get_value_list(result, false);
+
+    ASSERT_THAT(resultlist, ElementsAre("host2.example.com", "host1.example.com", "host3.example.com"));
+
+    range->remove_host_from_cluster("testenv1", "secondcluster1_1_2", "host1.example.com");
+    range->add_host_to_cluster("testenv1", "secondcluster1_1_2", "host1.example.com");
+
+    result = range->simple_expand("testenv1", "secondcluster1_1_2");
+    resultlist = get_value_list(result, false);
+
+    ASSERT_THAT(resultlist, ElementsAre("host2.example.com", "host3.example.com", "host1.example.com"));
+
+    range->remove_host_from_cluster("testenv1", "secondcluster1_1_2", "host2.example.com");
+    range->add_host_to_cluster("testenv1", "secondcluster1_1_2", "host2.example.com");
+    range->remove_host_from_cluster("testenv1", "secondcluster1_1_2", "host3.example.com");
+    range->add_host_to_cluster("testenv1", "secondcluster1_1_2", "host3.example.com");
+
+    result = range->simple_expand("testenv1", "secondcluster1_1_2");
+    resultlist = get_value_list(result, false);
+
+    ASSERT_THAT(resultlist, ElementsAre("host1.example.com", "host2.example.com", "host3.example.com"));
+}
+
 
 
 //##############################################################################

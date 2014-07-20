@@ -72,6 +72,9 @@ print_help(const char * progname)
         << "-v, --verbose" << std::endl
         << "\tSpecify repeatedly to increase verbosity" << std::endl
         << std::endl
+        << "-l, --logfilter" << std::endl
+        << "\tSpecify logfilters in the form of <CHANNEL>=<NUMBER>, where NUMBER is the numeric verbosity"
+        << std::endl
         << "-d, --debug" << std::endl
         << "\tSpecify to enable debugging output not normally emitted (even at max verbosity)" << std::endl
         << std::endl
@@ -87,16 +90,17 @@ const struct option longopts[] = {
     { "config",     required_argument,      NULL,     'c' },
     { "daemonize",  no_argument,            NULL,     'D' },
     { "verbose",    no_argument,            NULL,     'v' },
+    { "logfilter",  required_argument,      NULL,     'l' },
     { "debug",      no_argument,            NULL,     'd' },
     { "help",       no_argument,            NULL,     'h' },
     { "version",    no_argument,            NULL,     'V' },
     { 0, 0, 0 ,0 }
 };
 
-const char optstring[] = "c:DvdhV";
+const char optstring[] = "c:Dvl:dhV";
 
 #define UNUSED(x) (void)(x)
-
+static ::range::EmitterModuleRegistration mainLogModule { "main" };
 //##############################################################################
 //##############################################################################
 int
@@ -107,6 +111,7 @@ main(int argc, char ** argv, char ** envp)
     int lidx; 
     int ret = 0;
     std::string cfgfile;
+    std::string channel_filter;
     int verbosity = 2;
     bool debug_flag;
     bool daemonize_flag;
@@ -124,10 +129,13 @@ main(int argc, char ** argv, char ** envp)
                 print_version(argv[0]);
                 return(ret);
             case 'c':
-                cfgfile.assign(optarg);
+                cfgfile = optarg;
                 break;
             case 'v':
                 ++verbosity;
+                break;
+            case 'l':
+                channel_filter = optarg;
                 break;
             case 'd':
                 debug_flag = true;
@@ -148,8 +156,8 @@ main(int argc, char ** argv, char ** envp)
         verbosity = static_cast<uint8_t>(::range::Emitter::logseverity::debug9);
     }
 
-    ::range::initialize_logger("/dev/stdout", static_cast<uint8_t>(::range::Emitter::logseverity(verbosity)));
-    ::range::Emitter log { "main" };
+    ::range::initialize_logger("/dev/stdout", static_cast<uint8_t>(::range::Emitter::logseverity(verbosity)), channel_filter);
+    ::range::Emitter log { mainLogModule };
     BOOST_LOG_FUNCTION();
 
     using namespace range::stored;
@@ -185,6 +193,7 @@ main(int argc, char ** argv, char ** envp)
         hdl.join();
         LOG(critical, "shutting down");
     }
+    ::range::config->db_backend()->shutdown(true);
     ::range::config = nullptr;
     ::range::stored::WorkerThread::handle_exceptions();
     return 0;

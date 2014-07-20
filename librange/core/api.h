@@ -39,7 +39,7 @@
 #include "config.h"
 
 namespace range {
-
+static ::range::EmitterModuleRegistration RangeAPI_v1LogModule { "RangeAPI_v1" };
 //##############################################################################
 //##############################################################################
 class RangeAPI_v1
@@ -50,7 +50,7 @@ class RangeAPI_v1
         typedef ::range::graph::NodeIface::node_type node_type;
         //######################################################################
         explicit RangeAPI_v1(boost::shared_ptr<Config> cfg)
-            try : log("RangeAPI_v1"), cfg_(cfg) 
+            try : log(RangeAPI_v1LogModule), cfg_(cfg) 
         {
             cfg_->db_backend()->register_thread();
         } 
@@ -62,7 +62,7 @@ class RangeAPI_v1
         
         //######################################################################
         explicit RangeAPI_v1(const std::string &cfg_file) 
-            try : log("RangeAPI_v1"), cfg_(config_builder(cfg_file))
+            try : log(RangeAPI_v1LogModule), cfg_(config_builder(cfg_file))
         {
             cfg_->db_backend()->register_thread();
         }

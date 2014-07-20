@@ -177,7 +177,8 @@ librange_core_la_LIBADD =
 am_librange_core_la_OBJECTS = ./core/config_builder.lo \
 	./core/json_visitor.lo ./core/read_api.lo \
 	./core/stored_message.lo ./core/store.pb.lo \
-	./core/write_api.lo ./core/log.lo ./core/builtins.lo
+	./core/write_api.lo ./core/log.lo ./core/builtins.lo \
+	./core/exceptions.lo
 librange_core_la_OBJECTS = $(am_librange_core_la_OBJECTS)
 librange_db_la_LIBADD =
 am_librange_db_la_OBJECTS = ./db/berkeley_dbcxx_cursor.lo \
@@ -196,7 +197,8 @@ am_librange_graph_la_OBJECTS = graph/graphdb.lo graph/graph_iter.lo \
 	graph/node_interface.lo
 librange_graph_la_OBJECTS = $(am_librange_graph_la_OBJECTS)
 librange_util_la_LIBADD =
-am_librange_util_la_OBJECTS = util/crc32.lo ./util/demangle.lo
+am_librange_util_la_OBJECTS = util/crc32.lo ./util/demangle.lo \
+	./util/fdraii.lo
 librange_util_la_OBJECTS = $(am_librange_util_la_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -537,7 +539,8 @@ nobase_librange_util_la_include_HEADERS = util/crc32.h \
 										  ./util/demangle.h
 
 librange_util_la_SOURCES = util/crc32.cpp \
-						   ./util/demangle.cpp
+						   ./util/demangle.cpp \
+						   ./util/fdraii.cpp
 
 
 #librange_util_la_LIBADD = # $(AM_LIBADD)
@@ -624,7 +627,7 @@ nobase_librange_core_la_include_HEADERS = ./core/api.h \
 										  ./core/store.pb.h \
 										  ./core/log.h \
 										  ./core/builtins.h \
-										  ./core/range_function.h
+										  ./core/range_function.h 
 
 librange_core_la_SOURCES = ./core/config_builder.cpp \
 						   ./core/json_visitor.cpp \
@@ -633,7 +636,8 @@ librange_core_la_SOURCES = ./core/config_builder.cpp \
 						   ./core/store.pb.cpp \
 						   ./core/write_api.cpp \
 						   ./core/log.cpp \
-						   ./core/builtins.cpp
+						   ./core/builtins.cpp \
+						   ./core/exceptions.cpp
 
 
 #librange_core_la_LIBADD = # $(AM_LIBADD)
@@ -762,6 +766,8 @@ core/$(DEPDIR)/$(am__dirstamp):
 ./core/log.lo: core/$(am__dirstamp) core/$(DEPDIR)/$(am__dirstamp)
 ./core/builtins.lo: core/$(am__dirstamp) \
 	core/$(DEPDIR)/$(am__dirstamp)
+./core/exceptions.lo: core/$(am__dirstamp) \
+	core/$(DEPDIR)/$(am__dirstamp)
 
 librange_core.la: $(librange_core_la_OBJECTS) $(librange_core_la_DEPENDENCIES) $(EXTRA_librange_core_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_core_la_OBJECTS) $(librange_core_la_LIBADD) $(LIBS)
@@ -831,6 +837,7 @@ util/$(DEPDIR)/$(am__dirstamp):
 util/crc32.lo: util/$(am__dirstamp) util/$(DEPDIR)/$(am__dirstamp)
 ./util/demangle.lo: util/$(am__dirstamp) \
 	util/$(DEPDIR)/$(am__dirstamp)
+./util/fdraii.lo: util/$(am__dirstamp) util/$(DEPDIR)/$(am__dirstamp)
 
 librange_util.la: $(librange_util_la_OBJECTS) $(librange_util_la_DEPENDENCIES) $(EXTRA_librange_util_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_util_la_OBJECTS) $(librange_util_la_LIBADD) $(LIBS)
@@ -857,6 +864,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/builtins.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/config_builder.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/exceptions.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/json_visitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/log.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/read_api.Plo@am__quote@
@@ -881,6 +889,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./gnu/$(DEPDIR)/xalloc-die.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./gnu/$(DEPDIR)/xmalloc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./util/$(DEPDIR)/demangle.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./util/$(DEPDIR)/fdraii.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeParser_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeScanner_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/expanding_visitor.Plo@am__quote@

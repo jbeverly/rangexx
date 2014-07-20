@@ -27,9 +27,9 @@
 #include "db_interface.h"
 
 
-namespace range {
-namespace db { 
+namespace range { namespace db { 
 
+extern ::range::EmitterModuleRegistration ProtobufNodeLogModule;
 //##############################################################################
 //##############################################################################
 class ProtobufNode : public graph::NodeIface, public boost::enable_shared_from_this<ProtobufNode> {
@@ -42,7 +42,7 @@ class ProtobufNode : public graph::NodeIface, public boost::enable_shared_from_t
         inline ProtobufNode()
             : name_(), instance_(), wanted_version_(-1),
             type_(node_type::UNKNOWN), info_initialized(false), info(),
-            log("ProtobufNode")
+            log(ProtobufNodeLogModule)
         {
         }
 
@@ -50,7 +50,7 @@ class ProtobufNode : public graph::NodeIface, public boost::enable_shared_from_t
                             uint64_t version = -1)
             : name_(name), instance_(instance), wanted_version_(version),
                 type_(node_type::UNKNOWN), info_initialized(false),
-                log("ProtobufNode")
+                log(ProtobufNodeLogModule)
         {
         }
 

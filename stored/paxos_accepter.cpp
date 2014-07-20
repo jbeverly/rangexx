@@ -25,10 +25,11 @@ boost::lockfree::spsc_queue<range::stored::Request, boost::lockfree::capacity<10
 std::mutex Accepter::blocker_;
 std::condition_variable Accepter::condition_;
 
+static ::range::EmitterModuleRegistration AccepterLogModule { "stored.paxos.Accepter" };
 //##############################################################################
 //##############################################################################
 Accepter::Accepter(boost::shared_ptr<::range::StoreDaemonConfig> cfg)
-    : QueueWorkerThread("Accepter"), cfg_(cfg), promised_proposal_num_(0)
+    : QueueWorkerThread(AccepterLogModule), cfg_(cfg), promised_proposal_num_(0)
 {
 }
 

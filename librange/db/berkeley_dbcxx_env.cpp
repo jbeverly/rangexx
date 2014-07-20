@@ -30,6 +30,7 @@ thread_local boost::weak_ptr<BerkeleyDBCXXLock> BerkeleyDBCXXEnv::current_lock_;
 std::shared_ptr<range::util::LockFdRAII> BerkeleyDBCXXEnv::process_registration_fd_;
 thread_local std::shared_ptr<range::util::LockFdRAII> BerkeleyDBCXXEnv::thread_registration_fd_;
 
+static ::range::EmitterModuleRegistration BerkeleyDBCXXEnvLogModule {"db.BerkeleyDBCXXEnv"};
 //##############################################################################
 //##############################################################################
 boost::shared_ptr<BerkeleyDBCXXEnv>
@@ -47,7 +48,7 @@ BerkeleyDBCXXEnv::get(const boost::shared_ptr<db::ConfigIface> db_config)
 void
 BerkeleyDBCXXEnv::shutdown()
 {
-    range::Emitter log { "BerkeleyDBCXXEnv" };
+    range::Emitter log { BerkeleyDBCXXEnvLogModule };
     RANGE_LOG_FUNCTION();
     std::lock_guard<std::mutex> guard { inst_lock_ };
     BerkeleyDBCXXDb::close_all_db();                                            // close any open databases in this thread; since we are a singleton
@@ -58,7 +59,7 @@ BerkeleyDBCXXEnv::shutdown()
 //##############################################################################
 //##############################################################################
 BerkeleyDBCXXEnv::BerkeleyDBCXXEnv(const boost::shared_ptr<db::ConfigIface> db_config)
-    : env_{0}, log{"BerkeleyDBCXXEnv"}
+    : env_{0}, log{BerkeleyDBCXXEnvLogModule}
 {
     RANGE_LOG_FUNCTION();
     int rval = 0;
@@ -191,10 +192,6 @@ BerkeleyDBCXXEnv::BerkeleyDBCXXEnv(const boost::shared_ptr<db::ConfigIface> db_c
 BerkeleyDBCXXEnv::~BerkeleyDBCXXEnv() noexcept
 {
     try {
-        range::Emitter log { "BerkeleyDBCXXEnv.dtor" };
-        RANGE_LOG_FUNCTION();
-    } catch(...) {}
-    try {
         BerkeleyDBCXXDb::close_all_db();                                    // close any open databases in this thread; since we are a singleton
                                                                             // we should be destructed at program exit, so hopefully we're the only
                                                                             // thread left with open databases...
@@ -232,7 +229,7 @@ bool
 BerkeleyDBCXXEnv::get_lock(const std::string &lockfile,
         std::shared_ptr<range::util::LockFdRAII> * registration_fd)
 {
-    range::Emitter log { "BerkeleyDBCXXEnv" };
+    range::Emitter log {BerkeleyDBCXXEnvLogModule};
     RANGE_LOG_FUNCTION();
     std::shared_ptr<range::util::LockFdRAII> fd;
     try {
@@ -254,8 +251,7 @@ void
 BerkeleyDBCXXEnv::cleanup_thread()
 {
     RANGE_LOG_FUNCTION();
-    this->cleanup_thread(this->get_lockfile(&env_, getpid(), pthread_self()));
-}
+    this->cleanup_thread(this->get_lockfile(&env_, getpid(), pthread_self())); }
 
 //##############################################################################
 //##############################################################################

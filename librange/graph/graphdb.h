@@ -32,9 +32,9 @@
 #include "node_factory.h"
 #include "../db/db_interface.h"
 
-namespace range {
-namespace graph {
+namespace range { namespace graph {
 
+extern ::range::EmitterModuleRegistration GraphTxnLogModule;
 //##############################################################################
 //##############################################################################
 class GraphTxn : public GraphTxnIface
@@ -47,7 +47,7 @@ class GraphTxn : public GraphTxnIface
                 s_version(graphdb->version()),
                 lock(inst->write_lock(db::GraphInstanceInterface::record_type::UNKNOWN,"")),
                 txn(inst->start_txn()),
-                log("GraphTxn"),
+                log(GraphTxnLogModule),
                 timer()
         {
             RANGE_LOG_FUNCTION();
@@ -87,6 +87,7 @@ class GraphTxn : public GraphTxnIface
         boost::shared_ptr<range::Emitter::Timer> timer;
 };
 
+extern ::range::EmitterModuleRegistration GraphDBLogModule;
 //##############################################################################
 //##############################################################################
 class GraphDB 
@@ -106,7 +107,7 @@ class GraphDB
         //######################################################################
         GraphDB()
             : name_(), instance_(), wanted_version_(-1), node_factory_(),
-                log("GraphDB")
+                log(GraphDBLogModule)
                 
         {
             /* this space intentionally left blank */
@@ -124,7 +125,7 @@ class GraphDB
         inline GraphDB(const std::string& name, instance_t instance, 
                 node_factory_t node_factory)
             : name_(name), instance_(instance), wanted_version_(-1),
-                node_factory_(node_factory), log("GraphDB")
+                node_factory_(node_factory), log(GraphDBLogModule)
         {
             /* this space intentionally left blank */
         }

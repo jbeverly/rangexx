@@ -28,8 +28,8 @@ std::vector<std::exception_ptr> WorkerThread::exceptions_;
 
 //##############################################################################
 //##############################################################################
-WorkerThread::WorkerThread(const std::string &title) 
-    : log(title), title_(title), shutdown_(false), running_(false)
+WorkerThread::WorkerThread(const EmitterModuleRegistration &title) 
+    : log(title), title_(title.name), shutdown_(false), running_(false)
 { }
 
 //##############################################################################

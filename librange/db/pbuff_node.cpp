@@ -23,11 +23,12 @@
 #include "pbuff_node.h"
 #include "../util/crc32.h"
 
-namespace range {
-namespace db {
+namespace range { namespace db {
 
 typedef boost::shared_ptr<ProtobufNode> pbuffnode_t;
 typedef GraphInstanceInterface::record_type rectype_t;
+
+::range::EmitterModuleRegistration ProtobufNodeLogModule { "db.ProtobufNode" };
 
 //##############################################################################
 //##############################################################################
@@ -35,7 +36,7 @@ static inline bool
 write_record(const std::string& name, NodeInfo& info,
         ProtobufNode::instance_t instance, rectype_t rectype = rectype_t::NODE)
 {
-    auto log = range::Emitter("ProtobufNode");
+    range::Emitter log {ProtobufNodeLogModule};
     BOOST_LOG_FUNCTION();
 
     info.set_crc32(0);
@@ -54,7 +55,7 @@ template <typename Type>
 static inline void
 add_unique_new_version(Type item, uint64_t new_version)
 {
-    range::Emitter log { "ProtobufNode" };
+    range::Emitter log {ProtobufNodeLogModule};
     BOOST_LOG_FUNCTION();
     for(int vv_idx = item->versions_size() - 1; vv_idx >= 0; --vv_idx) {
         if (new_version == item->versions(vv_idx)) {
@@ -73,7 +74,7 @@ template <typename Type>
 static inline void
 update_unique_new_version(Type item, uint64_t cmp_version, uint64_t new_version)
 {
-    range::Emitter log { "ProtobufNode" };
+    range::Emitter log { ProtobufNodeLogModule };
     BOOST_LOG_FUNCTION();
     for(int vv_idx = item->versions_size() - 1; vv_idx >= 0; --vv_idx) {
         if (new_version == item->versions(vv_idx)) {
@@ -92,7 +93,7 @@ update_unique_new_version(Type item, uint64_t cmp_version, uint64_t new_version)
 static inline range::db::NodeInfo_Tags_KeyValue_Values *
 find_value(const std::string& value, NodeInfo_Tags_KeyValue * kv)
 {
-    auto log = range::Emitter("ProtobufNode");
+    range::Emitter log {ProtobufNodeLogModule};
     BOOST_LOG_FUNCTION();
     for (int val_idx = 0; val_idx < kv->values_size(); ++val_idx) {
         if (value == kv->values(val_idx).data() ) {
@@ -108,7 +109,7 @@ find_value(const std::string& value, NodeInfo_Tags_KeyValue * kv)
 //##############################################################################
 static inline void
 update_tag_versions(range::db::NodeInfo& info, uint64_t cmp_version, uint64_t new_version) {
-    auto log = range::Emitter("ProtobufNode");
+    range::Emitter log {ProtobufNodeLogModule};
     BOOST_LOG_FUNCTION();
     int keys_size = info.tags().keys_size();
     for (int key_idx = 0; key_idx < keys_size; ++key_idx) {
@@ -122,7 +123,7 @@ update_tag_versions(range::db::NodeInfo& info, uint64_t cmp_version, uint64_t ne
 static inline void
 init_default_nodeinfo(NodeInfo& info) //, uint64_t graph_version)
 {
-    auto log = range::Emitter("ProtobufNode");
+    range::Emitter log { ProtobufNodeLogModule };
     BOOST_LOG_FUNCTION();
     info.set_node_type(static_cast<int>(graph::NodeIface::node_type::UNKNOWN));
     info.set_list_version(0);
@@ -141,7 +142,7 @@ init_default_nodeinfo(NodeInfo& info) //, uint64_t graph_version)
 static inline void
 update_all_edge_versions(NodeInfo& info, uint64_t cmp_version, uint64_t new_version)
 {
-    auto log = range::Emitter("ProtobufNode");
+    range::Emitter log { ProtobufNodeLogModule };
     BOOST_LOG_FUNCTION();
     for (auto direction : { info.mutable_forward(), info.mutable_reverse() }) {
         for (int i = 0; i < direction->edges_size(); ++i) {
@@ -156,7 +157,7 @@ update_all_edge_versions(NodeInfo& info, uint64_t cmp_version, uint64_t new_vers
 static inline std::vector<std::string>
 get_map_value(uint64_t cmp_version, const NodeInfo_Tags_KeyValue& key) 
 {
-    auto log = range::Emitter("ProtobufNode");
+    range::Emitter log { ProtobufNodeLogModule };
     BOOST_LOG_FUNCTION();
     std::vector<std::string> values;
 

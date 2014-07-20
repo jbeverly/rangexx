@@ -23,10 +23,11 @@ namespace range { namespace stored {
 const std::string RangePaxosClient::environment_name_ { "_local_" };
 const std::array<std::string, 3> RangePaxosClient::cluster_names_ { { "proposers", "accepters", "learners" } };
 
+static ::range::EmitterModuleRegistration RangePaxosClientLogModule { "stored.RangePaxosClient" };
 //##############################################################################
 //##############################################################################
 RangePaxosClient::RangePaxosClient(boost::shared_ptr<::range::StoreDaemonConfig> &cfg)
-    : cfg_(cfg), log("RangePaxosClient")
+    : cfg_(cfg), log(RangePaxosClientLogModule)
 {
 }
 

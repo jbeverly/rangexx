@@ -28,7 +28,7 @@ class MockBackend : public ::range::db::BackendInterface
         MOCK_METHOD1(getGraphInstance, graph_instance_t(const std::string& name));
         MOCK_METHOD1(createGraphInstance, graph_instance_t(const std::string& name));
         MOCK_CONST_METHOD0(listGraphInstances, std::vector<std::string>(void));
-        MOCK_METHOD0(shutdown, void(void));
+        MOCK_METHOD1(shutdown, void(bool));
         MOCK_CONST_METHOD0(register_thread, void(void));
         MOCK_CONST_METHOD0(range_version, uint64_t());
         MOCK_METHOD1(set_wanted_version, void(uint64_t));

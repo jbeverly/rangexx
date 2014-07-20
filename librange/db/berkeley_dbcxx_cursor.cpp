@@ -23,6 +23,7 @@
 
 namespace range { namespace db {
 
+static ::range::EmitterModuleRegistration BerkeleyDBCXXCursorLogModule { "db.BerkeleyDBCXXCursor" };
 //##############################################################################
 //##############################################################################
 BerkeleyDBCXXCursor::BerkeleyDBCXXCursor(
@@ -31,7 +32,7 @@ BerkeleyDBCXXCursor::BerkeleyDBCXXCursor(
         boost::shared_ptr<BerkeleyDBCXXLock> lock
         )
     : inst_(inst), db_(db), lock_(lock), 
-        txn_(BerkeleyDBCXXLockTxnGetter(lock).txn()), log("BerkeleyDBCXXCursor")
+        txn_(BerkeleyDBCXXLockTxnGetter(lock).txn()), log(BerkeleyDBCXXCursorLogModule)
 {
     int rval = 0;
     try {

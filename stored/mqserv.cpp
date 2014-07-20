@@ -26,10 +26,11 @@
 
 namespace range { namespace stored {
 
+static ::range::EmitterModuleRegistration MQServerLogModule { "stored.MQServer" };
 //##############################################################################
 //##############################################################################
 MQServer::MQServer(boost::shared_ptr<::range::StoreDaemonConfig> cfg) 
-            : WorkerThread("MQServer"), cfg_(cfg)
+            : WorkerThread(MQServerLogModule), cfg_(cfg)
 {
 }
 

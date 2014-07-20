@@ -15,9 +15,33 @@
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <boost/algorithm/string.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/regex.hpp>
+
 #include "log.h"
+#include "exceptions.h"
 
 namespace range {
+
+const char Emitter::logseverity_strings[16][10] = {
+    "fatal",
+    "critical",
+    "error",
+    "warning",
+    "info",
+    "notice",
+    "debug0",
+    "debug1",
+    "debug2",
+    "debug3",
+    "debug4",
+    "debug5",
+    "debug6",
+    "debug7",
+    "debug8",
+    "debug9"
+};
 
 std::mutex StatsD::getter_lock_;
 std::shared_ptr<StatsD> StatsD::inst_;
@@ -170,15 +194,52 @@ Emitter::Timer::~Timer()
 }
 
 
+
+//##############################################################################
+//##############################################################################
+// EmitterModuleRegistration
+//##############################################################################
+//##############################################################################
+size_t EmitterModuleRegistration::refcount_ = 0;
+std::mutex Emitter::registered_modules_lock_;
+std::unique_ptr<std::set<std::string>> Emitter::registered_modules_;
+
+EmitterModuleRegistration::EmitterModuleRegistration(const std::string &module_name)
+    : name(module_name)
+{
+    std::lock_guard<std::mutex> guard { Emitter::registered_modules_lock_ };
+    if(!Emitter::registered_modules_) {
+        Emitter::registered_modules_ = std::unique_ptr<std::set<std::string>>(new std::set<std::string>());
+    }
+    if(Emitter::registered_modules_->find(module_name) == Emitter::registered_modules_->end()) {
+        std::cout << "adding module_name: " << module_name << std::endl;
+        Emitter::registered_modules_->insert(module_name);
+    }
+    ++refcount_;
+}
+//##############################################################################
+EmitterModuleRegistration::~EmitterModuleRegistration() noexcept
+{
+    try {
+        std::lock_guard<std::mutex> guard { Emitter::registered_modules_lock_ };
+        --refcount_;
+        if(refcount_ == 0) {
+            Emitter::registered_modules_.reset();
+        }
+    } catch(...) { }
+}
+
+
 //##############################################################################
 //##############################################################################
 // Emitter
 //##############################################################################
 //##############################################################################
 
-Emitter::Emitter(std::string module)
-    : sevstr_(std::string("unknown")), module_(module),
-        log(boost::log::keywords::channel = module),
+
+Emitter::Emitter(const EmitterModuleRegistration &module)
+    : sevstr_(std::string("unknown")), module_(module.name),
+        log(boost::log::keywords::channel = module.name),
         statsd_(StatsD::get())
 {
     log.add_attribute("SevString", sevstr_); 
@@ -404,11 +465,93 @@ Emitter::start_timer(std::string event, std::string extra) const
 // Free functions
 //##############################################################################
 //##############################################################################
+typedef boost::log::expressions::channel_severity_filter_actor<
+        std::string,
+        Emitter::logseverity,
+        boost::log::fallback_to_none,
+        boost::log::fallback_to_none,
+        boost::log::less,
+        std::less_equal<Emitter::logseverity>
+    > severity_filter_table_t;
+
+
+//##############################################################################
+//##############################################################################
+static severity_filter_table_t
+build_channel_filter(const std::string &channel_filter)
+{
+    using namespace boost::log;
+    BOOST_LOG_FUNCTION();
+    auto log = Emitter(EmitterModuleRegistration("filter"));
+
+    severity_filter_table_t min_severity =
+        expressions::channel_severity_filter(range::channel, range::severity,
+                std::less_equal<Emitter::logseverity>());
+
+    if(!channel_filter.empty()) {
+        std::vector<std::string> wanted_channels;
+        boost::split(wanted_channels, channel_filter, 
+                [](char c) { return c == ','; });
+
+        for(std::string c : wanted_channels) { 
+            std::vector<std::string> kv;
+            boost::split(kv, c, [](char c) { return c == '='; });
+            if(kv.size() == 2) {
+                int channel_sev = std::atoi(kv[1].c_str());
+                std::vector<std::string> matches;
+                boost::regex re { kv[0], boost::regex_constants::icase };
+
+                for ( std::string logmodule : Emitter::registered_modules() ) {
+                    if(boost::regex_search(logmodule, re, boost::match_perl)) {
+                        matches.push_back(logmodule);
+                    }
+                }
+
+
+                if(channel_sev == 0) {
+                    std::string channel_sev_name;
+                    bool found = false;
+
+                    for(char c : kv[1]) { channel_sev_name.push_back(tolower(c)); }
+                    for(uint16_t i = 0; 
+                            i <= static_cast<uint8_t>(Emitter::logseverity::debug9);
+                            ++i) {
+
+                        if (std::string(Emitter::logseverity_strings[i]) == channel_sev_name) {
+                            for(std::string mod : matches) { 
+                                min_severity[mod] = Emitter::logseverity(i);
+                                LOG(critical, "logging") << mod << " at severity " << i;
+                            }
+                            found = true;
+                            break;
+                        }
+                    }
+                    if(!found) {
+                        std::stringstream s;
+                        s << "invalid severity: " << kv[1];
+                        throw range::Exception(s.str());
+                    }
+                } else {
+                    if (channel_sev > static_cast<uint8_t>(Emitter::logseverity::debug9)) {
+                        channel_sev = static_cast<uint8_t>(Emitter::logseverity::debug9);
+                    }
+                    for(std::string mod : matches) { 
+                        min_severity[mod] = Emitter::logseverity(channel_sev);
+                        LOG(critical, "logging") << mod << " at severity " << channel_sev;
+                    }
+                }
+            } else {
+                throw range::Exception("channel-logging filters must be in the form of name=value,name2=value2");
+            }
+        }
+    }
+    return min_severity;
+}
 
 Emitter::logseverity Emitter::loglevel_;
 //##############################################################################
 //##############################################################################
-void initialize_logger(const std::string &filename, uint8_t sev)
+void initialize_logger(const std::string &filename, uint8_t sev, std::string channel_filter)
 {
     using namespace boost::log;
 
@@ -434,11 +577,14 @@ void initialize_logger(const std::string &filename, uint8_t sev)
             keywords::open_mode = std::ios::app
         );
 
-    core::get()->set_filter(expressions::attr<Emitter::logseverity>("Severity") 
-            <= Emitter::logseverity(sev)); 
+    severity_filter_table_t min_severity = build_channel_filter(channel_filter);
+    
+    core::get()->set_filter(min_severity || expressions::attr<Emitter::logseverity>("Severity") 
+            <= Emitter::logseverity(sev));
+    
 
     BOOST_LOG_FUNCTION();
-    auto log = Emitter("init");
+    auto log = Emitter(EmitterModuleRegistration("init"));
     LOG(critical, "service_start") << "Starting up";
 }
 

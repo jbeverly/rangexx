@@ -23,10 +23,11 @@
 
 namespace range { namespace stored {
 
+static ::range::EmitterModuleRegistration HeartbeatLogModule { "stored.Heartbeat" };
 //##############################################################################
 //##############################################################################
 Heartbeat::Heartbeat(boost::shared_ptr<range::StoreDaemonConfig> cfg)
-    : WorkerThread("Heartbeat"), cfg_(cfg)
+    : WorkerThread(HeartbeatLogModule), cfg_(cfg)
 {
 }
 
@@ -42,6 +43,7 @@ Heartbeat::event_task()
 
     if(it != proposers.begin() && it != proposers.end()) {
         --it;
+        LOG(info, "heartbeating") << *it;
 
         range::stored::network::UDPMultiClient cl { { *it }, cfg_->port() };
         Request req;
@@ -52,14 +54,20 @@ Heartbeat::event_task()
         req.set_crc(0);
         std::string buf = req.SerializeAsString();
         req.set_crc(range::util::crc32(buf));
+        std::chrono::time_point<std::chrono::system_clock> start, end;
+        start = std::chrono::high_resolution_clock::now();
 
         auto res = cl.timed_send(req.SerializeAsString(), cfg_->heartbeat_timeout());
-        if(res.empty() || res.begin()->second.status() != 0) {
+        if(res.empty() || res.begin()->second.status() != true) {
             if(proposers.size() > 1 && proposers[1] == cfg_->node_id()) {
                 reorder_proposer(*it, true);
             } else {
                 reorder_proposer(*it, false);
             }
+        } else {
+            end = std::chrono::high_resolution_clock::now();
+            std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(start - end);
+            std::this_thread::sleep_for(std::chrono::milliseconds(cfg_->heartbeat_timeout()) - duration);
         }
     } else {
         std::this_thread::sleep_for(std::chrono::milliseconds(cfg_->heartbeat_timeout()));
@@ -71,7 +79,8 @@ Heartbeat::event_task()
 void
 Heartbeat::reorder_proposer(const std::string &proposer, bool failover)
 {
-    auto type = (failover) ? Request::Type::Request_Type_REQUEST : Request::Type::Request_Type_FAILOVER;
+    LOG(critical, "Reordering proposers") << "heartbeat failure with: " << proposer << ((failover) ? " and we are becoming distinguished proposer": "");
+    auto type = (failover) ? Request::Type::Request_Type_FAILOVER : Request::Type::Request_Type_REQUEST;
     RangePaxosClient rcl { cfg_ };
 
     ::range::stored::WriteRequest req { cfg_, "remove_host_from_cluster" };

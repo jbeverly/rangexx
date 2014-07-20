@@ -23,8 +23,7 @@
 #include "../core/log.h"
 #include "../db/db_interface.h"
 
-namespace range {
-namespace graph { 
+namespace range { namespace graph { 
 
 //##############################################################################
 //##############################################################################
@@ -40,12 +39,13 @@ class NodeIfaceAbstractFactory {
 
 };
 
+extern ::range::EmitterModuleRegistration NodeIfaceConcreteFactoryLogModule;
 //##############################################################################
 //##############################################################################
 template <class T>
 struct NodeIfaceConcreteFactory : public NodeIfaceAbstractFactory
 {
-    NodeIfaceConcreteFactory() : log("NodeIfaceConcreteFactory") {}
+    NodeIfaceConcreteFactory() : log(NodeIfaceConcreteFactoryLogModule) {}
     virtual ~NodeIfaceConcreteFactory() = default;
     virtual node_t createNode(const std::string& name, instance_t instance) override
     {

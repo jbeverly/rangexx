@@ -25,8 +25,12 @@
 #include "../db/db_exceptions.h"
 #include "graphdb.h"
 
-namespace range {
-namespace graph {
+namespace range { namespace graph {
+
+::range::EmitterModuleRegistration NodeIfaceConcreteFactoryLogModule { "graph.NodeIfaceConcreteFactory" };
+::range::EmitterModuleRegistration GraphDBLogModule { "graph.GraphDB" };
+::range::EmitterModuleRegistration GraphdbConcreteFactoryLogModule { "graph.GraphdbConcreteFactory" };
+::range::EmitterModuleRegistration GraphTxnLogModule { "graph.GraphTxn" };
 
 //##############################################################################
 //##############################################################################

@@ -66,6 +66,7 @@ size_t ExpandFn::n_args() const { return 1; }
 //##############################################################################
 //##############################################################################
 
+static ::range::EmitterModuleRegistration ExpandHostsVisitorLogModule { "builtins.ExpandHostsVisitor" };
 //##############################################################################
 class ExpandHostsVisitor : public boost::static_visitor<void>
 {
@@ -73,7 +74,7 @@ class ExpandHostsVisitor : public boost::static_visitor<void>
         mutable std::vector<std::string> hosts;
 
         explicit ExpandHostsVisitor(const std::string &env_name) 
-            : log("ExpandHostsVisitor"), env_name_(env_name) 
+            : log(ExpandHostsVisitorLogModule), env_name_(env_name) 
         { }
 
         void operator()(const range::RangeObject &obj) const

@@ -25,10 +25,11 @@ namespace range { namespace stored {
 
 using boost::asio::ip::udp;
 
+static ::range::EmitterModuleRegistration ListenServerLogModule { "stored.ListenServer" };
 //##############################################################################
 //##############################################################################
 ListenServer::ListenServer(boost::shared_ptr<::range::StoreDaemonConfig> cfg)
-                : WorkerThread{"ListenServer"}, 
+                : WorkerThread{ListenServerLogModule}, 
                   socket_{io_service_, udp::endpoint(udp::v4(), cfg->port())},
                   cfg_{cfg}
 {

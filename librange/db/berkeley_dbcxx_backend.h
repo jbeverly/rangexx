@@ -46,7 +46,7 @@ class BerkeleyDB : public BackendInterface,
         virtual void set_wanted_version(uint64_t) override;
         virtual range_changelist_t get_changelist() override;
         virtual uint64_t get_graph_wanted_version(const std::string &graph_name) const override;
-        virtual void shutdown() override;
+        virtual void shutdown(bool terminal=false) override;
         static void backend_shutdown();
         std::string dbhome() const;
         void add_new_range_version();
@@ -56,6 +56,7 @@ class BerkeleyDB : public BackendInterface,
 
         static boost::shared_ptr<BerkeleyDB> inst_;
         static std::mutex inst_lock_;
+        volatile static bool terminated_;
 
         thread_local static boost::shared_ptr<BerkeleyDBCXXDb> info_;
 

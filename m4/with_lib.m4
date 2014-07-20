@@ -71,7 +71,7 @@ dnl but the disadvantage that the headers may mismatch with the library.
 AC_DEFUN([AX_CHECK_LIB_CLASS],
 		 [AC_REQUIRE([AC_LINK_IFELSE])
           AC_REQUIRE([AC_LANG_PROGRAM])
-          AC_LINK_IFELSE([AC_LANG_PROGRAM([#include $2],[typedef $3 foo;])],[$4],[$5])
+          AC_LINK_IFELSE([AC_LANG_PROGRAM([#include $2],[typedef $3 foo; foo * bar; (void)(bar);])],[$4],[$5])
          ])
 
 AC_DEFUN([AX_CHECK_EXT_LIB_CLASS],

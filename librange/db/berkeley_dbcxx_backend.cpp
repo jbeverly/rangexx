@@ -20,6 +20,7 @@
 
 namespace range { namespace db {
 
+volatile bool BerkeleyDB::terminated_=false;
 boost::shared_ptr<BerkeleyDB> BerkeleyDB::inst_;
 std::mutex BerkeleyDB::inst_lock_;
 thread_local boost::shared_ptr<BerkeleyDBCXXDb> BerkeleyDB::info_;              // All BerkeleyDBCXXDb instances expect to be thread-local; we must not break that
@@ -32,6 +33,9 @@ boost::shared_ptr<BerkeleyDB>
 BerkeleyDB::get(const boost::shared_ptr<db::ConfigIface> db_config)
 {
     std::lock_guard<std::mutex> guard { inst_lock_ };
+    if(terminated_) {
+        THROW_STACK(range::db::Exception("Cannot acquire instance of BerkeleyDB after terminal shutdown"));
+    }
     if(!inst_) {
         inst_ = boost::shared_ptr<BerkeleyDB>(new BerkeleyDB(db_config));
     }
@@ -45,18 +49,18 @@ BerkeleyDB::backend_shutdown()
 {
     std::lock_guard<std::mutex> guard { inst_lock_ };
     if(inst_) {
-        inst_->shutdown();
+        inst_->shutdown(true);
         inst_ = nullptr;
     }
-    google::protobuf::ShutdownProtobufLibrary();
 }
 
+static ::range::EmitterModuleRegistration BerkeleyDBLogModule { "db.BerkeleyDB" };
 //##############################################################################
 //##############################################################################
 BerkeleyDB::BerkeleyDB(const boost::shared_ptr<db::ConfigIface> db_config)
     :   db_config_(db_config),
         env_(BerkeleyDBCXXEnv::get(db_config_)), 
-        log("BerkeleyDB")
+        log(BerkeleyDBLogModule)
 {
 }
 
@@ -278,11 +282,15 @@ BerkeleyDB::register_thread() const
 //##############################################################################
 //##############################################################################
 void
-BerkeleyDB::shutdown()
+BerkeleyDB::shutdown(bool terminal)
 {
     info_.reset();
     env_->shutdown();
     inst_.reset();
+    if(terminal) {
+        google::protobuf::ShutdownProtobufLibrary();
+        terminated_ = true;
+    }
 }
 
 //##############################################################################

@@ -22,6 +22,7 @@
 #include <cctype>
 #include <chrono>
 #include <mutex>
+#include <set>
 
 #include <boost/make_shared.hpp>
 #include <boost/thread/shared_mutex.hpp>
@@ -62,7 +63,7 @@
 #define RANGE_LOG_TIMED_FUNCTION() \
     BOOST_LOG_FUNCTION(); \
     auto range_log_timer_ = log.start_timer(__func__); \
-    range_log_timer_
+    range_log_timer_ << ""
 
 #define RANGE_LOG_FUNCTION() \
     BOOST_LOG_FUNCTION(); \
@@ -138,7 +139,16 @@ class StatsD {
         void emit(const std::string &event, const std::string &type, const std::string &payload) const;
 };
 
-
+//##############################################################################
+//##############################################################################
+class EmitterModuleRegistration {
+    public:
+        explicit EmitterModuleRegistration(const std::string &module_name);
+        const std::string name;
+        ~EmitterModuleRegistration() noexcept;
+    private:
+        static size_t refcount_;
+};
 
 //##############################################################################
 /// A class for emitting information about the application. Most easily used
@@ -146,19 +156,25 @@ class StatsD {
 /// and uses that member variable to emit metrics.
 /// Example:
 /// @code{.cpp}
+/// namespace Namespace {
+///     static EmitterModuleRegistration foo_module { "Namespace.Foo" };
 ///     class Foo {
 ///         Emitter log;
 ///         public: 
-///             Foo() : log("Foo") { }
+///             Foo() : log(foo_module) { }
 ///             void something() {
 ///                 LOG(debug0, "hello_event") << "Hello world!";
 ///             }
 ///     }; 
+/// }
 /// @endcode
 /// All emitted events at or below debug4 are sent to the logger, and
 /// emitted as statsd metrics. Events emitted at debug5 or higher are
 /// not emitted to statsd, but will log if the loglevel is high enough.
 class Emitter {
+    friend class EmitterModuleRegistration;
+    static std::unique_ptr<std::set<std::string>> registered_modules_;
+    static std::mutex registered_modules_lock_;
     public:
     //######################################################################
     /// Timer is an RAII object that will capture the start time when it is
@@ -236,29 +252,11 @@ class Emitter {
             debug9,                                                             /// sent only to log 
         };
 
-        const char logseverity_strings[20][10] = {
-            "fatal",
-            "critical",
-            "error",
-            "warning",
-            "info",
-            "notice",
-            "debug0",
-            "debug1",
-            "debug2",
-            "debug3",
-            "debug4",
-            "debug5",
-            "debug6",
-            "debug7",
-            "debug8",
-            "debug9"
-        };
-
+        static const char logseverity_strings[16][10];
 
         //######################################################################
         /// @param module Name of module this logging instance is for. 
-        explicit Emitter(std::string module) ;
+        explicit Emitter(const EmitterModuleRegistration &module) ;
         
         //######################################################################
         /// replace all invalid metric-name characters with underscores
@@ -294,6 +292,12 @@ class Emitter {
         Timer start_timer(std::string event, std::string extra="") const;
 
         static inline logseverity loglevel() { return loglevel_; }
+
+        static std::set<std::string> registered_modules() {
+            std::lock_guard<std::mutex> guard { registered_modules_lock_ };
+            return *registered_modules_;
+        }
+
        
         //######################################################################
         //######################################################################
@@ -319,7 +323,7 @@ class Emitter {
 
 
     private:
-        friend void initialize_logger(const std::string &, uint8_t);
+        friend void initialize_logger(const std::string &, uint8_t, std::string);
         typedef boost::log::sources::severity_channel_logger<
                 logseverity, std::string
             > logger_mt;
@@ -351,7 +355,7 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(channel, "Channel", std::string);
 
 //##############################################################################
 //##############################################################################
-void initialize_logger(const std::string &filename, uint8_t sev);
+void initialize_logger(const std::string &filename, uint8_t sev, std::string channel_filter="");
 
 } /* namespace range */
 

@@ -12,61 +12,6 @@ without warranty of any kind.
 Basic Installation
 ==================
 
-Ubuntu 14.04 prerequisites:
-==================
-You will need berkeleydb < 6.0 or > 6.0.30; libdb6.0 in trusty is 6.0.19, which contains a bug in dbstl
-
-	build-essential
-	autotools-dev
-	automake
-	autoconf
-	libtool
-	libboost1.55-dev
-	libboost-thread1.55-dev
-	libboost-python1.55-dev
-	libboost-filesystem1.55-dev
-	libboost-regex1.55-dev
-	libboost-log1.55-dev
-	libprotobuf-dev
-	libprotoc-dev
-	protobuf-compiler
-
-Additionally, if you wish to run unit-tests, you will need to install
-gmock-1.7.0, 1.6.0 on trusty does not work.
-
-CentOS 6 prereqs
-==================
-You will need to build the following dependencies from source,
-equivilent libs in CentOS will not work
-
-	Berkeleydb 6.0.30 or later
-	boost1.55 or later (I strongly suggest building mt_s boost
-			    libs, and linking every boost library
-                            statically.)
-	protobuf 2.5.0 or later
-
-Additionally, if you wish to run unit-tests, you will need to install gmock-1.7.0 from source
-
-You will also need to install the devtools-2 SCL package (http://people.centos.org/tru/devtools-2/) 
-to setup gcc 4.8.2 or later, and install the following packages (or newer versions)
-
-	devtoolset-2-gcc-gfortran-4.8.2-15.el6.x86_64
-	devtoolset-2-binutils-2.23.52.0.1-10.el6.x86_64
-	devtoolset-2-gcc-4.8.2-15.el6.x86_64
-	devtoolset-2-gcc-plugin-devel-4.8.2-15.el6.x86_64
-	devtoolset-2-binutils-devel-2.23.52.0.1-10.el6.x86_64
-	devtoolset-2-runtime-2.1-4.el6.noarch
-	devtoolset-2-libstdc++-devel-4.8.2-15.el6.x86_64
-	devtoolset-2-libquadmath-devel-4.8.2-15.el6.x86_64
-	devtoolset-2-gcc-c++-4.8.2-15.el6.x86_64
-
-I also strongly recommend you install automake 1.13.4 or later,
-autoconf 2.69 or later, and libtool 2.4.2 or later. These may be obtained from
-pbone/rpmfind/etc or built yourself.
-
-Generic INSTALL follows
-==================
-
    Briefly, the shell command `./configure && make && make install'
 should configure, build, and install this package.  The following
 more-detailed instructions are generic; see the `README' file for

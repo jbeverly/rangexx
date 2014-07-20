@@ -35,6 +35,7 @@ namespace rangecompiler
 
 namespace c = ::range::compiler;
 
+static ::range::EmitterModuleRegistration RangeScanner_v1LogModule { "compiler.RangeScanner_v1" };
 //##############################################################################
 //##############################################################################
 class RangeScanner_v1: public RangeScanner_v1Base
@@ -46,7 +47,7 @@ class RangeScanner_v1: public RangeScanner_v1Base
         //######################################################################
         //######################################################################
         explicit RangeScanner_v1(std::istream& in, std::ostream& out, functor_map_sp_t(symtable))
-            : RangeScanner_v1Base(in, out), log("RangeScanner_v1"), function_st_(symtable)
+            : RangeScanner_v1Base(in, out), log(RangeScanner_v1LogModule), function_st_(symtable)
         {
         }
 
@@ -54,7 +55,7 @@ class RangeScanner_v1: public RangeScanner_v1Base
         //######################################################################
         explicit RangeScanner_v1(boost::shared_ptr<std::istream> in, boost::shared_ptr<std::ostream> out,
                 functor_map_sp_t symtable)
-            : RangeScanner_v1Base(*in, *out), log("RangeScanner_v1"), function_st_(symtable), in_(in), out_(out)
+            : RangeScanner_v1Base(*in, *out), log(RangeScanner_v1LogModule), function_st_(symtable), in_(in), out_(out)
         {
         }
 
@@ -135,7 +136,7 @@ inline void RangeScanner_v1::print()
 }
 
 inline boost::shared_ptr<RangeScanner_v1> make_string_scanner_v1(const std::string& s, RangeScanner_v1::functor_map_sp_t symtable) {
-    range::Emitter log {"make_string_scanner_v1"};
+    range::Emitter log {RangeScanner_v1LogModule};
     RANGE_LOG_FUNCTION();
     auto null = boost::make_shared<std::ofstream>("/dev/null");
     auto stringstream = boost::make_shared<std::istringstream>(s);

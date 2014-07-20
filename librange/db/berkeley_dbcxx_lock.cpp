@@ -20,10 +20,11 @@
 
 namespace range { namespace db {
 
+static ::range::EmitterModuleRegistration BerkeleyDBCXXLockLogModule { "db.BerkeleyDBCXXLock" };
 //##############################################################################
 //##############################################################################
 BerkeleyDBCXXLock::BerkeleyDBCXXLock(DbEnv * env, bool readwrite)
-    : env_(env), readwrite_(readwrite), log("BerkeleyDBCXXLock")
+    : env_(env), readwrite_(readwrite), log(BerkeleyDBCXXLockLogModule)
 {
     RANGE_LOG_FUNCTION();
     int rval = 0;

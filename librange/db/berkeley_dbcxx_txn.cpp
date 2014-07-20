@@ -21,11 +21,12 @@
 
 namespace range { namespace db {
 
+static ::range::EmitterModuleRegistration BerkeleyDBCXXTxnLogModule { "db.BerkeleyDBCXXTxn" };
 //##############################################################################
 //##############################################################################
 BerkeleyDBCXXTxn::BerkeleyDBCXXTxn(boost::shared_ptr<BerkeleyDB> backend,
         boost::shared_ptr<BerkeleyDBCXXDb> db)
-    : backend_(backend), db_(db), log("BerkeleyDBCXXTxn")
+    : backend_(backend), db_(db), log(BerkeleyDBCXXTxnLogModule)
 {
 }
 
