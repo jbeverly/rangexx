@@ -28,6 +28,10 @@ void
 submit(stored::Request &req)
 {
     switch (req.type()) {
+        case Request_Type_HEARTBEAT:
+            break;
+        case Request_Type_REPLAY:
+            break;
         case stored::Request::Type::Request_Type_FAILOVER:
         case stored::Request::Type::Request_Type_REQUEST:
             Proposer::submit(req);
