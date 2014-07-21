@@ -1,6 +1,6 @@
 # What is Range++ ?
 
-Range++ is a distributed fault-tolerant high-performance graph-database and directory service for storing and retrieving "Cloud" configuration metadata. It is inspired by Yahoo!'s [libcrange (now maintained by square)](https://github.com/square/libcrange) and Google's ["Chubby" Distribute Lock Service for Loosely-Coupled Distributed Systems](http://research.google.com/archive/chubby.html). 
+Range++ is a distributed fault-tolerant high-performance graph-database and directory service for storing and retrieving "Cloud" configuration metadata. It is inspired by Yahoo!'s [libcrange (now maintained by square)](https://github.com/square/libcrange) and loosely inspired by Google's ["Chubby" Distribute Lock Service for Loosely-Coupled Distributed Systems](http://research.google.com/archive/chubby.html). 
 
 ## How is Range++ like libcrange?
 Range++ has a compatible expression syntax, and supports libcrange's HTTP "API" (both list, and range modes), and so is compatible with all Yahoo SECO modules, Salt, and other tools which support libcrange.
