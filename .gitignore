@@ -20,10 +20,10 @@ librange/tests/test_*
 !librange/tests/test_*.cpp
 !librange/tests/test_*.dot
 !librange/tests/test_*.h
-rangexxstored/tests/test_*
-!rangexxstored/tests/test_*.cpp
-!rangexxstored/tests/test_*.h
-rangexxstored/stored
+stored/tests/test_*
+!stored/tests/test_*.cpp
+!stored/tests/test_*.h
+stored/stored
 docs
 *.pyc
 virtenv
