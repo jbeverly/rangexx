@@ -74,4 +74,44 @@ The following are builtin:
   * has(ENVIRONMENT; production) would return any clusters with the a key called ENVIRONMENT set to production
   * mem(CLUSTER; foo.example.com) => which keys under CLUSTER is foo.example.com a member of
 
+# Range REST API
+## See the Swagger generated docs.
+Below are the URL matchers:
 
+`
+url(r'^range/api/v1/environments/$', EnvList.as_view()),
+url(r'^range/api/v1/environments/(?P<env>[a-zA-Z0-9\_]+)$', EnvDetail.as_view()),
+url(r'^range/api/v1/environments/(?P<env>[a-zA-Z0-9\_]+)/$', EnvClusterList.as_view()),
+url(r'^range/api/v1/environments/(?P<env>[a-zA-Z0-9\_]+)/(?P<cluster>[a-zA-Z0-9\_]+)$', EnvClusterDetail.as_view()),
+url(r'^range/api/v1/environments/(?P<env>[a-zA-Z0-9\_]+)/(?P<cluster>[a-zA-Z0-9\_]+)/$', ClusterClusterList.as_view()),
+url(r'^range/api/v1/environments/(?P<env>[a-zA-Z0-9\_]+)/(?:[a-zA-Z0-9\_]+/)+?(?P<cluster>[a-zA-Z0-9\_]+)/$', ClusterClusterList.as_view()),
+url(r'^range/api/v1/environments/(?P<env>[a-zA-Z0-9\_]+)/(?:(?:[a-zA-Z0-9\_]+)/)*(?P<parent>[a-zA-Z0-9\_]+)/(?P<cluster>[a-zA-Z0-9\_]+)$', ClusterClusterDetail.as_view()),
+
+
+url(r'^range/api/v1/hosts/?$', HostsList.as_view()),
+
+url(r'^range/api/v1/dot/?$', DotView.as_view()),
+url(r'^range/api/v1/dot/topology/?$', DotTopologyView.as_view()),
+url(r'^range/api/v1/dot/topology/(?P<env>[a-zA-Z0-9\_]+)$', DotEnvView.as_view()),
+url(r'^range/api/v1/dot/topology/(?P<env>[a-zA-Z0-9\_]+)/(?P<cluster>[a-zA-Z0-9\_]+)$', DotClusterView.as_view()),
+
+url(r'^range/api/v1/dot/dependency/?$', DotDependencyView.as_view()),
+url(r'^range/api/v1/dot/dependency/(?P<env>[a-zA-Z0-9\_]+)/(?P<cluster>[a-zA-Z0-9\_]+)$', DotDependencyClusterView.as_view()),
+
+url(r'^range/api/v1/orphans/?$', OrphansView.as_view()),
+url(r'^range/api/v1/orphans/clusters/?$', EnvClusterOrphansList.as_view()),
+url(r'^range/api/v1/orphans/clusters/(?P<env>[a-zA-Z0-9\_]+)/?$', ClusterOrphansList.as_view()),
+url(r'^range/api/v1/orphans/clusters/(?P<env>[a-zA-Z0-9\_]+)/(?P<cluster>[a-zA-Z0-9\_]+)/?$', ClusterOrphansDetail.as_view()),
+url(r'^range/api/v1/orphans/hosts/?$', HostOrphansList.as_view()),
+url(r'^range/api/v1/orphans/hosts/(?P<host>[a-zA-Z0-9\_]+)/?$', HostOrphansDetail.as_view()),
+url(r'^range/api/v1/expression/?$', ExpressionView.as_view()),
+url(r'^range/api/v1/expression/(?P<env>[a-zA-Z0-9\.\_]+?)/?$', ExpressionView.as_view()),
+url(r'^range/api/v1/graph/nearest_common_ancestor/?$', GraphCommonAncestor.as_view()),
+url(r'^range/api/v1/graph/bfs_search_parents_for_first_key/?$', GraphBFSParents.as_view()),
+url(r'^range/api/v1/graph/dfs_search_parents_for_first_key/?$', GraphDFSParents.as_view()),
+url(r'^range/api/v1/graph/environment_topological_sort/?$', GraphTopsort.as_view()),
+
+url(r'^range/list/?$', LegacyListView.as_view()),
+url(r'^range/expand/?$', LegacyExpandView.as_view()),
+url(r'^docs/', include('rest_framework_swagger.urls')),
+`
