@@ -67,6 +67,9 @@ libcrange modules can define certain functions to look up data about hosts or cl
 The following are builtin:
     
   * has(KEY;value) - looks for a cluster that has a key with some certain value
+  * expand_hosts(cluster) - expand from cluster down, returning all "hosts" at any depth beneath it.
+  * expand(cluster) - expand to a JSON structure of the cluster down, with all descendants and their attribtues nested within.
+  * all_clusters() - expands to al ist of all clusters
   * * and clusters(node)  - returns all clusters a node is a direct descendant of
   * has(ENVIRONMENT; production) would return any clusters with the a key called ENVIRONMENT set to production
   * mem(CLUSTER; foo.example.com) => which keys under CLUSTER is foo.example.com a member of
