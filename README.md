@@ -78,7 +78,7 @@ The following are builtin:
 ## See the Swagger generated docs.
 Below are the URL matchers:
 
-`
+```
 url(r'^range/api/v1/environments/$', EnvList.as_view()),
 url(r'^range/api/v1/environments/(?P<env>[a-zA-Z0-9\_]+)$', EnvDetail.as_view()),
 url(r'^range/api/v1/environments/(?P<env>[a-zA-Z0-9\_]+)/$', EnvClusterList.as_view()),
@@ -114,4 +114,4 @@ url(r'^range/api/v1/graph/environment_topological_sort/?$', GraphTopsort.as_view
 url(r'^range/list/?$', LegacyListView.as_view()),
 url(r'^range/expand/?$', LegacyExpandView.as_view()),
 url(r'^docs/', include('rest_framework_swagger.urls')),
-`
+```
