@@ -63,7 +63,8 @@ A cluster is a way to store node membership into groups. Depending on your backe
       
 ### Functions:
 
-libcrange modules can define certain functions to look up data about hosts or clusters  The yaml module for instance implements some of the following functions.
+libcrange modules can define certain functions to look up data about hosts or clusters
+The following are builtin:
     
   * has(KEY;value) - looks for a cluster that has a key with some certain value
   * * and clusters(node)  - returns all clusters a node is a direct descendant of
