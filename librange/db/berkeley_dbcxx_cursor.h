@@ -52,9 +52,9 @@ class BerkeleyDBCXXCursor : public graph::GraphCursorInterface {
         virtual node_t first() const override;
         //######################################################################
         virtual node_t last() const override;
-    private:
+    protected:
         bool fetch_from_dbc(const std::string &fullkey, int flags, std::string &keybuf, std::string &databuf) const;
-
+    private:
         mutable boost::shared_ptr<GraphInstanceInterface> inst_;
         boost::shared_ptr<Db> db_;
         boost::shared_ptr<BerkeleyDBCXXLock> lock_;
