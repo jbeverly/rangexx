@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGE_DB_BERKELEY_DBCXX_TXN
-#define _RANGE_DB_BERKELEY_DBCXX_TXN
+#ifndef _RANGE_DB_BERKELEY_DBCXX_TXN_H
+#define _RANGE_DB_BERKELEY_DBCXX_TXN_H
 
 #include "db_interface.h"
 #include "berkeley_db_types.h"

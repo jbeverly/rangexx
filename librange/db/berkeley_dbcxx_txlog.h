@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGEXX_BERKELEYDB_CXX_TXLOG_H
-#define _RANGEXX_BERKELEYDB_CXX_TXLOG_H
+#ifndef _RANGEXX_BERKELEY_DBCXX_TXLOG_H
+#define _RANGEXX_BERKELEY_DBCXX_TXLOG_H
 
 #include <db_cxx.h>
 
@@ -33,7 +33,7 @@ class BerkeleyDBCXXTxLogDb : public TxLogInstanceInterface {
         //######################################################################
         /// @param[in] version the version to try to find in the txlog
         /// @return a graph_iterator for a particlar version
-        virtual iterator find(uint64_t version) override;
+        virtual iterator find(uint32_t version) override;
 
         //######################################################################
         /// @return a graph_iterator for first item in the txlog
@@ -52,7 +52,7 @@ class BerkeleyDBCXXTxLogDb : public TxLogInstanceInterface {
         /// @param version version which should become oldest version in txlog
         ///                (version itself is NOT removed)
         /// @return true if transactions older than version were in txlog, false otherwise
-        virtual bool prune_txns_prior_to(uint64_t version) override;
+        virtual bool prune_txns_prior_to(uint32_t version) override;
         
         //######################################################################
         virtual ~BerkeleyDBCXXTxLogDb() noexcept override; 
@@ -65,6 +65,7 @@ class BerkeleyDBCXXTxLogDb : public TxLogInstanceInterface {
         boost::shared_ptr<BerkeleyDBCXXEnv> env_;
         ::range::Emitter log;
 
+        static std::mutex append_lock_;
         thread_local static boost::shared_ptr<BerkeleyDBCXXTxLogDb> inst_;
 
 };

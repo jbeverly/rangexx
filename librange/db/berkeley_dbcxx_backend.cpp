@@ -18,6 +18,8 @@
 #include "graph_list.pb.h"
 #include <google/protobuf/message.h>
 
+#include "berkeley_dbcxx_txlog.h"
+
 namespace range { namespace db {
 
 volatile bool BerkeleyDB::terminated_=false;
@@ -52,6 +54,7 @@ BerkeleyDB::backend_shutdown()
         inst_->shutdown(true);
         inst_ = nullptr;
     }
+    google::protobuf::ShutdownProtobufLibrary();
 }
 
 static ::range::EmitterModuleRegistration BerkeleyDBLogModule { "db.BerkeleyDB" };
@@ -95,6 +98,14 @@ BerkeleyDB::getGraphInstance(const std::string& name)
         return nullptr;
     }
     return BerkeleyDBCXXDb::get(name, shared_from_this(), db_config_, env_);
+}
+
+//##############################################################################
+//##############################################################################
+BerkeleyDB::txlog_instance_t
+BerkeleyDB::getTxLogInstance()
+{
+    return BerkeleyDBCXXTxLogDb::get(env_);
 }
 
 //##############################################################################

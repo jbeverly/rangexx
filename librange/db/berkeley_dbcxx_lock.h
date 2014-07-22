@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGE_DB_BERKELEY_DBCXX_LOCK
-#define _RANGE_DB_BERKELEY_DBCXX_LOCK
+#ifndef _RANGE_DB_BERKELEY_DBCXX_LOCK_H
+#define _RANGE_DB_BERKELEY_DBCXX_LOCK_H
 
 #include <db_cxx.h>
 
@@ -48,6 +48,7 @@ class BerkeleyDBCXXLock : public GraphInstanceLock {
 class BerkeleyDBCXXLockTxnGetter {
     friend class BerkeleyDBCXXDb;
     friend class BerkeleyDBCXXCursor;
+    friend class BerkeleyDBCXXTxLogCursor;
     friend class BerkeleyDBCXXTxLogDb;
     
     explicit BerkeleyDBCXXLockTxnGetter(boost::shared_ptr<BerkeleyDBCXXLock> lock) 

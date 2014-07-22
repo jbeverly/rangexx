@@ -113,16 +113,18 @@ nobase_librange_db_la_include_HEADERS  = ./db/berkeley_dbcxx_backend.h \
 										 ./db/nodeinfo.pb.h \
 										 ./db/pbuff_node.h
 
-librange_db_la_SOURCES = ./db/berkeley_dbcxx_cursor.cpp \
-						 ./db/berkeley_dbcxx_db.cpp \
-						 ./db/berkeley_dbcxx_env.cpp \
-						 ./db/berkeley_dbcxx_lock.cpp \
-						 ./db/berkeley_dbcxx_backend.cpp \
-						 ./db/berkeley_dbcxx_txn.cpp \
-						 ./db/changelist.pb.cpp \
-						 ./db/graph_list.pb.cpp \
-						 ./db/nodeinfo.pb.cpp \
-						 ./db/pbuff_node.cpp \
+librange_db_la_SOURCES = db/berkeley_dbcxx_backend.cpp \
+						 db/berkeley_dbcxx_cursor.cpp \
+						 db/berkeley_dbcxx_db.cpp \
+						 db/berkeley_dbcxx_env.cpp \
+						 db/berkeley_dbcxx_lock.cpp \
+						 db/berkeley_dbcxx_txlog.cpp \
+						 db/berkeley_dbcxx_txn.cpp \
+						 db/changelist.pb.cpp \
+						 db/graph_list.pb.cpp \
+						 db/nodeinfo.pb.cpp \
+						 db/pbuff_node.cpp \
+						 db/txlog_iterator.cpp \
 						 $(top_builddir)/range_config.h 
 
 #librange_db_la_LIBADD = # $(AM_LIBADD)

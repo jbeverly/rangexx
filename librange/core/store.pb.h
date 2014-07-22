@@ -264,6 +264,13 @@ class Request : public ::google::protobuf::Message {
   inline ::google::protobuf::uint32 sender_port() const;
   inline void set_sender_port(::google::protobuf::uint32 value);
 
+  // optional uint64 version = 12;
+  inline bool has_version() const;
+  inline void clear_version();
+  static const int kVersionFieldNumber = 12;
+  inline ::google::protobuf::uint64 version() const;
+  inline void set_version(::google::protobuf::uint64 value);
+
   // @@protoc_insertion_point(class_scope:range.stored.Request)
  private:
   inline void set_has_crc();
@@ -286,6 +293,8 @@ class Request : public ::google::protobuf::Message {
   inline void clear_has_sender_addr();
   inline void set_has_sender_port();
   inline void clear_has_sender_port();
+  inline void set_has_version();
+  inline void clear_has_version();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -299,10 +308,11 @@ class Request : public ::google::protobuf::Message {
   ::google::protobuf::uint64 proposal_num_;
   ::google::protobuf::uint32 proposer_id_;
   ::google::protobuf::uint32 sender_addr_;
+  ::google::protobuf::uint64 version_;
   ::google::protobuf::uint32 sender_port_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(12 + 31) / 32];
 
   friend void  protobuf_AddDesc_store_2eproto();
   friend void protobuf_AssignDesc_store_2eproto();
@@ -875,6 +885,28 @@ inline ::google::protobuf::uint32 Request::sender_port() const {
 inline void Request::set_sender_port(::google::protobuf::uint32 value) {
   set_has_sender_port();
   sender_port_ = value;
+}
+
+// optional uint64 version = 12;
+inline bool Request::has_version() const {
+  return (_has_bits_[0] & 0x00000800u) != 0;
+}
+inline void Request::set_has_version() {
+  _has_bits_[0] |= 0x00000800u;
+}
+inline void Request::clear_has_version() {
+  _has_bits_[0] &= ~0x00000800u;
+}
+inline void Request::clear_version() {
+  version_ = GOOGLE_ULONGLONG(0);
+  clear_has_version();
+}
+inline ::google::protobuf::uint64 Request::version() const {
+  return version_;
+}
+inline void Request::set_version(::google::protobuf::uint64 value) {
+  set_has_version();
+  version_ = value;
 }
 
 // -------------------------------------------------------------------

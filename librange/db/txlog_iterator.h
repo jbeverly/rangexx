@@ -38,11 +38,12 @@ class TxLogIterator : public boost::iterator_facade<
     public:
         TxLogIterator();
         TxLogIterator(boost::shared_ptr<TxLogCursorInterface> cursor);
+        TxLogIterator(boost::shared_ptr<TxLogCursorInterface> cursor, boost::shared_ptr<range::stored::Request> e);
 
     private:
         friend class boost::iterator_core_access;
         boost::shared_ptr<TxLogCursorInterface> cursor_;
-        uint64_t current_;
+        boost::shared_ptr<range::stored::Request> current_;
         
         //######################################################################
         range::stored::Request& dereference() const;

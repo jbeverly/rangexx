@@ -18,33 +18,33 @@
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include "../util/crc32.h"
+
+#include "db_exceptions.h"
 #include "berkeley_dbcxx_env.h"
 #include "berkeley_dbcxx_txlog.h"
+#include "txlog_iterator.h"
 
 namespace range { namespace db {
 
 //##############################################################################
-struct TransactionLogException : public range::db::Exception {
-    TransactionLogException(const std::string &what,
-            const std::string &event="db.TransactionLogException") :
-        range::db::Exception(what, event) { }
-};
-
 //##############################################################################
-//##############################################################################
-static ::range::EmitterModuleRegistration BerkeleyDBCXXTxLogDbCursorLogModule { "db.BerkeleyDBCXXTxLogCursor" };
+static ::range::EmitterModuleRegistration
+    BerkeleyDBCXXTxLogDbCursorLogModule { "db.BerkeleyDBCXXTxLogCursor" };
 //##############################################################################
 class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
 {
     public:
         //######################################################################
         //######################################################################
-        BerkeleyDBCXXTxLogCursor(boost::shared_ptr<Db> db, DbTxn * txn) 
-            : db_(db), log(BerkeleyDBCXXTxLogDbCursorLogModule)
+        BerkeleyDBCXXTxLogCursor(boost::shared_ptr<Db> db, 
+                boost::shared_ptr<BerkeleyDBCXXLock> lock_txn) 
+            : db_(db), lock_txn_(lock_txn), log(BerkeleyDBCXXTxLogDbCursorLogModule)
         {
             int rval = 0;
             try {
-                rval = db_->cursor(txn, &cur_, DB_TXN_SNAPSHOT);
+                rval = db_->cursor(BerkeleyDBCXXLockTxnGetter(lock_txn_).txn(),
+                        &cur_, DB_TXN_SNAPSHOT);
             }
             catch(DbException &e) {
                 THROW_STACK(CursorException(e.what()));
@@ -80,15 +80,16 @@ class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
         
         //######################################################################
         //######################################################################
-        bool fetch_from_dbc(const std::string& fullkey, int flags,
-                    std::string &keybuf, std::string &databuf) const
+        bool fetch_from_dbc(db_recno_t key, int flags,
+                    db_recno_t * keybuf, std::string &databuf) const
         {
             size_t localdatabuf_size = 131072;
-            size_t localkeybuf_size = 131072;
-            std::unique_ptr<char[]> localkeybuf { nullptr };
             std::unique_ptr<char[]> localdatabuf { nullptr };
 
-            Dbt dbkey;
+            if(key != std::numeric_limits<uint32_t>::max()) {
+                *keybuf = key;
+            }
+            Dbt dbkey { (void *) &keybuf, sizeof(key) };;
             Dbt dbdata;
             int dbrval = 0;
 
@@ -96,16 +97,7 @@ class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
                 if(localdatabuf) {
                     LOG(debug0, "resizing_record_buffer") << localdatabuf_size;
                 }
-                if(!fullkey.empty()) {
-                    dbkey = Dbt( (void *) fullkey.c_str(), (uint32_t) fullkey.size());
-                } else {
-                    localkeybuf = std::unique_ptr<char[]>(new char[localkeybuf_size]);
-                    dbkey = Dbt(localkeybuf.get(), localkeybuf_size);
-                    dbkey.set_ulen(localkeybuf_size);
-                    dbkey.set_flags(DB_DBT_USERMEM);
-                    localkeybuf_size *= 2;
-                }
-
+                
                 localdatabuf = std::unique_ptr<char[]>(new char[localdatabuf_size]);
                 dbdata = Dbt(localdatabuf.get(), localdatabuf_size);
                 dbdata.set_ulen(localdatabuf_size);
@@ -146,7 +138,6 @@ class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
                     break;
             }
 
-            keybuf = std::string((char *) dbkey.get_data(), dbkey.get_size());
             databuf = std::string((char *) dbdata.get_data(), dbdata.get_size());
             return true;
         }
@@ -154,7 +145,7 @@ class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
         //######################################################################
         //######################################################################
         txn_t parse_data(const std::string &data) {
-            auto r =boost::make_shared<range::stored::Request>();
+            auto r = boost::make_shared<range::stored::Request>();
             r->ParseFromString(data);
             if(!r->IsInitialized()) {
                 THROW_STACK(TransactionLogException("Unable to parse entry"));
@@ -164,11 +155,11 @@ class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
 
         //######################################################################
         //######################################################################
-        virtual txn_t get(uint64_t v) override
+        virtual txn_t get(uint32_t v) override
         {
-            std::stringstream s; s << v;
-            std::string key, data;
-            if(this->fetch_from_dbc(s.str(), DB_SET, key, data)) {
+            uint32_t key;
+            std::string data;
+            if(this->fetch_from_dbc(v, DB_SET, &key, data)) {
                 return this->parse_data(data);
             }
             return nullptr;
@@ -178,8 +169,9 @@ class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
         //######################################################################
         virtual txn_t next() override
         {
-            std::string key, data;
-            if(this->fetch_from_dbc("", DB_NEXT, key, data)) {
+            uint32_t key = std::numeric_limits<uint32_t>::max();
+            std::string data;
+            if(this->fetch_from_dbc(key, DB_NEXT, &key, data)) {
                 return this->parse_data(data);
             }
             return nullptr;
@@ -189,8 +181,9 @@ class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
         //######################################################################
         virtual txn_t prev() override
         {
-            std::string key, data;
-            if(this->fetch_from_dbc("", DB_PREV, key, data)) {
+            uint32_t key = std::numeric_limits<uint32_t>::max();
+            std::string data;
+            if(this->fetch_from_dbc(key, DB_PREV, &key, data)) {
                 return this->parse_data(data);
             }
             return nullptr;
@@ -200,8 +193,9 @@ class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
         //######################################################################
         virtual txn_t first() override
         {
-            std::string key, data;
-            if(this->fetch_from_dbc("", DB_FIRST, key, data)) {
+            uint32_t key = std::numeric_limits<uint32_t>::max();
+            std::string data;
+            if(this->fetch_from_dbc(key, DB_FIRST, &key, data)) {
                 return this->parse_data(data);
             }
             return nullptr;
@@ -211,8 +205,9 @@ class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
         //######################################################################
         virtual txn_t last() override
         {
-            std::string key, data;
-            if(this->fetch_from_dbc("", DB_LAST, key, data)) {
+            uint32_t key = std::numeric_limits<uint32_t>::max();
+            std::string data;
+            if(this->fetch_from_dbc(key, DB_LAST, &key, data)) {
                 return this->parse_data(data);
             }
             return nullptr;
@@ -221,6 +216,7 @@ class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
     private:
         boost::shared_ptr<Db> db_;
         Dbc * cur_;
+        boost::shared_ptr<BerkeleyDBCXXLock> lock_txn_;
         range::Emitter log;
 };
 
@@ -232,18 +228,22 @@ class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
 //##############################################################################
 //##############################################################################
 
+thread_local boost::shared_ptr<BerkeleyDBCXXTxLogDb> BerkeleyDBCXXTxLogDb::inst_;
+std::mutex BerkeleyDBCXXTxLogDb::append_lock_;
 //##############################################################################
 //##############################################################################
 boost::shared_ptr<BerkeleyDBCXXTxLogDb>
 BerkeleyDBCXXTxLogDb::get(boost::shared_ptr<BerkeleyDBCXXEnv> env)
 {
     if(!inst_) {
-        inst_ = boost::make_shared<BerkeleyDBCXXTxLogDb>(env);
+        BerkeleyDBCXXTxLogDb * p = new BerkeleyDBCXXTxLogDb(env);
+        inst_ = boost::shared_ptr<BerkeleyDBCXXTxLogDb>(p);
     }
     return inst_;
 }
 
-static ::range::EmitterModuleRegistration BerkeleyDBCXXTxLogDbLogModule { "db.BerkeleyDBCXXTxLogDb" };
+static ::range::EmitterModuleRegistration
+    BerkeleyDBCXXTxLogDbLogModule { "db.BerkeleyDBCXXTxLogDb" };
 //##############################################################################
 //##############################################################################
 BerkeleyDBCXXTxLogDb::BerkeleyDBCXXTxLogDb(boost::shared_ptr<BerkeleyDBCXXEnv> env)
@@ -255,7 +255,8 @@ BerkeleyDBCXXTxLogDb::BerkeleyDBCXXTxLogDb(boost::shared_ptr<BerkeleyDBCXXEnv> e
     int rval = 0;
     DbTxn * txn;
     try { 
-        rval = env_->getEnv()->txn_begin(NULL, &txn, DB_TXN_SYNC | DB_TXN_WAIT | DB_TXN_SNAPSHOT);
+        rval = env_->getEnv()->txn_begin(NULL, &txn,
+                DB_TXN_SYNC | DB_TXN_WAIT | DB_TXN_SNAPSHOT);
     }
     catch(DbException &e) {
         THROW_STACK(UnknownTransactionException(e.what()));
@@ -315,6 +316,168 @@ BerkeleyDBCXXTxLogDb::~BerkeleyDBCXXTxLogDb() noexcept
         } catch(...) { }
     }
     catch(...) { }
+}
+
+//##############################################################################
+//##############################################################################
+BerkeleyDBCXXTxLogDb::iterator
+BerkeleyDBCXXTxLogDb::find(uint32_t version)
+{
+    auto lock = env_->acquire_DbTxn_lock(false);
+    auto c = boost::make_shared<BerkeleyDBCXXTxLogCursor>(
+            db_, lock);
+    iterator it { c, c->get(version) };
+    return it;
+}
+
+//##############################################################################
+//##############################################################################
+BerkeleyDBCXXTxLogDb::iterator
+BerkeleyDBCXXTxLogDb::begin()
+{
+    auto lock = env_->acquire_DbTxn_lock(false);
+    auto c = boost::make_shared<BerkeleyDBCXXTxLogCursor>(
+            db_, lock);
+    iterator it { c, c->first() };
+    return it;
+}
+
+//##############################################################################
+//##############################################################################
+BerkeleyDBCXXTxLogDb::iterator
+BerkeleyDBCXXTxLogDb::end()
+{
+    auto lock = env_->acquire_DbTxn_lock(false);
+    auto c = boost::make_shared<BerkeleyDBCXXTxLogCursor>(
+            db_, lock);
+
+    iterator it { c };
+    return it;
+}
+
+//##############################################################################
+//##############################################################################
+bool
+BerkeleyDBCXXTxLogDb::append_txn(const txn_t &change)
+{
+    RANGE_LOG_TIMED_FUNCTION();
+    std::lock_guard<std::mutex> guard { this->append_lock_ };
+    auto lck = env_->acquire_DbTxn_lock(true);
+
+    BerkeleyDBCXXTxLogCursor c {db_, lck};
+
+    txn_t last = c.last();
+    uint32_t key = (last) ? last->version() + 1 : 1;
+    change->set_version(key);
+    change->set_crc(0);
+    change->set_crc(range::util::crc32(change->SerializeAsString()));
+    std::string data = change->SerializeAsString();
+
+    DbTxn * dbtxn = BerkeleyDBCXXLockTxnGetter(lck).txn();
+    Dbt dbkey { (void*) &key, sizeof(key) };
+    Dbt dbdata { (void*) data.c_str(), (uint32_t) data.size() };
+
+    int dbrval = 0;
+    try {
+        dbrval = db_->put(dbtxn, &dbkey, &dbdata, 0);
+    }
+    catch (DbException &e) {
+        THROW_STACK(
+                DatabaseEnvironmentException(
+                    std::string("Unable to write record") + e.what()));
+    }
+    catch (std::exception &e) {
+        THROW_STACK(
+                DatabaseEnvironmentException(
+                    std::string("Unable to write record") + e.what()));
+    }
+    switch(dbrval) {
+        case 0:
+            return true;
+            break;
+        case DB_LOCK_DEADLOCK:
+            THROW_STACK(
+                    DatabaseEnvironmentException(
+                        "A transactional database environment operation "
+                        "was selected to resolve a deadlock."));
+            break;
+        case DB_LOCK_NOTGRANTED:
+            THROW_STACK(
+                    DatabaseEnvironmentException(
+                        "unable to grant a lock in the allowed time."));
+            break;
+        case DB_REP_HANDLE_DEAD:
+            THROW_STACK(DatabaseEnvironmentException("Dead handle"));
+            break;
+        case EACCES:
+            THROW_STACK(DatabaseEnvironmentException("Database read-only"));
+            break;
+        default:
+            LOG(error, "unknown_rval_from_Db_put") << dbrval;
+            return false;
+    }
+}
+
+//##############################################################################
+//##############################################################################
+bool
+BerkeleyDBCXXTxLogDb::prune_txns_prior_to(uint32_t version)
+{
+    RANGE_LOG_TIMED_FUNCTION();
+    std::lock_guard<std::mutex> guard { this->append_lock_ };
+    auto lck = env_->acquire_DbTxn_lock(true);
+
+    BerkeleyDBCXXTxLogCursor c {db_, lck};
+    
+    txn_t current = c.first();
+    while(current && current->version() < version) {
+        
+        uint32_t key = current->version();
+
+        DbTxn * dbtxn = BerkeleyDBCXXLockTxnGetter(lck).txn();
+        Dbt dbkey { (void*) &key, sizeof(key) };
+
+        int dbrval = 0;
+        try {
+            dbrval = db_->del(dbtxn, &dbkey, 0);
+        }
+        catch (DbException &e) {
+            THROW_STACK(
+                    DatabaseEnvironmentException(
+                        std::string("Unable to write record") + e.what()));
+        }
+        catch (std::exception &e) {
+            THROW_STACK(
+                    DatabaseEnvironmentException(
+                        std::string("Unable to write record") + e.what()));
+        }
+        switch(dbrval) {
+            case 0:
+                break;
+            case DB_LOCK_DEADLOCK:
+                THROW_STACK(
+                        DatabaseEnvironmentException(
+                            "A transactional database environment operation "
+                            "was selected to resolve a deadlock."));
+                break;
+            case DB_LOCK_NOTGRANTED:
+                THROW_STACK(
+                        DatabaseEnvironmentException(
+                            "unable to grant a lock in the allowed time."));
+                break;
+            case DB_REP_HANDLE_DEAD:
+                THROW_STACK(DatabaseEnvironmentException("Dead handle"));
+                break;
+            case EACCES:
+                THROW_STACK(DatabaseEnvironmentException("Database read-only"));
+                break;
+            default:
+                LOG(error, "unknown_rval_from_Db_put") << dbrval;
+                return false;
+        }
+        current = c.next();
+    }
+    return true;
 }
 
 

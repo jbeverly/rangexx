@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGEXX_DB_BERKELEY_DBCPP_BACKEND_H
-#define _RANGEXX_DB_BERKELEY_DBCPP_BACKEND_H
+#ifndef _RANGEXX_DB_BERKELEY_DBCXX_BACKEND_H
+#define _RANGEXX_DB_BERKELEY_DBCXX_BACKEND_H
 
 #include <unordered_set>
 
@@ -38,6 +38,7 @@ class BerkeleyDB : public BackendInterface,
         static boost::shared_ptr<BerkeleyDB> get(const boost::shared_ptr<db::ConfigIface> db_config);
         virtual ~BerkeleyDB() noexcept override;
 
+        virtual txlog_instance_t getTxLogInstance() override;
         virtual graph_instance_t getGraphInstance(const std::string& name) override;
         virtual graph_instance_t createGraphInstance(const std::string& name) override;
         virtual std::vector<std::string> listGraphInstances() const override;

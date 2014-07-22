@@ -22,7 +22,7 @@ message Request {
 	optional uint32		proposer_id			= 9;
 	optional uint32     sender_addr         = 10;
 	optional uint32     sender_port         = 11;
-	
+	optional uint64     version             = 12;
 }
 
 message Ack {

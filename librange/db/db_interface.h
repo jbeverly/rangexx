@@ -29,7 +29,7 @@
 #include "../graph/graph_interface.h"
 #include "../core/store.pb.h"
 
-#include "berkeley_dbcxx_txlog_iterator.h"
+#include "txlog_iterator.h"
 
 namespace range {
 namespace db {
@@ -174,7 +174,7 @@ class TxLogCursorInterface {
     public:
         typedef boost::shared_ptr<range::stored::Request> txn_t;
         virtual ~TxLogCursorInterface() noexcept = default;
-        virtual txn_t get(uint64_t) = 0;
+        virtual txn_t get(uint32_t) = 0;
         virtual txn_t next() = 0;
         virtual txn_t prev() = 0;
         virtual txn_t first() = 0;
@@ -194,7 +194,7 @@ class TxLogInstanceInterface {
         //######################################################################
         /// @param[in] version the version to try to find in the txlog
         /// @return a graph_iterator for a particlar version
-        virtual iterator find(uint64_t version) = 0;
+        virtual iterator find(uint32_t version) = 0;
 
         //######################################################################
         /// @return a graph_iterator for first item in the txlog
@@ -213,7 +213,7 @@ class TxLogInstanceInterface {
         /// @param version version which should become oldest version in txlog
         ///                (version itself is NOT removed)
         /// @return true if transactions older than version were in txlog, false otherwise
-        virtual bool prune_txns_prior_to(uint64_t version) = 0;
+        virtual bool prune_txns_prior_to(uint32_t version) = 0;
 
         //######################################################################
         virtual ~TxLogInstanceInterface() noexcept = default;

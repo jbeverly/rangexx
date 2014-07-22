@@ -181,11 +181,12 @@ am_librange_core_la_OBJECTS = ./core/config_builder.lo \
 	./core/exceptions.lo
 librange_core_la_OBJECTS = $(am_librange_core_la_OBJECTS)
 librange_db_la_LIBADD =
-am_librange_db_la_OBJECTS = ./db/berkeley_dbcxx_cursor.lo \
-	./db/berkeley_dbcxx_db.lo ./db/berkeley_dbcxx_env.lo \
-	./db/berkeley_dbcxx_lock.lo ./db/berkeley_dbcxx_backend.lo \
-	./db/berkeley_dbcxx_txn.lo ./db/changelist.pb.lo \
-	./db/graph_list.pb.lo ./db/nodeinfo.pb.lo ./db/pbuff_node.lo
+am_librange_db_la_OBJECTS = db/berkeley_dbcxx_backend.lo \
+	db/berkeley_dbcxx_cursor.lo db/berkeley_dbcxx_db.lo \
+	db/berkeley_dbcxx_env.lo db/berkeley_dbcxx_lock.lo \
+	db/berkeley_dbcxx_txlog.lo db/berkeley_dbcxx_txn.lo \
+	db/changelist.pb.lo db/graph_list.pb.lo db/nodeinfo.pb.lo \
+	db/pbuff_node.lo db/txlog_iterator.lo
 librange_db_la_OBJECTS = $(am_librange_db_la_OBJECTS)
 librange_gnu_la_LIBADD =
 am_librange_gnu_la_OBJECTS = ./gnu/timespec.lo ./gnu/parse-datetime.lo \
@@ -582,16 +583,18 @@ nobase_librange_db_la_include_HEADERS = ./db/berkeley_dbcxx_backend.h \
 										 ./db/nodeinfo.pb.h \
 										 ./db/pbuff_node.h
 
-librange_db_la_SOURCES = ./db/berkeley_dbcxx_cursor.cpp \
-						 ./db/berkeley_dbcxx_db.cpp \
-						 ./db/berkeley_dbcxx_env.cpp \
-						 ./db/berkeley_dbcxx_lock.cpp \
-						 ./db/berkeley_dbcxx_backend.cpp \
-						 ./db/berkeley_dbcxx_txn.cpp \
-						 ./db/changelist.pb.cpp \
-						 ./db/graph_list.pb.cpp \
-						 ./db/nodeinfo.pb.cpp \
-						 ./db/pbuff_node.cpp \
+librange_db_la_SOURCES = db/berkeley_dbcxx_backend.cpp \
+						 db/berkeley_dbcxx_cursor.cpp \
+						 db/berkeley_dbcxx_db.cpp \
+						 db/berkeley_dbcxx_env.cpp \
+						 db/berkeley_dbcxx_lock.cpp \
+						 db/berkeley_dbcxx_txlog.cpp \
+						 db/berkeley_dbcxx_txn.cpp \
+						 db/changelist.pb.cpp \
+						 db/graph_list.pb.cpp \
+						 db/nodeinfo.pb.cpp \
+						 db/pbuff_node.cpp \
+						 db/txlog_iterator.cpp \
 						 $(top_builddir)/range_config.h 
 
 
@@ -772,27 +775,30 @@ core/$(DEPDIR)/$(am__dirstamp):
 librange_core.la: $(librange_core_la_OBJECTS) $(librange_core_la_DEPENDENCIES) $(EXTRA_librange_core_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_core_la_OBJECTS) $(librange_core_la_LIBADD) $(LIBS)
 db/$(am__dirstamp):
-	@$(MKDIR_P) ./db
+	@$(MKDIR_P) db
 	@: > db/$(am__dirstamp)
 db/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) ./db/$(DEPDIR)
+	@$(MKDIR_P) db/$(DEPDIR)
 	@: > db/$(DEPDIR)/$(am__dirstamp)
-./db/berkeley_dbcxx_cursor.lo: db/$(am__dirstamp) \
+db/berkeley_dbcxx_backend.lo: db/$(am__dirstamp) \
 	db/$(DEPDIR)/$(am__dirstamp)
-./db/berkeley_dbcxx_db.lo: db/$(am__dirstamp) \
+db/berkeley_dbcxx_cursor.lo: db/$(am__dirstamp) \
 	db/$(DEPDIR)/$(am__dirstamp)
-./db/berkeley_dbcxx_env.lo: db/$(am__dirstamp) \
+db/berkeley_dbcxx_db.lo: db/$(am__dirstamp) \
 	db/$(DEPDIR)/$(am__dirstamp)
-./db/berkeley_dbcxx_lock.lo: db/$(am__dirstamp) \
+db/berkeley_dbcxx_env.lo: db/$(am__dirstamp) \
 	db/$(DEPDIR)/$(am__dirstamp)
-./db/berkeley_dbcxx_backend.lo: db/$(am__dirstamp) \
+db/berkeley_dbcxx_lock.lo: db/$(am__dirstamp) \
 	db/$(DEPDIR)/$(am__dirstamp)
-./db/berkeley_dbcxx_txn.lo: db/$(am__dirstamp) \
+db/berkeley_dbcxx_txlog.lo: db/$(am__dirstamp) \
 	db/$(DEPDIR)/$(am__dirstamp)
-./db/changelist.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
-./db/graph_list.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
-./db/nodeinfo.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
-./db/pbuff_node.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
+db/berkeley_dbcxx_txn.lo: db/$(am__dirstamp) \
+	db/$(DEPDIR)/$(am__dirstamp)
+db/changelist.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
+db/graph_list.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
+db/nodeinfo.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
+db/pbuff_node.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
+db/txlog_iterator.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
 
 librange_db.la: $(librange_db_la_OBJECTS) $(librange_db_la_DEPENDENCIES) $(EXTRA_librange_db_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(librange_db_la_OBJECTS) $(librange_db_la_LIBADD) $(LIBS)
@@ -846,14 +852,14 @@ mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f ./core/*.$(OBJEXT)
 	-rm -f ./core/*.lo
-	-rm -f ./db/*.$(OBJEXT)
-	-rm -f ./db/*.lo
 	-rm -f ./gnu/*.$(OBJEXT)
 	-rm -f ./gnu/*.lo
 	-rm -f ./util/*.$(OBJEXT)
 	-rm -f ./util/*.lo
 	-rm -f compiler/*.$(OBJEXT)
 	-rm -f compiler/*.lo
+	-rm -f db/*.$(OBJEXT)
+	-rm -f db/*.lo
 	-rm -f graph/*.$(OBJEXT)
 	-rm -f graph/*.lo
 	-rm -f util/*.$(OBJEXT)
@@ -871,16 +877,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/store.pb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/stored_message.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./core/$(DEPDIR)/write_api.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./db/$(DEPDIR)/berkeley_dbcxx_backend.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./db/$(DEPDIR)/berkeley_dbcxx_cursor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./db/$(DEPDIR)/berkeley_dbcxx_db.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./db/$(DEPDIR)/berkeley_dbcxx_env.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./db/$(DEPDIR)/berkeley_dbcxx_lock.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./db/$(DEPDIR)/berkeley_dbcxx_txn.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./db/$(DEPDIR)/changelist.pb.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./db/$(DEPDIR)/graph_list.pb.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./db/$(DEPDIR)/nodeinfo.pb.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./db/$(DEPDIR)/pbuff_node.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./gnu/$(DEPDIR)/c-ctype.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./gnu/$(DEPDIR)/exitfail.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./gnu/$(DEPDIR)/gettime.Plo@am__quote@
@@ -893,6 +889,18 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeParser_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/RangeScanner_v1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/expanding_visitor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_dbcxx_backend.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_dbcxx_cursor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_dbcxx_db.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_dbcxx_env.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_dbcxx_lock.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_dbcxx_txlog.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_dbcxx_txn.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/changelist.pb.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/graph_list.pb.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/nodeinfo.pb.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/pbuff_node.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/txlog_iterator.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@graph/$(DEPDIR)/graph_iter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@graph/$(DEPDIR)/graphdb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@graph/$(DEPDIR)/node_interface.Plo@am__quote@
@@ -952,10 +960,10 @@ mostlyclean-libtool:
 clean-libtool:
 	-rm -rf .libs _libs
 	-rm -rf ./core/.libs ./core/_libs
-	-rm -rf ./db/.libs ./db/_libs
 	-rm -rf ./gnu/.libs ./gnu/_libs
 	-rm -rf ./util/.libs ./util/_libs
 	-rm -rf compiler/.libs compiler/_libs
+	-rm -rf db/.libs db/_libs
 	-rm -rf graph/.libs graph/_libs
 	-rm -rf util/.libs util/_libs
 install-nobase_librange_compiler_la_includeHEADERS: $(nobase_librange_compiler_la_include_HEADERS)
@@ -1313,7 +1321,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	clean-noinstLTLIBRARIES mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./core/$(DEPDIR) ./db/$(DEPDIR) ./gnu/$(DEPDIR) ./util/$(DEPDIR) compiler/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
+	-rm -rf ./core/$(DEPDIR) ./gnu/$(DEPDIR) ./util/$(DEPDIR) compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1364,7 +1372,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./core/$(DEPDIR) ./db/$(DEPDIR) ./gnu/$(DEPDIR) ./util/$(DEPDIR) compiler/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
+	-rm -rf ./core/$(DEPDIR) ./gnu/$(DEPDIR) ./util/$(DEPDIR) compiler/$(DEPDIR) db/$(DEPDIR) graph/$(DEPDIR) util/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
