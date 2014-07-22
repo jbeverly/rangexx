@@ -146,7 +146,7 @@ BerkeleyDBCXXDb::start_txn()
     RANGE_LOG_FUNCTION();
     auto txn = current_txn_.lock();
     if(!txn) {
-        txn = boost::make_shared<BerkeleyDBCXXTxn>(backend_, shared_from_this());
+        txn = boost::make_shared<BerkeleyDBCXXTxn>(shared_from_this());
         current_txn_ = txn;
     }
     return boost::dynamic_pointer_cast<range::db::GraphTransaction>(txn);

@@ -39,6 +39,7 @@ class BerkeleyDB : public BackendInterface,
         virtual ~BerkeleyDB() noexcept override;
 
         virtual txlog_instance_t getTxLogInstance() override;
+        virtual txn_type_p startRangeTransaction(txn_type::req_type_p) override;
         virtual graph_instance_t getGraphInstance(const std::string& name) override;
         virtual graph_instance_t createGraphInstance(const std::string& name) override;
         virtual std::vector<std::string> listGraphInstances() const override;

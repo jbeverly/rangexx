@@ -26,6 +26,7 @@ class MockBackend : public ::range::db::BackendInterface
 {
     public:
         MOCK_METHOD0(getTxLogInstance, txlog_instance_t());
+        MOCK_METHOD1(startRangeTransaction, txn_type_p(txn_type::req_type_p));
         MOCK_METHOD1(getGraphInstance, graph_instance_t(const std::string& name));
         MOCK_METHOD1(createGraphInstance, graph_instance_t(const std::string& name));
         MOCK_CONST_METHOD0(listGraphInstances, std::vector<std::string>(void));

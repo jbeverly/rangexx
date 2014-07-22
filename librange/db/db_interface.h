@@ -221,6 +221,17 @@ class TxLogInstanceInterface {
         TxLogInstanceInterface() = default;
 };
 
+//##############################################################################
+//##############################################################################
+class RangeTxn {
+    public:
+        typedef range::stored::Request req_type;
+        typedef boost::shared_ptr<req_type> req_type_p;
+        virtual ~RangeTxn() noexcept = default;
+    protected:
+        RangeTxn() = default;
+};
+
 
 //##############################################################################
 //##############################################################################
@@ -232,12 +243,15 @@ class BackendInterface {
         typedef std::vector<std::tuple<std::time_t, uint64_t, range_change_t>> range_changelist_t;
         typedef boost::shared_ptr<GraphInstanceInterface> graph_instance_t;
         typedef boost::shared_ptr<TxLogInstanceInterface> txlog_instance_t;
+        typedef RangeTxn txn_type;
+        typedef boost::shared_ptr<txn_type> txn_type_p;
 
         //######################################################################
         virtual ~BackendInterface() = default;
 
         //######################################################################
         virtual txlog_instance_t getTxLogInstance() = 0;
+        virtual txn_type_p startRangeTransaction(txn_type::req_type_p) = 0;
         virtual graph_instance_t getGraphInstance(const std::string& name) = 0;
         virtual graph_instance_t createGraphInstance(const std::string& name) = 0;
         virtual std::vector<std::string> listGraphInstances() const = 0;

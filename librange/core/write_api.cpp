@@ -93,15 +93,17 @@ RangeAPI_v1::create_env(const std::string &env_name)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name;
 
+    ::range::stored::WriteRequest req { cfg_, "create_env" };
+    req.add_arg(env_name);
+
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "create_env" };
-        req.add_arg(env_name);
         auto ack = req.send();
         if(!ack.status()) {
             LOG(notice, "failed") << ack.code() << ": " << ack.reason();
         }
         return ack.status();
     }
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
         auto txn = g->start_txn();
@@ -123,12 +125,13 @@ RangeAPI_v1::remove_env(const std::string &env_name)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name;
 
+    ::range::stored::WriteRequest req { cfg_, "remove_env" };
+    req.add_arg(env_name);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_env" };
-        req.add_arg(env_name);
         auto ack = req.send();
         return ack.status();
     }
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
         auto txn = g->start_txn();
@@ -171,13 +174,15 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
         return false;
     }
 
+    ::range::stored::WriteRequest req { cfg_, "add_cluster_to_env" };
+    req.add_arg(env_name);
+    req.add_arg(cluster_name);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "add_cluster_to_env" };
-        req.add_arg(env_name);
-        req.add_arg(cluster_name);
         auto ack = req.send();
         return ack.status();
     }
+
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
     if (!n) {
         LOG(notice, "nonexistent_cluster") << "node "
@@ -226,13 +231,14 @@ RangeAPI_v1::remove_cluster_from_env(const std::string &env_name,
         return false;
     }
 
+    ::range::stored::WriteRequest req { cfg_, "remove_cluster_from_env" };
+    req.add_arg(env_name);
+    req.add_arg(cluster_name);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_cluster_from_env" };
-        req.add_arg(env_name);
-        req.add_arg(cluster_name);
         auto ack = req.send();
         return ack.status();
     }
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
     if(env->remove_forward_edge(n, true)) {
         return true;
@@ -266,14 +272,16 @@ RangeAPI_v1::add_cluster_to_cluster(const std::string &env_name,
         return false;
     }
 
+    ::range::stored::WriteRequest req { cfg_, "add_cluster_to_cluster" };
+    req.add_arg(env_name);
+    req.add_arg(parent_cluster);
+    req.add_arg(child_cluster);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "add_cluster_to_cluster" };
-        req.add_arg(env_name);
-        req.add_arg(parent_cluster);
-        req.add_arg(child_cluster);
         auto ack = req.send();
         return ack.status();
     }
+
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
     if (!n) {
         n = primary->create(prefixed_node_name(env_name, child_cluster));
@@ -318,14 +326,15 @@ RangeAPI_v1::remove_cluster_from_cluster(const std::string &env_name,
         return false;
     }
 
+    ::range::stored::WriteRequest req { cfg_, "remove_cluster_from_cluster" };
+    req.add_arg(env_name);
+    req.add_arg(parent_cluster);
+    req.add_arg(child_cluster);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_cluster_from_cluster" };
-        req.add_arg(env_name);
-        req.add_arg(parent_cluster);
-        req.add_arg(child_cluster);
         auto ack = req.send();
         return ack.status();
     }
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
     if(parent->remove_forward_edge(n, true)) {
         return true;
@@ -353,13 +362,14 @@ RangeAPI_v1::remove_cluster(const std::string &env_name, const std::string &clus
         return false;
     }
 
+    ::range::stored::WriteRequest req { cfg_, "remove_cluster" };
+    req.add_arg(env_name);
+    req.add_arg(cluster_name);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_cluster" };
-        req.add_arg(env_name);
-        req.add_arg(cluster_name);
         auto ack = req.send();
         return ack.status();
     }
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
     primary->remove(n);
     dependency->remove(n);
@@ -394,14 +404,15 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
         return false;
     }
 
+    ::range::stored::WriteRequest req { cfg_, "add_host_to_cluster" };
+    req.add_arg(env_name);
+    req.add_arg(parent_cluster);
+    req.add_arg(hostname);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "add_host_to_cluster" };
-        req.add_arg(env_name);
-        req.add_arg(parent_cluster);
-        req.add_arg(hostname);
         auto ack = req.send();
         return ack.status();
     }
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
     if(n) {
         LOG(debug9, "found_host_being_added") << hostname;
@@ -489,14 +500,15 @@ RangeAPI_v1::remove_host_from_cluster(const std::string &env_name,
         return false;
     }
 
+    ::range::stored::WriteRequest req { cfg_, "remove_host_from_cluster" };
+    req.add_arg(env_name);
+    req.add_arg(parent_cluster);
+    req.add_arg(hostname);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_host_from_cluster" };
-        req.add_arg(env_name);
-        req.add_arg(parent_cluster);
-        req.add_arg(hostname);
         auto ack = req.send();
         return ack.status();
     }
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
 
     if(n->remove_reverse_edge(parent, true)) {
@@ -512,12 +524,13 @@ RangeAPI_v1::add_host(const std::string &hostname)
 {
     RANGE_LOG_TIMED_FUNCTION() << "hostname: " << hostname;
 
+    ::range::stored::WriteRequest req { cfg_, "add_host" };
+    req.add_arg(hostname);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "add_host" };
-        req.add_arg(hostname);
         auto ack = req.send();
         return ack.status();
     }
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
 
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
@@ -579,13 +592,14 @@ RangeAPI_v1::remove_host(const std::string &env_name, const std::string &hostnam
         }
     } 
 
+    ::range::stored::WriteRequest req { cfg_, "remove_host" };
+    req.add_arg(env_name);
+    req.add_arg(hostname);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_host" };
-        req.add_arg(env_name);
-        req.add_arg(hostname);
         auto ack = req.send();
         return ack.status();
     }
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
 
     primary->remove(n);
@@ -627,15 +641,16 @@ RangeAPI_v1::add_node_key_value(const std::string &env_name, const std::string &
         }
     }
 
+    ::range::stored::WriteRequest req { cfg_, "add_node_key_value" };
+    req.add_arg(env_name);
+    req.add_arg(node_name);
+    req.add_arg(key);
+    req.add_arg(value);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "add_node_key_value" };
-        req.add_arg(env_name);
-        req.add_arg(node_name);
-        req.add_arg(key);
-        req.add_arg(value);
         auto ack = req.send();
         return ack.status();
     }
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
     values.push_back(value);
     return n->update_tag(key, values);
@@ -678,15 +693,16 @@ RangeAPI_v1::remove_node_key_value(const std::string &env_name, const std::strin
         }
     }
     if(new_values.size() != values.size()) {
+        ::range::stored::WriteRequest req { cfg_, "remove_node_key_value" };
+        req.add_arg(env_name);
+        req.add_arg(node_name);
+        req.add_arg(key);
+        req.add_arg(value);
         if (cfg_->use_stored()) {
-            ::range::stored::WriteRequest req { cfg_, "remove_node_key_value" };
-            req.add_arg(env_name);
-            req.add_arg(node_name);
-            req.add_arg(key);
-            req.add_arg(value);
             auto ack = req.send();
             return ack.status();
         }
+        auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
         return n->update_tag(key, new_values);
     }
@@ -711,14 +727,15 @@ RangeAPI_v1::remove_key_from_node(const std::string &env_name, const std::string
         return false;
     }
 
+    ::range::stored::WriteRequest req { cfg_, "remove_key_from_node" };
+    req.add_arg(env_name);
+    req.add_arg(node_name);
+    req.add_arg(key);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_key_from_node" };
-        req.add_arg(env_name);
-        req.add_arg(node_name);
-        req.add_arg(key);
         auto ack = req.send();
         return ack.status();
     }
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
     bool ret = n->delete_tag(key);
     return ret;
@@ -749,15 +766,16 @@ RangeAPI_v1::add_node_ext_dependency(const std::string &env_name,
         return false;
     }
 
+    ::range::stored::WriteRequest req { cfg_, "add_node_ext_dependency" };
+    req.add_arg(env_name);
+    req.add_arg(node_name);
+    req.add_arg(dependency_env);
+    req.add_arg(dependency_name);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "add_node_ext_dependency" };
-        req.add_arg(env_name);
-        req.add_arg(node_name);
-        req.add_arg(dependency_env);
-        req.add_arg(dependency_name);
         auto ack = req.send();
         return ack.status();
     }
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
 
     if(n->add_forward_edge(d, true)) {
@@ -798,15 +816,16 @@ RangeAPI_v1::remove_node_ext_dependency(const std::string &env_name,
         return false;
     }
 
+    ::range::stored::WriteRequest req { cfg_, "remove_node_ext_dependency" };
+    req.add_arg(env_name);
+    req.add_arg(node_name);
+    req.add_arg(dependency_env);
+    req.add_arg(dependency_name);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_node_ext_dependency" };
-        req.add_arg(env_name);
-        req.add_arg(node_name);
-        req.add_arg(dependency_env);
-        req.add_arg(dependency_name);
         auto ack = req.send();
         return ack.status();
     }
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
 
     if(n->remove_forward_edge(d)) {
         return true;

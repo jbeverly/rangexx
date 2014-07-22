@@ -67,6 +67,10 @@ class TestRangeWriteAPI : public ::testing::Test {
             EXPECT_CALL(*backend, register_thread())
                 .Times(AnyNumber());
 
+            EXPECT_CALL(*backend, startRangeTransaction(_))
+                .Times(AnyNumber())
+                .WillRepeatedly(Return(nullptr));
+
             EXPECT_CALL(*cfg, db_backend())
                 .Times(AtLeast(0))
                 .WillRepeatedly(Return(backend));

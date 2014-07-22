@@ -181,12 +181,12 @@ am_librange_core_la_OBJECTS = ./core/config_builder.lo \
 	./core/exceptions.lo
 librange_core_la_OBJECTS = $(am_librange_core_la_OBJECTS)
 librange_db_la_LIBADD =
-am_librange_db_la_OBJECTS = db/berkeley_dbcxx_backend.lo \
-	db/berkeley_dbcxx_cursor.lo db/berkeley_dbcxx_db.lo \
-	db/berkeley_dbcxx_env.lo db/berkeley_dbcxx_lock.lo \
-	db/berkeley_dbcxx_txlog.lo db/berkeley_dbcxx_txn.lo \
-	db/changelist.pb.lo db/graph_list.pb.lo db/nodeinfo.pb.lo \
-	db/pbuff_node.lo db/txlog_iterator.lo
+am_librange_db_la_OBJECTS = db/nodeinfo.pb.lo db/berkeley_dbcxx_txn.lo \
+	db/berkeley_dbcxx_env.lo db/berkeley_dbcxx_range_txn.lo \
+	db/berkeley_dbcxx_backend.lo db/berkeley_dbcxx_txlog.lo \
+	db/pbuff_node.lo db/changelist.pb.lo db/graph_list.pb.lo \
+	db/berkeley_dbcxx_lock.lo db/berkeley_dbcxx_db.lo \
+	db/berkeley_dbcxx_cursor.lo db/txlog_iterator.lo
 librange_db_la_OBJECTS = $(am_librange_db_la_OBJECTS)
 librange_gnu_la_LIBADD =
 am_librange_gnu_la_OBJECTS = ./gnu/timespec.lo ./gnu/parse-datetime.lo \
@@ -568,32 +568,36 @@ librange_compiler_la_SOURCES = compiler/RangeParser_v1.cpp \
 
 ################################################################################
 librange_db_la_includedir = $(includedir)/rangexx
-nobase_librange_db_la_include_HEADERS = ./db/berkeley_dbcxx_backend.h \
-										 ./db/berkeley_dbcxx_cursor.h \
-										 ./db/berkeley_dbcxx_db.h \
-										 ./db/berkeley_dbcxx_env.h \
-										 ./db/berkeley_dbcxx_lock.h \
-										 ./db/berkeley_dbcxx_txn.h \
-										 ./db/berkeley_db_types.h \
-										 ./db/changelist.pb.h \
-										 ./db/config_interface.h \
-										 ./db/db_exceptions.h \
-										 ./db/db_interface.h \
-										 ./db/graph_list.pb.h \
-										 ./db/nodeinfo.pb.h \
-										 ./db/pbuff_node.h
+nobase_librange_db_la_include_HEADERS = db/berkeley_dbcxx_db.h \
+										 db/db_exceptions.h \
+										 db/berkeley_dbcxx_range_txn.h \
+										 db/graph_list.pb.h \
+										 db/berkeley_dbcxx_txn.h \
+										 db/berkeley_dbcxx_txlog.h \
+										 db/berkeley_dbcxx_env.h \
+										 db/berkeley_db_types.h \
+										 db/db_interface.h \
+										 db/txlog_iterator.h \
+										 db/pbuff_node.h \
+										 db/berkeley_dbcxx_backend.h \
+										 db/nodeinfo.pb.h \
+										 db/berkeley_dbcxx_lock.h \
+										 db/changelist.pb.h \
+										 db/config_interface.h \
+										 db/berkeley_dbcxx_cursor.h
 
-librange_db_la_SOURCES = db/berkeley_dbcxx_backend.cpp \
-						 db/berkeley_dbcxx_cursor.cpp \
-						 db/berkeley_dbcxx_db.cpp \
-						 db/berkeley_dbcxx_env.cpp \
-						 db/berkeley_dbcxx_lock.cpp \
-						 db/berkeley_dbcxx_txlog.cpp \
+librange_db_la_SOURCES = db/nodeinfo.pb.cpp \
 						 db/berkeley_dbcxx_txn.cpp \
+						 db/berkeley_dbcxx_env.cpp \
+						 db/berkeley_dbcxx_range_txn.cpp \
+						 db/berkeley_dbcxx_backend.cpp \
+						 db/berkeley_dbcxx_txlog.cpp \
+						 db/pbuff_node.cpp \
 						 db/changelist.pb.cpp \
 						 db/graph_list.pb.cpp \
-						 db/nodeinfo.pb.cpp \
-						 db/pbuff_node.cpp \
+						 db/berkeley_dbcxx_lock.cpp \
+						 db/berkeley_dbcxx_db.cpp \
+						 db/berkeley_dbcxx_cursor.cpp \
 						 db/txlog_iterator.cpp \
 						 $(top_builddir)/range_config.h 
 
@@ -780,24 +784,26 @@ db/$(am__dirstamp):
 db/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) db/$(DEPDIR)
 	@: > db/$(DEPDIR)/$(am__dirstamp)
-db/berkeley_dbcxx_backend.lo: db/$(am__dirstamp) \
-	db/$(DEPDIR)/$(am__dirstamp)
-db/berkeley_dbcxx_cursor.lo: db/$(am__dirstamp) \
-	db/$(DEPDIR)/$(am__dirstamp)
-db/berkeley_dbcxx_db.lo: db/$(am__dirstamp) \
+db/nodeinfo.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
+db/berkeley_dbcxx_txn.lo: db/$(am__dirstamp) \
 	db/$(DEPDIR)/$(am__dirstamp)
 db/berkeley_dbcxx_env.lo: db/$(am__dirstamp) \
 	db/$(DEPDIR)/$(am__dirstamp)
-db/berkeley_dbcxx_lock.lo: db/$(am__dirstamp) \
+db/berkeley_dbcxx_range_txn.lo: db/$(am__dirstamp) \
+	db/$(DEPDIR)/$(am__dirstamp)
+db/berkeley_dbcxx_backend.lo: db/$(am__dirstamp) \
 	db/$(DEPDIR)/$(am__dirstamp)
 db/berkeley_dbcxx_txlog.lo: db/$(am__dirstamp) \
 	db/$(DEPDIR)/$(am__dirstamp)
-db/berkeley_dbcxx_txn.lo: db/$(am__dirstamp) \
-	db/$(DEPDIR)/$(am__dirstamp)
+db/pbuff_node.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
 db/changelist.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
 db/graph_list.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
-db/nodeinfo.pb.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
-db/pbuff_node.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
+db/berkeley_dbcxx_lock.lo: db/$(am__dirstamp) \
+	db/$(DEPDIR)/$(am__dirstamp)
+db/berkeley_dbcxx_db.lo: db/$(am__dirstamp) \
+	db/$(DEPDIR)/$(am__dirstamp)
+db/berkeley_dbcxx_cursor.lo: db/$(am__dirstamp) \
+	db/$(DEPDIR)/$(am__dirstamp)
 db/txlog_iterator.lo: db/$(am__dirstamp) db/$(DEPDIR)/$(am__dirstamp)
 
 librange_db.la: $(librange_db_la_OBJECTS) $(librange_db_la_DEPENDENCIES) $(EXTRA_librange_db_la_DEPENDENCIES) 
@@ -894,6 +900,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_dbcxx_db.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_dbcxx_env.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_dbcxx_lock.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_dbcxx_range_txn.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_dbcxx_txlog.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/berkeley_dbcxx_txn.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@db/$(DEPDIR)/changelist.pb.Plo@am__quote@

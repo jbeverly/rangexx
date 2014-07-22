@@ -104,38 +104,46 @@ class WriteRequest {
         WriteRequest(const boost::shared_ptr<Config> cfg, const std::string &name) 
             : cfg_{cfg}
         {
-            req.set_method(name);
-            req.set_request_id(request_id_++);
-            req.set_type(Request::Type::Request_Type_REQUEST);
+            req_.set_method(name);
+            req_.set_request_id(request_id_++);
+            req_.set_type(Request::Type::Request_Type_REQUEST);
         }
 
         //######################################################################
         void set_type(Request::Type type)
         {
-            req.set_type(type);
+            req_.set_type(type);
         }
 
         //######################################################################
         void add_arg(const std::string &arg)
         {
-            req.add_args(arg);
+            req_.add_args(arg);
+        }
+
+        //######################################################################
+        boost::shared_ptr<Request>
+        req() {
+            req_.set_crc(0);
+            req_.set_client_id(CLIENT_ID);
+            req_.set_crc(range::util::crc32(req_.SerializeAsString()));
+            boost::shared_ptr<Request> req { &req_, [](void *) { return; } };
+            return req;
         }
 
         //######################################################################
         Ack send()
         {
             RequestQueueClient reqq { cfg_ };
-            req.set_crc(0);
-            req.set_client_id(CLIENT_ID);
-            req.set_crc(range::util::crc32(req.SerializeAsString()));
-            reqq.request(req, ack);
-            return ack;
+            this->req();
+            reqq.request(req_, ack_);
+            return ack_;
         }
 
     private:
         boost::shared_ptr<Config> cfg_;
-        Request req;
-        Ack ack;
+        Request req_;
+        Ack ack_;
         thread_local static uint64_t request_id_;
 };
 

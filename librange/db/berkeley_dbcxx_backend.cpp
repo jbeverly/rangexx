@@ -19,6 +19,7 @@
 #include <google/protobuf/message.h>
 
 #include "berkeley_dbcxx_txlog.h"
+#include "berkeley_dbcxx_range_txn.h"
 
 namespace range { namespace db {
 
@@ -106,6 +107,15 @@ BerkeleyDB::txlog_instance_t
 BerkeleyDB::getTxLogInstance()
 {
     return BerkeleyDBCXXTxLogDb::get(env_);
+}
+
+//##############################################################################
+//##############################################################################
+BerkeleyDB::txn_type_p
+BerkeleyDB::startRangeTransaction(txn_type::req_type_p change)
+{
+    auto txn = boost::make_shared<BerkeleyDBCXXRangeTxn>(shared_from_this(), change);
+    return txn;
 }
 
 //##############################################################################
