@@ -155,6 +155,28 @@ TEST_F(TestIntegration, test_write_create_env) {
 
     std::vector<std::string> resultlist = get_value_list(result);
     ASSERT_THAT(resultlist, ElementsAreArray({"testenv1", "testenv2", "testenv3", "testenv4", "testenv5", "testenv6"}));
+
+    uint64_t v = ::range::config->db_backend()->range_version();
+
+    result = range->all_environments(v - 1);
+    resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAreArray({"testenv1", "testenv2", "testenv3", "testenv4", "testenv5"}));
+
+    result = range->all_environments(v - 2);
+    resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAreArray({"testenv1", "testenv2", "testenv3", "testenv4"}));
+
+    result = range->all_environments(v - 3);
+    resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAreArray({"testenv1", "testenv2", "testenv3"}));
+
+    result = range->all_environments(v - 4);
+    resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAreArray({"testenv1", "testenv2"}));
+
+    result = range->all_environments(v - 5);
+    resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAreArray({"testenv1"}));
 }
 
 //##############################################################################
@@ -178,6 +200,11 @@ TEST_F(TestIntegration, test_write_remove_env) {
 
     ASSERT_THROW(req = range->remove_env("testenv2"), range::graph::NodeNotFoundException);
 
+    uint64_t v = ::range::config->db_backend()->range_version();
+    result = range->all_environments(v - 1);
+    resultlist = get_value_list(result);
+    ASSERT_THAT(resultlist, ElementsAreArray({"testenv1", "testenv2", "testenv3", "testenv4", "testenv5", "testenv6"}));
+
     req = range->create_env("testenv2");
     EXPECT_TRUE(req);
 
@@ -192,39 +219,94 @@ TEST_F(TestIntegration, test_write_remove_env) {
 TEST_F(TestIntegration, test_write_add_clusters_to_env) {
     using namespace ::range;
     bool req;
+
+    range::RangeStruct result;
+    std::vector<std::string> resultlist;
+
+    uint64_t v = ::range::config->db_backend()->range_version();
     req = range->add_cluster_to_env("testenv1", "testcluster1_1");
     EXPECT_TRUE(req);
+    EXPECT_EQ(v + 1, ::range::config->db_backend()->range_version());
     req = range->add_cluster_to_env("testenv1", "testcluster1_2");
     EXPECT_TRUE(req);
+    EXPECT_EQ(v + 2, ::range::config->db_backend()->range_version());
     req = range->add_cluster_to_env("testenv1", "testcluster1_3");
     EXPECT_TRUE(req);
+    EXPECT_EQ(v + 3, ::range::config->db_backend()->range_version());
+    
+    uint64_t v1 = ::range::config->db_backend()->range_version();
 
     req = range->add_cluster_to_env("testenv3", "testcluster3_1");
     EXPECT_TRUE(req);
+    EXPECT_EQ(v1 + 1, ::range::config->db_backend()->range_version());
     req = range->add_cluster_to_env("testenv3", "testcluster3_2");
     EXPECT_TRUE(req);
+    EXPECT_EQ(v1 + 2, ::range::config->db_backend()->range_version());
     req = range->add_cluster_to_env("testenv3", "testcluster3_3");
     EXPECT_TRUE(req);
+    EXPECT_EQ(v1 + 3, ::range::config->db_backend()->range_version());
+
+    uint64_t v3 = ::range::config->db_backend()->range_version();
 
     req = range->add_cluster_to_env("testenv2", "testcluster2_1");
     EXPECT_TRUE(req);
+    EXPECT_EQ(v3 + 1, ::range::config->db_backend()->range_version());
     req = range->add_cluster_to_env("testenv2", "testcluster2_2");
     EXPECT_TRUE(req);
+    EXPECT_EQ(v3 + 2, ::range::config->db_backend()->range_version());
     req = range->add_cluster_to_env("testenv2", "testcluster2_3");
     EXPECT_TRUE(req);
+    EXPECT_EQ(v3 + 3, ::range::config->db_backend()->range_version());
 
+    uint64_t v2 = ::range::config->db_backend()->range_version();
 
-    range::RangeStruct result = range->simple_expand_env("testenv1");
-    std::vector<std::string> resultlist = get_value_list(result);
-    ASSERT_THAT(resultlist, ElementsAre("testcluster1_1", "testcluster1_2", "testcluster1_3"));
+    result = range->simple_expand_env("testenv1");
+    resultlist = get_value_list(result);
+    EXPECT_THAT(resultlist, ElementsAre("testcluster1_1", "testcluster1_2", "testcluster1_3"));
+
+    result = range->simple_expand_env("testenv1", v1 - 2);
+    resultlist = get_value_list(result);
+    EXPECT_THAT(resultlist, ElementsAre("testcluster1_1", "testcluster1_2"));
+
+    result = range->simple_expand_env("testenv1", v1 - 3);
+    resultlist = get_value_list(result);
+    EXPECT_THAT(resultlist, ElementsAre("testcluster1_1"));
+
+    result = range->simple_expand_env("testenv1", v1 - 4);
+    resultlist = get_value_list(result);
+    EXPECT_EQ(0, resultlist.size());
 
     result = range->simple_expand_env("testenv3");
     resultlist = get_value_list(result);
-    ASSERT_THAT(resultlist, ElementsAre("testcluster3_1", "testcluster3_2", "testcluster3_3"));
+    EXPECT_THAT(resultlist, ElementsAre("testcluster3_1", "testcluster3_2", "testcluster3_3"));
+
+    result = range->simple_expand_env("testenv3", v3 - 2);
+    resultlist = get_value_list(result);
+    EXPECT_THAT(resultlist, ElementsAre("testcluster3_1", "testcluster3_2"));
+
+    result = range->simple_expand_env("testenv3", v3 - 3);
+    resultlist = get_value_list(result);
+    EXPECT_THAT(resultlist, ElementsAre("testcluster3_1"));
+
+    result = range->simple_expand_env("testenv3", v3 - 4);
+    resultlist = get_value_list(result);
+    EXPECT_EQ(0, resultlist.size());
 
     result = range->simple_expand_env("testenv2");
     resultlist = get_value_list(result);
-    ASSERT_THAT(resultlist, ElementsAre("testcluster2_1", "testcluster2_2", "testcluster2_3"));
+    EXPECT_THAT(resultlist, ElementsAre("testcluster2_1", "testcluster2_2", "testcluster2_3"));
+
+    result = range->simple_expand_env("testenv2", v2 - 2);
+    resultlist = get_value_list(result);
+    EXPECT_THAT(resultlist, ElementsAre("testcluster2_1", "testcluster2_2"));
+
+    result = range->simple_expand_env("testenv2", v2 - 3);
+    resultlist = get_value_list(result);
+    EXPECT_THAT(resultlist, ElementsAre("testcluster2_1"));
+
+    result = range->simple_expand_env("testenv2", v2 - 4);
+    resultlist = get_value_list(result);
+    EXPECT_EQ(0, resultlist.size());
 }
 //##############################################################################
 //##############################################################################
@@ -237,7 +319,18 @@ TEST_F(TestIntegration, test_remove_cluster_from_env) {
 
     range::RangeStruct result = range->simple_expand_env("testenv2");
     std::vector<std::string> resultlist = get_value_list(result);
-    ASSERT_THAT(resultlist, ElementsAre("testcluster2_1", "testcluster2_3"));
+    EXPECT_THAT(resultlist, ElementsAre("testcluster2_1", "testcluster2_3"));
+    uint64_t v = ::range::config->db_backend()->range_version();
+
+    result = range->simple_expand_env("testenv2", v - 2);
+    resultlist = get_value_list(result);
+    EXPECT_THAT(resultlist, ElementsAre("testcluster2_1", "testcluster2_2", "testcluster2_3"));
+
+    auto txlog = ::range::config->db_backend()->getTxLogInstance();
+    auto it = txlog->find(v);
+    ASSERT_NE(it, txlog->end());
+    ++it;
+    ASSERT_EQ(txlog->end(), it);
 
     ASSERT_THROW(req = range->remove_cluster_from_env("testenv2", "testcluster2_2"), range::graph::EdgeNotFoundException);
 
@@ -549,6 +642,18 @@ TEST_F(TestIntegration, test_add_node_key_value) {
                 "value2",
                 "value3",
                 }));
+
+    uint64_t v = ::range::config->db_backend()->range_version() - 1;
+
+    result = range->fetch_key("testenv1", "host1.example.com", "foobar", v - 1);
+    resultlist = get_value_list(result, false);
+    EXPECT_THAT(resultlist, ElementsAreArray({ "value1", "value2"}));
+
+    result = range->fetch_key("testenv1", "host1.example.com", "foobar", v - 2);
+    resultlist = get_value_list(result, false);
+    EXPECT_THAT(resultlist, ElementsAreArray({ "value1" }));
+
+    ASSERT_THROW(range->fetch_key("testenv1", "host1.example.com", "foobar", v - 3), range::graph::KeyNotFoundException);
 }
 
 //##############################################################################
@@ -669,6 +774,17 @@ TEST_F(TestIntegration, test_reordering_nodes) {
 
     ASSERT_THAT(resultlist, ElementsAre("host1.example.com", "host2.example.com", "host3.example.com"));
 }
+
+//##############################################################################
+//##############################################################################
+TEST_F(TestIntegration, txlog_version_numbers) {
+    auto txlog = ::range::config->db_backend()->getTxLogInstance();
+    auto it = txlog->find(::range::config->db_backend()->range_version());
+    ASSERT_NE(it, txlog->end());
+    ++it;
+    ASSERT_EQ(txlog->end(), it);
+}
+
 
 
 

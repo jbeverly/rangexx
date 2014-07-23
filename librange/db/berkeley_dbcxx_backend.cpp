@@ -290,6 +290,7 @@ BerkeleyDB::add_new_range_version()
     ts->set_msec(cur_time.tv_usec / 1000);
 
     changes.set_current_version(changes.current_version() + 1);
+    info_->commit_record(std::make_tuple(record_type::GRAPH_META, "range_changelist", 0, changes.SerializeAsString()));
 }
 
 //##############################################################################

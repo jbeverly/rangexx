@@ -89,7 +89,7 @@ class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
             if(key != std::numeric_limits<uint32_t>::max()) {
                 *keybuf = key;
             }
-            Dbt dbkey { (void *) &keybuf, sizeof(key) };;
+            Dbt dbkey { (void *) keybuf, sizeof(*keybuf) };;
             Dbt dbdata;
             int dbrval = 0;
 
@@ -120,6 +120,9 @@ class BerkeleyDBCXXTxLogCursor : public TxLogCursorInterface
                 case 0:
                     break;
                 case DB_NOTFOUND:
+                    return false;
+                    break;
+                case DB_KEYEMPTY:
                     return false;
                     break;
                 case DB_BUFFER_SMALL:
@@ -326,7 +329,14 @@ BerkeleyDBCXXTxLogDb::find(uint32_t version)
     auto lock = env_->acquire_DbTxn_lock(false);
     auto c = boost::make_shared<BerkeleyDBCXXTxLogCursor>(
             db_, lock);
-    iterator it { c, c->get(version) };
+    auto tx = c->get(version);
+    iterator it;
+    if(tx) {
+        it = iterator(c, tx);
+    } else {
+        it = iterator(c, nullptr);
+    }
+        
     return it;
 }
 
@@ -351,7 +361,7 @@ BerkeleyDBCXXTxLogDb::end()
     auto c = boost::make_shared<BerkeleyDBCXXTxLogCursor>(
             db_, lock);
 
-    iterator it { c };
+    iterator it { c, nullptr };
     return it;
 }
 

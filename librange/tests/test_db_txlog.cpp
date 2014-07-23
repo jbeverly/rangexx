@@ -140,6 +140,20 @@ TEST_F(TestTxnLogDB, test_iterator)
 
 //##############################################################################
 //##############################################################################
+TEST_F(TestTxnLogDB, test_find)
+{
+    std::stringstream s;
+    s << "foo" << 5;
+    auto it = instance->find(6);
+    it->version();
+    instance->end();
+    ASSERT_NE(it, instance->end());
+    EXPECT_EQ(6, it->version());
+    EXPECT_EQ(s.str(), it->client_id());
+}
+
+//##############################################################################
+//##############################################################################
 int
 main(int argc, char **argv)
 {

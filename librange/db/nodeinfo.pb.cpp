@@ -39,6 +39,9 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* NodeInfo_Tags_KeyValue_Values_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   NodeInfo_Tags_KeyValue_Values_reflection_ = NULL;
+const ::google::protobuf::Descriptor* NodeInfo_Tags_KeyValue_ListToVersionMap_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  NodeInfo_Tags_KeyValue_ListToVersionMap_reflection_ = NULL;
 
 }  // namespace
 
@@ -117,11 +120,12 @@ void protobuf_AssignDesc_nodeinfo_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(NodeInfo_Tags));
   NodeInfo_Tags_KeyValue_descriptor_ = NodeInfo_Tags_descriptor_->nested_type(0);
-  static const int NodeInfo_Tags_KeyValue_offsets_[4] = {
+  static const int NodeInfo_Tags_KeyValue_offsets_[5] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeInfo_Tags_KeyValue, key_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeInfo_Tags_KeyValue, key_version_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeInfo_Tags_KeyValue, values_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeInfo_Tags_KeyValue, versions_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeInfo_Tags_KeyValue, versionmap_),
   };
   NodeInfo_Tags_KeyValue_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -150,6 +154,22 @@ void protobuf_AssignDesc_nodeinfo_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(NodeInfo_Tags_KeyValue_Values));
+  NodeInfo_Tags_KeyValue_ListToVersionMap_descriptor_ = NodeInfo_Tags_KeyValue_descriptor_->nested_type(1);
+  static const int NodeInfo_Tags_KeyValue_ListToVersionMap_offsets_[2] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeInfo_Tags_KeyValue_ListToVersionMap, list_version_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeInfo_Tags_KeyValue_ListToVersionMap, key_version_),
+  };
+  NodeInfo_Tags_KeyValue_ListToVersionMap_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      NodeInfo_Tags_KeyValue_ListToVersionMap_descriptor_,
+      NodeInfo_Tags_KeyValue_ListToVersionMap::default_instance_,
+      NodeInfo_Tags_KeyValue_ListToVersionMap_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeInfo_Tags_KeyValue_ListToVersionMap, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(NodeInfo_Tags_KeyValue_ListToVersionMap, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(NodeInfo_Tags_KeyValue_ListToVersionMap));
 }
 
 namespace {
@@ -174,6 +194,8 @@ void protobuf_RegisterTypes(const ::std::string&) {
     NodeInfo_Tags_KeyValue_descriptor_, &NodeInfo_Tags_KeyValue::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     NodeInfo_Tags_KeyValue_Values_descriptor_, &NodeInfo_Tags_KeyValue_Values::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    NodeInfo_Tags_KeyValue_ListToVersionMap_descriptor_, &NodeInfo_Tags_KeyValue_ListToVersionMap::default_instance());
 }
 
 }  // namespace
@@ -191,6 +213,8 @@ void protobuf_ShutdownFile_nodeinfo_2eproto() {
   delete NodeInfo_Tags_KeyValue_reflection_;
   delete NodeInfo_Tags_KeyValue_Values::default_instance_;
   delete NodeInfo_Tags_KeyValue_Values_reflection_;
+  delete NodeInfo_Tags_KeyValue_ListToVersionMap::default_instance_;
+  delete NodeInfo_Tags_KeyValue_ListToVersionMap_reflection_;
 }
 
 void protobuf_AddDesc_nodeinfo_2eproto() {
@@ -200,7 +224,7 @@ void protobuf_AddDesc_nodeinfo_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\016nodeinfo.proto\022\010range.db\"\225\004\n\010NodeInfo\022"
+    "\n\016nodeinfo.proto\022\010range.db\"\233\005\n\010NodeInfo\022"
     "\024\n\014list_version\030\001 \002(\004\022\r\n\005crc32\030\002 \002(\r\022\021\n\t"
     "node_type\030\003 \002(\r\022)\n\007forward\030\004 \002(\0132\030.range"
     ".db.NodeInfo.Edges\022)\n\007reverse\030\005 \002(\0132\030.ra"
@@ -208,13 +232,16 @@ void protobuf_AddDesc_nodeinfo_2eproto() {
     "nge.db.NodeInfo.Tags\022\026\n\016graph_versions\030\007"
     " \003(\004\032)\n\tAdjacency\022\n\n\002id\030\001 \002(\t\022\020\n\010version"
     "s\030\002 \003(\004\0324\n\005Edges\022+\n\005edges\030\001 \003(\0132\034.range."
-    "db.NodeInfo.Adjacency\032\332\001\n\004Tags\022.\n\004keys\030\001"
-    " \003(\0132 .range.db.NodeInfo.Tags.KeyValue\032\241"
-    "\001\n\010KeyValue\022\013\n\003key\030\001 \002(\t\022\023\n\013key_version\030"
-    "\004 \002(\004\0227\n\006values\030\002 \003(\0132\'.range.db.NodeInf"
-    "o.Tags.KeyValue.Values\022\020\n\010versions\030\003 \003(\004"
-    "\032(\n\006Values\022\014\n\004data\030\001 \002(\t\022\020\n\010versions\030\002 \003"
-    "(\004", 562);
+    "db.NodeInfo.Adjacency\032\340\002\n\004Tags\022.\n\004keys\030\001"
+    " \003(\0132 .range.db.NodeInfo.Tags.KeyValue\032\247"
+    "\002\n\010KeyValue\022\013\n\003key\030\001 \002(\t\022\023\n\013key_version\030"
+    "\002 \002(\004\0227\n\006values\030\003 \003(\0132\'.range.db.NodeInf"
+    "o.Tags.KeyValue.Values\022\020\n\010versions\030\004 \003(\004"
+    "\022E\n\nversionmap\030\005 \003(\01321.range.db.NodeInfo"
+    ".Tags.KeyValue.ListToVersionMap\032(\n\006Value"
+    "s\022\014\n\004data\030\001 \002(\t\022\020\n\010versions\030\002 \003(\004\032=\n\020Lis"
+    "tToVersionMap\022\024\n\014list_version\030\001 \002(\004\022\023\n\013k"
+    "ey_version\030\002 \002(\004", 696);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "nodeinfo.proto", &protobuf_RegisterTypes);
   NodeInfo::default_instance_ = new NodeInfo();
@@ -223,12 +250,14 @@ void protobuf_AddDesc_nodeinfo_2eproto() {
   NodeInfo_Tags::default_instance_ = new NodeInfo_Tags();
   NodeInfo_Tags_KeyValue::default_instance_ = new NodeInfo_Tags_KeyValue();
   NodeInfo_Tags_KeyValue_Values::default_instance_ = new NodeInfo_Tags_KeyValue_Values();
+  NodeInfo_Tags_KeyValue_ListToVersionMap::default_instance_ = new NodeInfo_Tags_KeyValue_ListToVersionMap();
   NodeInfo::default_instance_->InitAsDefaultInstance();
   NodeInfo_Adjacency::default_instance_->InitAsDefaultInstance();
   NodeInfo_Edges::default_instance_->InitAsDefaultInstance();
   NodeInfo_Tags::default_instance_->InitAsDefaultInstance();
   NodeInfo_Tags_KeyValue::default_instance_->InitAsDefaultInstance();
   NodeInfo_Tags_KeyValue_Values::default_instance_->InitAsDefaultInstance();
+  NodeInfo_Tags_KeyValue_ListToVersionMap::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_nodeinfo_2eproto);
 }
 
@@ -996,10 +1025,260 @@ void NodeInfo_Tags_KeyValue_Values::Swap(NodeInfo_Tags_KeyValue_Values* other) {
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
+const int NodeInfo_Tags_KeyValue_ListToVersionMap::kListVersionFieldNumber;
+const int NodeInfo_Tags_KeyValue_ListToVersionMap::kKeyVersionFieldNumber;
+#endif  // !_MSC_VER
+
+NodeInfo_Tags_KeyValue_ListToVersionMap::NodeInfo_Tags_KeyValue_ListToVersionMap()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void NodeInfo_Tags_KeyValue_ListToVersionMap::InitAsDefaultInstance() {
+}
+
+NodeInfo_Tags_KeyValue_ListToVersionMap::NodeInfo_Tags_KeyValue_ListToVersionMap(const NodeInfo_Tags_KeyValue_ListToVersionMap& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void NodeInfo_Tags_KeyValue_ListToVersionMap::SharedCtor() {
+  _cached_size_ = 0;
+  list_version_ = GOOGLE_ULONGLONG(0);
+  key_version_ = GOOGLE_ULONGLONG(0);
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+NodeInfo_Tags_KeyValue_ListToVersionMap::~NodeInfo_Tags_KeyValue_ListToVersionMap() {
+  SharedDtor();
+}
+
+void NodeInfo_Tags_KeyValue_ListToVersionMap::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void NodeInfo_Tags_KeyValue_ListToVersionMap::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* NodeInfo_Tags_KeyValue_ListToVersionMap::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return NodeInfo_Tags_KeyValue_ListToVersionMap_descriptor_;
+}
+
+const NodeInfo_Tags_KeyValue_ListToVersionMap& NodeInfo_Tags_KeyValue_ListToVersionMap::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_nodeinfo_2eproto();
+  return *default_instance_;
+}
+
+NodeInfo_Tags_KeyValue_ListToVersionMap* NodeInfo_Tags_KeyValue_ListToVersionMap::default_instance_ = NULL;
+
+NodeInfo_Tags_KeyValue_ListToVersionMap* NodeInfo_Tags_KeyValue_ListToVersionMap::New() const {
+  return new NodeInfo_Tags_KeyValue_ListToVersionMap;
+}
+
+void NodeInfo_Tags_KeyValue_ListToVersionMap::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    list_version_ = GOOGLE_ULONGLONG(0);
+    key_version_ = GOOGLE_ULONGLONG(0);
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool NodeInfo_Tags_KeyValue_ListToVersionMap::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // required uint64 list_version = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &list_version_)));
+          set_has_list_version();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(16)) goto parse_key_version;
+        break;
+      }
+
+      // required uint64 key_version = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_key_version:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &key_version_)));
+          set_has_key_version();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void NodeInfo_Tags_KeyValue_ListToVersionMap::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // required uint64 list_version = 1;
+  if (has_list_version()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(1, this->list_version(), output);
+  }
+
+  // required uint64 key_version = 2;
+  if (has_key_version()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(2, this->key_version(), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* NodeInfo_Tags_KeyValue_ListToVersionMap::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // required uint64 list_version = 1;
+  if (has_list_version()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(1, this->list_version(), target);
+  }
+
+  // required uint64 key_version = 2;
+  if (has_key_version()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(2, this->key_version(), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int NodeInfo_Tags_KeyValue_ListToVersionMap::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // required uint64 list_version = 1;
+    if (has_list_version()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+          this->list_version());
+    }
+
+    // required uint64 key_version = 2;
+    if (has_key_version()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+          this->key_version());
+    }
+
+  }
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void NodeInfo_Tags_KeyValue_ListToVersionMap::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const NodeInfo_Tags_KeyValue_ListToVersionMap* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const NodeInfo_Tags_KeyValue_ListToVersionMap*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void NodeInfo_Tags_KeyValue_ListToVersionMap::MergeFrom(const NodeInfo_Tags_KeyValue_ListToVersionMap& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_list_version()) {
+      set_list_version(from.list_version());
+    }
+    if (from.has_key_version()) {
+      set_key_version(from.key_version());
+    }
+  }
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void NodeInfo_Tags_KeyValue_ListToVersionMap::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void NodeInfo_Tags_KeyValue_ListToVersionMap::CopyFrom(const NodeInfo_Tags_KeyValue_ListToVersionMap& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool NodeInfo_Tags_KeyValue_ListToVersionMap::IsInitialized() const {
+  if ((_has_bits_[0] & 0x00000003) != 0x00000003) return false;
+
+  return true;
+}
+
+void NodeInfo_Tags_KeyValue_ListToVersionMap::Swap(NodeInfo_Tags_KeyValue_ListToVersionMap* other) {
+  if (other != this) {
+    std::swap(list_version_, other->list_version_);
+    std::swap(key_version_, other->key_version_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata NodeInfo_Tags_KeyValue_ListToVersionMap::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = NodeInfo_Tags_KeyValue_ListToVersionMap_descriptor_;
+  metadata.reflection = NodeInfo_Tags_KeyValue_ListToVersionMap_reflection_;
+  return metadata;
+}
+
+
+// -------------------------------------------------------------------
+
+#ifndef _MSC_VER
 const int NodeInfo_Tags_KeyValue::kKeyFieldNumber;
 const int NodeInfo_Tags_KeyValue::kKeyVersionFieldNumber;
 const int NodeInfo_Tags_KeyValue::kValuesFieldNumber;
 const int NodeInfo_Tags_KeyValue::kVersionsFieldNumber;
+const int NodeInfo_Tags_KeyValue::kVersionmapFieldNumber;
 #endif  // !_MSC_VER
 
 NodeInfo_Tags_KeyValue::NodeInfo_Tags_KeyValue()
@@ -1067,6 +1346,7 @@ void NodeInfo_Tags_KeyValue::Clear() {
   }
   values_.Clear();
   versions_.Clear();
+  versionmap_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
 }
@@ -1089,49 +1369,12 @@ bool NodeInfo_Tags_KeyValue::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(18)) goto parse_values;
+        if (input->ExpectTag(16)) goto parse_key_version;
         break;
       }
 
-      // repeated .range.db.NodeInfo.Tags.KeyValue.Values values = 2;
+      // required uint64 key_version = 2;
       case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_values:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-                input, add_values()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(18)) goto parse_values;
-        if (input->ExpectTag(24)) goto parse_versions;
-        break;
-      }
-
-      // repeated uint64 versions = 3;
-      case 3: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_versions:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitive<
-                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
-                 1, 24, input, this->mutable_versions())));
-        } else if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag)
-                   == ::google::protobuf::internal::WireFormatLite::
-                      WIRETYPE_LENGTH_DELIMITED) {
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitiveNoInline<
-                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
-                 input, this->mutable_versions())));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(24)) goto parse_versions;
-        if (input->ExpectTag(32)) goto parse_key_version;
-        break;
-      }
-
-      // required uint64 key_version = 4;
-      case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_key_version:
@@ -1142,6 +1385,58 @@ bool NodeInfo_Tags_KeyValue::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(26)) goto parse_values;
+        break;
+      }
+
+      // repeated .range.db.NodeInfo.Tags.KeyValue.Values values = 3;
+      case 3: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_values:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_values()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(26)) goto parse_values;
+        if (input->ExpectTag(32)) goto parse_versions;
+        break;
+      }
+
+      // repeated uint64 versions = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_versions:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 1, 32, input, this->mutable_versions())));
+        } else if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag)
+                   == ::google::protobuf::internal::WireFormatLite::
+                      WIRETYPE_LENGTH_DELIMITED) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitiveNoInline<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, this->mutable_versions())));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(32)) goto parse_versions;
+        if (input->ExpectTag(42)) goto parse_versionmap;
+        break;
+      }
+
+      // repeated .range.db.NodeInfo.Tags.KeyValue.ListToVersionMap versionmap = 5;
+      case 5: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_versionmap:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_versionmap()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(42)) goto parse_versionmap;
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -1173,21 +1468,27 @@ void NodeInfo_Tags_KeyValue::SerializeWithCachedSizes(
       1, this->key(), output);
   }
 
-  // repeated .range.db.NodeInfo.Tags.KeyValue.Values values = 2;
+  // required uint64 key_version = 2;
+  if (has_key_version()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(2, this->key_version(), output);
+  }
+
+  // repeated .range.db.NodeInfo.Tags.KeyValue.Values values = 3;
   for (int i = 0; i < this->values_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      2, this->values(i), output);
+      3, this->values(i), output);
   }
 
-  // repeated uint64 versions = 3;
+  // repeated uint64 versions = 4;
   for (int i = 0; i < this->versions_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(
-      3, this->versions(i), output);
+      4, this->versions(i), output);
   }
 
-  // required uint64 key_version = 4;
-  if (has_key_version()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(4, this->key_version(), output);
+  // repeated .range.db.NodeInfo.Tags.KeyValue.ListToVersionMap versionmap = 5;
+  for (int i = 0; i < this->versionmap_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      5, this->versionmap(i), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -1208,22 +1509,29 @@ void NodeInfo_Tags_KeyValue::SerializeWithCachedSizes(
         1, this->key(), target);
   }
 
-  // repeated .range.db.NodeInfo.Tags.KeyValue.Values values = 2;
+  // required uint64 key_version = 2;
+  if (has_key_version()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(2, this->key_version(), target);
+  }
+
+  // repeated .range.db.NodeInfo.Tags.KeyValue.Values values = 3;
   for (int i = 0; i < this->values_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
-        2, this->values(i), target);
+        3, this->values(i), target);
   }
 
-  // repeated uint64 versions = 3;
+  // repeated uint64 versions = 4;
   for (int i = 0; i < this->versions_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
-      WriteUInt64ToArray(3, this->versions(i), target);
+      WriteUInt64ToArray(4, this->versions(i), target);
   }
 
-  // required uint64 key_version = 4;
-  if (has_key_version()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(4, this->key_version(), target);
+  // repeated .range.db.NodeInfo.Tags.KeyValue.ListToVersionMap versionmap = 5;
+  for (int i = 0; i < this->versionmap_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        5, this->versionmap(i), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -1244,7 +1552,7 @@ int NodeInfo_Tags_KeyValue::ByteSize() const {
           this->key());
     }
 
-    // required uint64 key_version = 4;
+    // required uint64 key_version = 2;
     if (has_key_version()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::UInt64Size(
@@ -1252,7 +1560,7 @@ int NodeInfo_Tags_KeyValue::ByteSize() const {
     }
 
   }
-  // repeated .range.db.NodeInfo.Tags.KeyValue.Values values = 2;
+  // repeated .range.db.NodeInfo.Tags.KeyValue.Values values = 3;
   total_size += 1 * this->values_size();
   for (int i = 0; i < this->values_size(); i++) {
     total_size +=
@@ -1260,7 +1568,7 @@ int NodeInfo_Tags_KeyValue::ByteSize() const {
         this->values(i));
   }
 
-  // repeated uint64 versions = 3;
+  // repeated uint64 versions = 4;
   {
     int data_size = 0;
     for (int i = 0; i < this->versions_size(); i++) {
@@ -1268,6 +1576,14 @@ int NodeInfo_Tags_KeyValue::ByteSize() const {
         UInt64Size(this->versions(i));
     }
     total_size += 1 * this->versions_size() + data_size;
+  }
+
+  // repeated .range.db.NodeInfo.Tags.KeyValue.ListToVersionMap versionmap = 5;
+  total_size += 1 * this->versionmap_size();
+  for (int i = 0; i < this->versionmap_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->versionmap(i));
   }
 
   if (!unknown_fields().empty()) {
@@ -1297,6 +1613,7 @@ void NodeInfo_Tags_KeyValue::MergeFrom(const NodeInfo_Tags_KeyValue& from) {
   GOOGLE_CHECK_NE(&from, this);
   values_.MergeFrom(from.values_);
   versions_.MergeFrom(from.versions_);
+  versionmap_.MergeFrom(from.versionmap_);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (from.has_key()) {
       set_key(from.key());
@@ -1326,6 +1643,9 @@ bool NodeInfo_Tags_KeyValue::IsInitialized() const {
   for (int i = 0; i < values_size(); i++) {
     if (!this->values(i).IsInitialized()) return false;
   }
+  for (int i = 0; i < versionmap_size(); i++) {
+    if (!this->versionmap(i).IsInitialized()) return false;
+  }
   return true;
 }
 
@@ -1335,6 +1655,7 @@ void NodeInfo_Tags_KeyValue::Swap(NodeInfo_Tags_KeyValue* other) {
     std::swap(key_version_, other->key_version_);
     values_.Swap(&other->values_);
     versions_.Swap(&other->versions_);
+    versionmap_.Swap(&other->versionmap_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

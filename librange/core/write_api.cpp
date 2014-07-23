@@ -231,7 +231,9 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
         }
     }
 
-    bool ret = env->add_forward_edge(n, true);
+    if(!env->add_forward_edge(n, true)) {
+        THROW_STACK(range::NodeExistsException(cluster_name));
+    }
 
     n = dependency->get_node(prefixed_node_name(env_name, cluster_name));
     if(!n) {
@@ -240,7 +242,7 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
             n->set_type(node_type::CLUSTER);
         } 
     }
-    return ret;
+    return true;
 }
 
 //##############################################################################

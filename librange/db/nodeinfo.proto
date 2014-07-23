@@ -16,10 +16,17 @@ message NodeInfo {
 				required string data = 1;
 				repeated uint64 versions = 2;
 			}
+
+			message ListToVersionMap {
+				required uint64 list_version = 1;
+				required uint64 key_version = 2;
+			}
+
 			required string key = 1;
-			required uint64 key_version = 4;
-			repeated Values values = 2;
-			repeated uint64 versions = 3;
+			required uint64 key_version = 2;
+			repeated Values values = 3;
+			repeated uint64 versions = 4;
+			repeated ListToVersionMap versionmap = 5;
 		}
 		repeated KeyValue keys = 1;
 	}
