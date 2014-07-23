@@ -429,12 +429,12 @@ class Ack : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 request_id() const;
   inline void set_request_id(::google::protobuf::uint64 value);
 
-  // optional uint64 code = 4;
+  // optional uint32 code = 4;
   inline bool has_code() const;
   inline void clear_code();
   static const int kCodeFieldNumber = 4;
-  inline ::google::protobuf::uint64 code() const;
-  inline void set_code(::google::protobuf::uint64 value);
+  inline ::google::protobuf::uint32 code() const;
+  inline void set_code(::google::protobuf::uint32 value);
 
   // optional string reason = 5;
   inline bool has_reason() const;
@@ -500,14 +500,14 @@ class Ack : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::std::string* client_id_;
-  ::google::protobuf::uint64 request_id_;
   bool status_;
-  int type_;
-  ::google::protobuf::uint64 code_;
+  ::google::protobuf::uint32 code_;
+  ::google::protobuf::uint64 request_id_;
   ::std::string* reason_;
   ::google::protobuf::uint64 proposal_num_;
-  ::google::protobuf::uint64 next_proposal_num_;
+  int type_;
   ::google::protobuf::uint32 proposer_id_;
+  ::google::protobuf::uint64 next_proposal_num_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
@@ -1027,7 +1027,7 @@ inline void Ack::set_request_id(::google::protobuf::uint64 value) {
   request_id_ = value;
 }
 
-// optional uint64 code = 4;
+// optional uint32 code = 4;
 inline bool Ack::has_code() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
@@ -1038,13 +1038,13 @@ inline void Ack::clear_has_code() {
   _has_bits_[0] &= ~0x00000008u;
 }
 inline void Ack::clear_code() {
-  code_ = GOOGLE_ULONGLONG(0);
+  code_ = 0u;
   clear_has_code();
 }
-inline ::google::protobuf::uint64 Ack::code() const {
+inline ::google::protobuf::uint32 Ack::code() const {
   return code_;
 }
-inline void Ack::set_code(::google::protobuf::uint64 value) {
+inline void Ack::set_code(::google::protobuf::uint32 value) {
   set_has_code();
   code_ = value;
 }

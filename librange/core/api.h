@@ -45,6 +45,16 @@ static ::range::EmitterModuleRegistration RangeAPI_v1LogModule { "RangeAPI_v1" }
 class RangeAPI_v1
 {
     public: 
+        enum class ErrorCode {
+            CreateNodeException = 1,
+            EdgeNotFoundException,
+            IncorrectNodeTypeException,
+            InvalidEnvironmentException,
+            NodeExistsException,
+            NodeNotFoundException,
+            UNKNOWN
+        };
+
         static const std::map<std::string, std::function<bool(RangeAPI_v1*, std::vector<std::string>)>> write_api_symtable;
 
         typedef ::range::graph::NodeIface::node_type node_type;

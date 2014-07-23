@@ -64,6 +64,10 @@ class TestRangeWriteAPI : public ::testing::Test {
                 .Times(AtLeast(0))
                 .WillRepeatedly(Return(nullptr));
 
+            EXPECT_CALL(*cfg, use_stored())
+                .Times(AnyNumber())
+                .WillRepeatedly(Return(false));
+
             EXPECT_CALL(*backend, register_thread())
                 .Times(AnyNumber());
 
@@ -491,24 +495,24 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster_existing_same_env) {
         .WillOnce(Return(bazcluster));
 
     EXPECT_CALL(*fooenv, type())
-        .Times(0)
-        .WillRepeatedly(Return(range::graph::NodeIface::node_type::ENVIRONMENT));
+        .Times(0);
+        //.WillRepeatedly(Return(range::graph::NodeIface::node_type::ENVIRONMENT));
 
     EXPECT_CALL(*fooenv, name())
-        .Times(0)
-        .WillRepeatedly(Return("foobar"));
+        .Times(0);
+        //.WillRepeatedly(Return("foobar"));
 
     EXPECT_CALL(*fooparent1, type())
-        .Times(0)
-        .WillRepeatedly(Return(range::graph::NodeIface::node_type::CLUSTER));
+        .Times(0);
+        //.WillRepeatedly(Return(range::graph::NodeIface::node_type::CLUSTER));
 
     EXPECT_CALL(*fooparent1, name())
-        .Times(0)
-        .WillRepeatedly(Return("foobar#parent1"));
+        .Times(0);
+        //.WillRepeatedly(Return("foobar#parent1"));
 
     EXPECT_CALL(*fooparent1, reverse_edges())
-        .Times(0)
-        .WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({fooenv})));
+        .Times(0);
+        //.WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({fooenv})));
 
     EXPECT_CALL(*foocluster1, type())
         .Times(1)
@@ -519,8 +523,8 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster_existing_same_env) {
         .WillRepeatedly(Return("foobar#cluster1"));
 
     EXPECT_CALL(*foocluster1, reverse_edges())
-        .Times(0)
-        .WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({fooparent1})));
+        .Times(0);
+        //.WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({fooparent1})));
 
     EXPECT_CALL(*host, reverse_edges())
         .Times(1)
@@ -531,8 +535,8 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster_existing_same_env) {
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::HOST));
 
     EXPECT_CALL(*host, name())
-        .Times(0)
-        .WillRepeatedly(Return("somehost.example.com"));
+        .Times(0);
+        //.WillRepeatedly(Return("somehost.example.com"));
 
     EXPECT_CALL(*primary, get_node("somehost.example.com"))
         .Times(1)
@@ -567,24 +571,24 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster_existing_diff_env) {
         .WillOnce(Return(bazcluster));
 
     EXPECT_CALL(*fooenv, type())
-        .Times(0)
-        .WillRepeatedly(Return(range::graph::NodeIface::node_type::ENVIRONMENT));
+        .Times(0);
+        //.WillRepeatedly(Return(range::graph::NodeIface::node_type::ENVIRONMENT));
 
     EXPECT_CALL(*fooenv, name())
-        .Times(0)
-        .WillRepeatedly(Return("other"));
+        .Times(0);
+        //.WillRepeatedly(Return("other"));
 
     EXPECT_CALL(*fooparent1, type())
-        .Times(0)
-        .WillRepeatedly(Return(range::graph::NodeIface::node_type::CLUSTER));
+        .Times(0);
+        //.WillRepeatedly(Return(range::graph::NodeIface::node_type::CLUSTER));
 
     EXPECT_CALL(*fooparent1, name())
-        .Times(0)
-        .WillRepeatedly(Return("other#parent1"));
+        .Times(0);
+        //.WillRepeatedly(Return("other#parent1"));
 
     EXPECT_CALL(*fooparent1, reverse_edges())
-        .Times(0)
-        .WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({fooenv})));
+        .Times(0);
+        //.WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({fooenv})));
 
     EXPECT_CALL(*foocluster1, type())
         .Times(1)
@@ -595,8 +599,8 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster_existing_diff_env) {
         .WillRepeatedly(Return("other#cluster1"));
 
     EXPECT_CALL(*foocluster1, reverse_edges())
-        .Times(0)
-        .WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({fooparent1})));
+        .Times(0);
+        //.WillRepeatedly(Return(std::vector<boost::shared_ptr<range::graph::NodeIface>>({fooparent1})));
 
     EXPECT_CALL(*host, reverse_edges())
         .Times(1)
@@ -607,8 +611,8 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster_existing_diff_env) {
         .WillRepeatedly(Return(range::graph::NodeIface::node_type::HOST));
 
     EXPECT_CALL(*host, name())
-        .Times(0)
-        .WillRepeatedly(Return("somehost.example.com"));
+        .Times(0);
+        //.WillRepeatedly(Return("somehost.example.com"));
 
     EXPECT_CALL(*primary, get_node("somehost.example.com"))
         .Times(1)
@@ -616,9 +620,7 @@ TEST_F(TestRangeWriteAPI, test_add_host_to_cluster_existing_diff_env) {
 
     ::range::RangeAPI_v1 api { cfg };
 
-    bool a = api.add_host_to_cluster("foobar", "baz", "somehost.example.com");
-
-    EXPECT_EQ(a, false);
+    ASSERT_THROW(api.add_host_to_cluster("foobar", "baz", "somehost.example.com"), range::InvalidEnvironmentException);
 }
 
 //##############################################################################
@@ -821,8 +823,7 @@ TEST_F(TestRangeWriteAPI, test_remove_host_diff_env) {
 
     ::range::RangeAPI_v1 api { cfg };
 
-    bool a = api.remove_host("foobar", "somehost.example.com");
-    EXPECT_EQ(a, false);
+    ASSERT_THROW(api.remove_host("foobar", "somehost.example.com"), range::InvalidEnvironmentException);
 }
 
 //##############################################################################
@@ -892,8 +893,7 @@ TEST_F(TestRangeWriteAPI, test_add_node_key_value_pre_existing)
 
     ::range::RangeAPI_v1 api { cfg };
 
-    bool a = api.add_node_key_value("fooenv", "foonode", "testkey", {"value1"});
-    EXPECT_EQ(a, false);
+    ASSERT_THROW(api.add_node_key_value("fooenv", "foonode", "testkey", {"value1"}), range::NodeExistsException);
 }
 
 //##############################################################################
@@ -938,8 +938,7 @@ TEST_F(TestRangeWriteAPI, test_remove_node_key_value_non_existing)
 
     ::range::RangeAPI_v1 api { cfg };
 
-    bool a = api.remove_node_key_value("fooenv", "foonode", "testkey", {"value2"});
-    EXPECT_EQ(a, false);
+    ASSERT_THROW(api.remove_node_key_value("fooenv", "foonode", "testkey", {"value2"}), range::graph::NodeNotFoundException);
 }
 
 //##############################################################################

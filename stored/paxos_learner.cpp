@@ -141,7 +141,10 @@ void Learner::learn(stored::Request req)
     LOG(debug0, "learning") << req.proposal_num();
 
     bool success;
+    uint32_t code = 0;
+    std::string reason;
     auto it = ::range::RangeAPI_v1::write_api_symtable.find(req.method());
+    typedef range::RangeAPI_v1::ErrorCode ec;
 
     if(it != ::range::RangeAPI_v1::write_api_symtable.end()) {
         std::vector<std::string> args;
@@ -150,15 +153,47 @@ void Learner::learn(stored::Request req)
         }
         try {
             success = it->second(&range_, args);
-        } catch (range::IncorrectNumberOfArguments &e) {
+        }
+        catch (range::IncorrectNumberOfArguments &e) {
             LOG(error, "invalid_number_of_arguments") << e.what();
             return;
+        }
+        catch(range::Exception &e) {
+            LOG(info, "txn_failed") << e.what();
+            success = false;
+            reason = e.what();
+            try {
+                throw;
+            }
+            catch(range::CreateNodeException &e) {
+                code = static_cast<uint32_t>(ec::CreateNodeException);
+            }
+            catch(range::graph::EdgeNotFoundException &e) {
+                code = static_cast<uint32_t>(ec::EdgeNotFoundException);
+            }
+            catch(range::graph::IncorrectNodeTypeException &e) {
+                code = static_cast<uint32_t>(ec::IncorrectNodeTypeException);
+            }
+            catch(range::InvalidEnvironmentException &e) {
+                code = static_cast<uint32_t>(ec::InvalidEnvironmentException);
+            }
+            catch(range::NodeExistsException &e) {
+                code = static_cast<uint32_t>(ec::NodeExistsException);
+            }
+            catch(range::graph::NodeNotFoundException &e) {
+                code = static_cast<uint32_t>(ec::NodeNotFoundException);
+            }
+            catch(range::Exception &e) {
+                code = static_cast<uint32_t>(ec::UNKNOWN);
+            }
         }
     }
     
     if(req.client_id().substr(0,cfg_->node_id().size() + 1) == cfg_->node_id() + "|") {
         ::range::stored::Ack ack;
+        ack.set_reason(reason);
         ack.set_status(success);
+        ack.set_code(code);
         ack.set_client_id(req.client_id());
         ack.set_request_id(req.request_id());
         ::range::stored::RequestQueueListener reqql { request_queue_, cfg_ };

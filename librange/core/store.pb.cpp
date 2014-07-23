@@ -135,7 +135,7 @@ void protobuf_AddDesc_store_2eproto() {
     "\n\007PROPOSE\020\004\022\t\n\005LEARN\020\010\022\n\n\006REPLAY\020\020\022\014\n\010FA"
     "ILOVER\020 \022\r\n\tHEARTBEAT\020@\"\374\001\n\003Ack\022\016\n\006statu"
     "s\030\001 \002(\010\022\021\n\tclient_id\030\002 \002(\t\022\022\n\nrequest_id"
-    "\030\003 \002(\004\022\014\n\004code\030\004 \001(\004\022\016\n\006reason\030\005 \001(\t\022$\n\004"
+    "\030\003 \002(\004\022\014\n\004code\030\004 \001(\r\022\016\n\006reason\030\005 \001(\t\022$\n\004"
     "type\030\006 \001(\0162\026.range.stored.Ack.Type\022\024\n\014pr"
     "oposal_num\030\007 \001(\004\022\023\n\013proposer_id\030\010 \001(\r\022\031\n"
     "\021next_proposal_num\030\t \001(\004\"4\n\004Type\022\007\n\003ACK\020"
@@ -948,7 +948,7 @@ void Ack::SharedCtor() {
   status_ = false;
   client_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   request_id_ = GOOGLE_ULONGLONG(0);
-  code_ = GOOGLE_ULONGLONG(0);
+  code_ = 0u;
   reason_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   type_ = 1;
   proposal_num_ = GOOGLE_ULONGLONG(0);
@@ -1002,7 +1002,7 @@ void Ack::Clear() {
       }
     }
     request_id_ = GOOGLE_ULONGLONG(0);
-    code_ = GOOGLE_ULONGLONG(0);
+    code_ = 0u;
     if (has_reason()) {
       if (reason_ != &::google::protobuf::internal::kEmptyString) {
         reason_->clear();
@@ -1073,13 +1073,13 @@ bool Ack::MergePartialFromCodedStream(
         break;
       }
 
-      // optional uint64 code = 4;
+      // optional uint32 code = 4;
       case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_code:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
                  input, &code_)));
           set_has_code();
         } else {
@@ -1212,9 +1212,9 @@ void Ack::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(3, this->request_id(), output);
   }
 
-  // optional uint64 code = 4;
+  // optional uint32 code = 4;
   if (has_code()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(4, this->code(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(4, this->code(), output);
   }
 
   // optional string reason = 5;
@@ -1275,9 +1275,9 @@ void Ack::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(3, this->request_id(), target);
   }
 
-  // optional uint64 code = 4;
+  // optional uint32 code = 4;
   if (has_code()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(4, this->code(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(4, this->code(), target);
   }
 
   // optional string reason = 5;
@@ -1341,10 +1341,10 @@ int Ack::ByteSize() const {
           this->request_id());
     }
 
-    // optional uint64 code = 4;
+    // optional uint32 code = 4;
     if (has_code()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+        ::google::protobuf::internal::WireFormatLite::UInt32Size(
           this->code());
     }
 

@@ -58,6 +58,34 @@ struct IncorrectNumberOfArguments : public Exception {
         { }
 };
 
+//##############################################################################
+//##############################################################################
+struct NodeExistsException : public Exception {
+    NodeExistsException(const std::string &what, 
+            const std::string &event="NodeExistsException")
+        : Exception(what, event)
+        { }
+};
+
+//##############################################################################
+//##############################################################################
+struct CreateNodeException : public Exception {
+    CreateNodeException(const std::string &what, 
+            const std::string &event="CreateNodeException")
+        : Exception(what, event)
+        { }
+};
+
+//##############################################################################
+//##############################################################################
+struct InvalidEnvironmentException : public Exception {
+    InvalidEnvironmentException(const std::string &what, 
+            const std::string &event="NodeExistsException")
+        : Exception(what, event)
+        { }
+};
+
+
 namespace stored {
 
 //##############################################################################
