@@ -55,7 +55,7 @@ class RangeAPI_v1
             UNKNOWN
         };
 
-        static const std::map<std::string, std::function<bool(RangeAPI_v1*, std::vector<std::string>)>> write_api_symtable;
+        static const std::map<std::string, std::function<bool(RangeAPI_v1*, std::vector<std::string>, uint64_t)>> write_api_symtable;
 
         typedef ::range::graph::NodeIface::node_type node_type;
         //######################################################################
@@ -371,17 +371,19 @@ class RangeAPI_v1
         /// Create an environment
         ///
         /// @param[in] env_name Name of environment to create
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure (e.g. environment already
         ///         exists)
-        virtual bool create_env(const std::string &env_name);
+        virtual bool create_env(const std::string &env_name, uint64_t id=0);
 
         //######################################################################
         /// Remove an environment, and all child nodes (history retained)
         ///
         /// @param[in] env_name Name of environment to remove
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure (e.g. environment already
         ///         exists)
-        virtual bool remove_env(const std::string &env_name);
+        virtual bool remove_env(const std::string &env_name, uint64_t id=0);
 
         //######################################################################
         /// Create and add a cluster and add it to an environment (environment
@@ -389,10 +391,12 @@ class RangeAPI_v1
         ///
         /// @param[in] env_name name of existing environment
         /// @param[in] cluster_name Name of cluster to create
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure (e.g. cluster already
         ///          exists)
         virtual bool add_cluster_to_env(const std::string &env_name,
-                                        const std::string &cluster_name);
+                                        const std::string &cluster_name,
+                                        uint64_t id=0);
 
         //######################################################################
         /// Remove a cluster from an environment (cluster in environment
@@ -400,10 +404,12 @@ class RangeAPI_v1
         ///
         /// @param[in] env_name name of existing environment
         /// @param[in] cluster_name Name of cluster to create
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure (e.g. cluster does not 
         ///          exists)
         virtual bool remove_cluster_from_env(const std::string &env_name,
-                                        const std::string &cluster_name);
+                                        const std::string &cluster_name,
+                                        uint64_t id=0);
 
 
         //######################################################################
@@ -415,11 +421,13 @@ class RangeAPI_v1
         /// @param[in] parent_cluster name of existing cluster to add new 
         ///            cluster to
         /// @param[in] child_cluster name of new child cluster
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure (e.g. child_cluster already
         ///         exists and is a child of parent_cluster)
         virtual bool add_cluster_to_cluster(const std::string &env_name,
                                             const std::string &parent_cluster,
-                                            const std::string &child_cluster);
+                                            const std::string &child_cluster,
+                                            uint64_t id=0);
 
 
         //######################################################################
@@ -431,20 +439,24 @@ class RangeAPI_v1
         /// @param[in] parent_cluster name of existing cluster to add new 
         ///            cluster to
         /// @param[in] child_cluster name of new child cluster
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure (e.g. either cluster doesn't  
         ///         exist or child_cluster is not a child of parent_cluster)
         virtual bool remove_cluster_from_cluster(const std::string &env_name,
                                                  const std::string &parent_cluster,
-                                                 const std::string &child_cluster);
+                                                 const std::string &child_cluster,
+                                                 uint64_t id=0);
 
         //######################################################################
         /// Remove a cluster from all of its parents
         ///
         /// @param[in] env_name name of environment
         /// @param[in] cluster_name name of cluster to remove
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure (e.g. cluster doesn't exist)
         virtual bool remove_cluster(const std::string &env_name, 
-                                    const std::string &cluster_name);
+                                    const std::string &cluster_name,
+                                    uint64_t id=0);
 
 
         //######################################################################
@@ -455,13 +467,15 @@ class RangeAPI_v1
         /// @param[in] env_name name of environment
         /// @param[in] parent_cluster cluster to add host to
         /// @param[in] hostname name of host to add to cluster
+        /// @param[in] id id number of the request 
         /// @return true on success, false otherwise (e.g. host already exists 
         ///         and is already a child of parent_cluster. Will also fail
         ///         if host-node exists and is linked to a cluster in another
         ///         environment)
         virtual bool add_host_to_cluster(const std::string &env_name,
                                          const std::string &parent_cluster,
-                                         const std::string &hostname);
+                                         const std::string &hostname,
+                                         uint64_t id=0);
 
 
         //######################################################################
@@ -471,21 +485,25 @@ class RangeAPI_v1
         /// @param[in] env_name name of environment
         /// @param[in] parent_cluster cluster to remove host from
         /// @param[in] hostname name of host to remove from cluster
+        /// @param[in] id id number of the request 
         /// @return true on success, false otherwise (e.g. host already exists 
         ///         and is already a child of parent_cluster. Will also fail
         ///         if host-node exists and is linked to a cluster in another
         ///         environment)
         virtual bool remove_host_from_cluster(const std::string &env_name,
                                               const std::string &parent_cluster,
-                                              const std::string &hostname);
+                                              const std::string &hostname,
+                                              uint64_t id=0);
 
         //######################################################################
         /// Add a host to range. 
         ///
         /// @param[in] hostname name of host to remove from all parents
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure (e.g. hostnode doesn't exist,
         ///         or hostnode not linked to specified environment)
-        virtual bool add_host(const std::string &hostname);
+        virtual bool add_host(const std::string &hostname,
+                uint64_t id=0);
 
         //######################################################################
         /// Remove a host from all parent clusters. Verifies host is in the 
@@ -493,10 +511,12 @@ class RangeAPI_v1
         ///
         /// @param[in] env_name name of environment to check that the host is linked to
         /// @param[in] hostname name of host to remove from all parents
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure (e.g. hostnode doesn't exist,
         ///         or hostnode not linked to specified environment)
         virtual bool remove_host(const std::string &env_name,
-                                 const std::string &hostname);
+                                 const std::string &hostname,
+                                 uint64_t id=0);
 
 
         //######################################################################
@@ -508,12 +528,14 @@ class RangeAPI_v1
         /// @param[in] node_name name of node
         /// @param[in] key key to add the value to
         /// @param[in] value value to add to the key
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure (e.g. value already in
         ///         list of values)
         virtual bool add_node_key_value(const std::string &env_name,
                                         const std::string &node_name,
                                         const std::string &key,
-                                        const std::string &value);
+                                        const std::string &value,
+                                        uint64_t id=0);
 
         //######################################################################
         /// Remove a value from a given node's key. key must alrady exist.
@@ -524,12 +546,14 @@ class RangeAPI_v1
         /// @param[in] node_name name of node
         /// @param[in] key key to remove the value from
         /// @param[in] value value to remove from the key
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure (e.g. value not in
         ///         list of values)
         virtual bool remove_node_key_value(const std::string &env_name,
                                         const std::string &node_name,
                                         const std::string &key,
-                                        const std::string &value);
+                                        const std::string &value,
+                                        uint64_t id=0);
 
         //######################################################################
         /// Remove a key from a node
@@ -537,10 +561,12 @@ class RangeAPI_v1
         /// @param[in] env_name name of environment
         /// @param[in] node_name name of node to remove key from
         /// @param[in] key name of key to remove
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure (e.g. key doesn't exist on node)
         virtual bool remove_key_from_node(const std::string &env_name,
                                           const std::string &node_name,
-                                          const std::string &key);
+                                          const std::string &key,
+                                          uint64_t id=0);
 
         //######################################################################
         /// Add a dependency a node to another node within the same environment
@@ -549,10 +575,12 @@ class RangeAPI_v1
         /// @param[in] env_name name of environment
         /// @param[in] node_name name of the node which has the dependency (the dependent)
         /// @param[in] dependency_name name of node upon which node_name depends.
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure
         virtual bool add_node_env_dependency(const std::string &env_name,
                                              const std::string &node_name,
-                                             const std::string &dependency_name);
+                                             const std::string &dependency_name,
+                                             uint64_t id=0);
 
         //######################################################################
         /// Remove a dependency from a node to another node within the same environment
@@ -560,10 +588,12 @@ class RangeAPI_v1
         /// @param[in] env_name name of environment
         /// @param[in] node_name name of the node which has the dependency (the dependent)
         /// @param[in] dependency_name name of node upon which node_name depends.
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure
         virtual bool remove_node_env_dependency(const std::string &env_name,
                                                 const std::string &node_name,
-                                                const std::string &dependency_name);
+                                                const std::string &dependency_name,
+                                                uint64_t id=0);
 
         //######################################################################
         /// Add a dependency a node to another node in different environments
@@ -573,11 +603,13 @@ class RangeAPI_v1
         /// @param[in] node_name name of the node which has the dependency (the dependent)
         /// @param[in] dependency_env Name of the environment wherein dependency_name exists
         /// @param[in] dependency_name name of node upon which node_name depends.
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure
         virtual bool add_node_ext_dependency(const std::string &env_name,
                                              const std::string &node_name,
                                              const std::string &dependency_env,
-                                             const std::string &dependency_name);
+                                             const std::string &dependency_name,
+                                             uint64_t id=0);
 
         //######################################################################
         /// Remove a dependency from a node to another node within the same environment
@@ -586,11 +618,13 @@ class RangeAPI_v1
         /// @param[in] node_name name of the node which has the dependency (the dependent)
         /// @param[in] dependency_env Name of the environment wherein dependency_name exists
         /// @param[in] dependency_name name of node upon which node_name depends.
+        /// @param[in] id id number of the request 
         /// @return true on success, false on failure
         virtual bool remove_node_ext_dependency(const std::string &env_name,
                                                 const std::string &node_name,
                                                 const std::string &dependency_env,
-                                                const std::string &dependency_name);
+                                                const std::string &dependency_name,
+                                                uint64_t id=0);
 
 
         static const std::map<std::string, size_t> num_arguments;

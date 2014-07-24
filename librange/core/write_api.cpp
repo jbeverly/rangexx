@@ -24,23 +24,23 @@
 
 namespace range {
 
-#define SYMTABLE_ENTRY1(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args) -> bool { \
+#define SYMTABLE_ENTRY1(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args, uint64_t id) -> bool { \
         if(args.size() != 1) throw range::IncorrectNumberOfArguments("incorrect # of arguments"); \
-        return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1)(args[0]); }
+        return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1, std::placeholders::_2)(args[0], id); }
 
-#define SYMTABLE_ENTRY2(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args) -> bool { \
+#define SYMTABLE_ENTRY2(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args, uint64_t id) -> bool { \
         if(args.size() != 2) throw range::IncorrectNumberOfArguments("incorrect # of arguments"); \
-        return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1, std::placeholders::_2)(args[0], args[1]); }
+        return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)(args[0], args[1], id); }
 
-#define SYMTABLE_ENTRY3(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args) -> bool  { \
+#define SYMTABLE_ENTRY3(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args, uint64_t id) -> bool  { \
         if(args.size() != 3) throw range::IncorrectNumberOfArguments("incorrect # of arguments"); \
         return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1, std::placeholders::_2, \
-        std::placeholders::_3)(args[0], args[1], args[2]); }
+        std::placeholders::_3, std::placeholders::_4)(args[0], args[1], args[2], id); }
 
-#define SYMTABLE_ENTRY4(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args) -> bool { \
+#define SYMTABLE_ENTRY4(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args, uint64_t id) -> bool { \
         if(args.size() != 4) throw range::IncorrectNumberOfArguments("incorrect # of arguments"); \
         return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1, std::placeholders::_2, \
-        std::placeholders::_3, std::placeholders::_4)(args[0], args[1], args[2], args[3]); }
+        std::placeholders::_3, std::placeholders::_4, std::placeholders::_5)(args[0], args[1], args[2], args[3], id); }
 
 
 //##############################################################################
@@ -64,7 +64,7 @@ const std::map<std::string, size_t> RangeAPI_v1::num_arguments {
     };
 
 //##############################################################################
-const std::map<std::string, std::function<bool(RangeAPI_v1*, std::vector<std::string>)>>
+const std::map<std::string, std::function<bool(RangeAPI_v1*, std::vector<std::string>, uint64_t)>>
     RangeAPI_v1::write_api_symtable { 
         { SYMTABLE_ENTRY1(create_env) },
         { SYMTABLE_ENTRY1(remove_env) },
@@ -118,7 +118,7 @@ process_ack(stored::Ack &ack) {
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::create_env(const std::string &env_name)
+RangeAPI_v1::create_env(const std::string &env_name, uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name;
 
@@ -132,7 +132,9 @@ RangeAPI_v1::create_env(const std::string &env_name)
         }
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
         auto txn = g->start_txn();
@@ -149,7 +151,7 @@ RangeAPI_v1::create_env(const std::string &env_name)
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::remove_env(const std::string &env_name)
+RangeAPI_v1::remove_env(const std::string &env_name, uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name;
 
@@ -159,7 +161,9 @@ RangeAPI_v1::remove_env(const std::string &env_name)
         auto ack = req.send();
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
         auto txn = g->start_txn();
@@ -181,7 +185,8 @@ RangeAPI_v1::remove_env(const std::string &env_name)
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &cluster_name)
+RangeAPI_v1::add_cluster_to_env(const std::string &env_name,
+        const std::string &cluster_name, uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " cluster_name: "
         << cluster_name;
@@ -217,7 +222,9 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
         return process_ack(ack);
     }
 
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     if (!n) {
         LOG(notice, "nonexistent_cluster") << "node "
@@ -249,7 +256,8 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
 //##############################################################################
 bool
 RangeAPI_v1::remove_cluster_from_env(const std::string &env_name,
-                                     const std::string &cluster_name)
+                                     const std::string &cluster_name,
+                                     uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " cluster_name: "
         << cluster_name;
@@ -285,7 +293,9 @@ RangeAPI_v1::remove_cluster_from_env(const std::string &env_name,
         auto ack = req.send();
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     if(!env->remove_forward_edge(n, true)) {
         THROW_STACK(graph::EdgeNotFoundException(n->name()));
@@ -298,7 +308,8 @@ RangeAPI_v1::remove_cluster_from_env(const std::string &env_name,
 bool
 RangeAPI_v1::add_cluster_to_cluster(const std::string &env_name,
                                     const std::string &parent_cluster,
-                                    const std::string &child_cluster)
+                                    const std::string &child_cluster,
+                                    uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " parent_cluster: "
         << parent_cluster << " child_cluster: " << child_cluster;
@@ -335,7 +346,9 @@ RangeAPI_v1::add_cluster_to_cluster(const std::string &env_name,
         return process_ack(ack);
     }
 
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     if (!n) {
         n = primary->create(prefixed_node_name(env_name, child_cluster));
@@ -363,7 +376,8 @@ RangeAPI_v1::add_cluster_to_cluster(const std::string &env_name,
 bool
 RangeAPI_v1::remove_cluster_from_cluster(const std::string &env_name,
                                          const std::string &parent_cluster,
-                                         const std::string &child_cluster)
+                                         const std::string &child_cluster,
+                                         uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " parent_cluster: "
         << parent_cluster << " child_cluster: " << child_cluster;
@@ -402,7 +416,9 @@ RangeAPI_v1::remove_cluster_from_cluster(const std::string &env_name,
         auto ack = req.send();
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     if(!parent->remove_forward_edge(n, true)) {
         THROW_STACK(graph::EdgeNotFoundException(n->name()));
@@ -413,7 +429,9 @@ RangeAPI_v1::remove_cluster_from_cluster(const std::string &env_name,
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::remove_cluster(const std::string &env_name, const std::string &cluster_name)
+RangeAPI_v1::remove_cluster(const std::string &env_name,
+        const std::string &cluster_name,
+        uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " cluster_name: " 
         << cluster_name;
@@ -439,7 +457,9 @@ RangeAPI_v1::remove_cluster(const std::string &env_name, const std::string &clus
         auto ack = req.send();
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     primary->remove(n);
     dependency->remove(n);
@@ -451,7 +471,8 @@ RangeAPI_v1::remove_cluster(const std::string &env_name, const std::string &clus
 bool
 RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
                                  const std::string &parent_cluster,
-                                 const std::string &hostname)
+                                 const std::string &hostname,
+                                 uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " parent_cluster: "
         << parent_cluster << " hostname " << hostname;
@@ -487,7 +508,9 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
         auto ack = req.send();
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     if(n) {
         LOG(debug9, "found_host_being_added") << hostname;
@@ -555,7 +578,8 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
 bool
 RangeAPI_v1::remove_host_from_cluster(const std::string &env_name,
                                       const std::string &parent_cluster,
-                                      const std::string &hostname)
+                                      const std::string &hostname,
+                                      uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " parent_cluster "
         << parent_cluster << " hostname: " << hostname;
@@ -592,7 +616,9 @@ RangeAPI_v1::remove_host_from_cluster(const std::string &env_name,
         auto ack = req.send();
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
 
     if(!n->remove_reverse_edge(parent, true)) {
@@ -604,7 +630,7 @@ RangeAPI_v1::remove_host_from_cluster(const std::string &env_name,
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::add_host(const std::string &hostname)
+RangeAPI_v1::add_host(const std::string &hostname, uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "hostname: " << hostname;
 
@@ -614,7 +640,9 @@ RangeAPI_v1::add_host(const std::string &hostname)
         auto ack = req.send();
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
 
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
@@ -636,7 +664,9 @@ RangeAPI_v1::add_host(const std::string &hostname)
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::remove_host(const std::string &env_name, const std::string &hostname)
+RangeAPI_v1::remove_host(const std::string &env_name,
+        const std::string &hostname,
+        uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " hostname: " 
         << hostname;
@@ -683,7 +713,9 @@ RangeAPI_v1::remove_host(const std::string &env_name, const std::string &hostnam
         auto ack = req.send();
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
 
     primary->remove(n);
@@ -696,7 +728,8 @@ RangeAPI_v1::remove_host(const std::string &env_name, const std::string &hostnam
 //##############################################################################
 bool
 RangeAPI_v1::add_node_key_value(const std::string &env_name, const std::string &node_name,
-                                const std::string &key, const std::string &value)
+                                const std::string &key, const std::string &value,
+                                uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
         << node_name << " key: " << key << " value " << value;
@@ -734,7 +767,9 @@ RangeAPI_v1::add_node_key_value(const std::string &env_name, const std::string &
         auto ack = req.send();
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     values.push_back(value);
     return n->update_tag(key, values);
@@ -745,7 +780,8 @@ RangeAPI_v1::add_node_key_value(const std::string &env_name, const std::string &
 //##############################################################################
 bool
 RangeAPI_v1::remove_node_key_value(const std::string &env_name, const std::string &node_name,
-                                   const std::string &key, const std::string &value)
+                                   const std::string &key, const std::string &value,
+                                   uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
         << node_name << " key: " << key << " value " << value;
@@ -788,7 +824,9 @@ RangeAPI_v1::remove_node_key_value(const std::string &env_name, const std::strin
         auto ack = req.send();
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     if(!n->update_tag(key, new_values)) {
         THROW_STACK(CreateNodeException("Unable to update tag"));
@@ -799,8 +837,10 @@ RangeAPI_v1::remove_node_key_value(const std::string &env_name, const std::strin
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::remove_key_from_node(const std::string &env_name, const std::string &node_name,
-                                  const std::string &key)
+RangeAPI_v1::remove_key_from_node(const std::string &env_name,
+        const std::string &node_name,
+        const std::string &key,
+        uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
         << node_name << " key: " << key;
@@ -822,7 +862,9 @@ RangeAPI_v1::remove_key_from_node(const std::string &env_name, const std::string
         auto ack = req.send();
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     if(!n->delete_tag(key)) {
         THROW_STACK(graph::EdgeNotFoundException(key));
@@ -836,7 +878,8 @@ bool
 RangeAPI_v1::add_node_ext_dependency(const std::string &env_name,
                                      const std::string &node_name,
                                      const std::string &dependency_env,
-                                     const std::string &dependency_name)
+                                     const std::string &dependency_name,
+                                     uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
         << node_name << " dependency_env: " << dependency_env
@@ -869,7 +912,9 @@ RangeAPI_v1::add_node_ext_dependency(const std::string &env_name,
         auto ack = req.send();
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
 
     if(!n->add_forward_edge(d, true)) {
@@ -883,10 +928,11 @@ RangeAPI_v1::add_node_ext_dependency(const std::string &env_name,
 bool
 RangeAPI_v1::add_node_env_dependency(const std::string &env_name,
                                      const std::string &node_name,
-                                     const std::string &dependency_name)
+                                     const std::string &dependency_name,
+                                     uint64_t id)
 {
     BOOST_LOG_FUNCTION();
-    return add_node_ext_dependency(env_name, node_name, env_name, dependency_name);
+    return add_node_ext_dependency(env_name, node_name, env_name, dependency_name, id);
 }
 
 //##############################################################################
@@ -895,7 +941,8 @@ bool
 RangeAPI_v1::remove_node_ext_dependency(const std::string &env_name,
                                         const std::string &node_name,
                                         const std::string &dependency_env,
-                                        const std::string &dependency_name)
+                                        const std::string &dependency_name,
+                                        uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
         << node_name << " dependency_env: " << dependency_env
@@ -922,7 +969,9 @@ RangeAPI_v1::remove_node_ext_dependency(const std::string &env_name,
         auto ack = req.send();
         return process_ack(ack);
     }
-    auto rtxn = cfg_->db_backend()->startRangeTransaction(req.req());
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     if(!n->remove_forward_edge(d)) {
         THROW_STACK(graph::EdgeNotFoundException(dependency_name));
@@ -935,10 +984,11 @@ RangeAPI_v1::remove_node_ext_dependency(const std::string &env_name,
 bool
 RangeAPI_v1::remove_node_env_dependency(const std::string &env_name,
                                         const std::string &node_name,
-                                        const std::string &dependency_name)
+                                        const std::string &dependency_name,
+                                        uint64_t id)
 {
     BOOST_LOG_FUNCTION();
-    return remove_node_ext_dependency(env_name, node_name, env_name, dependency_name);
+    return remove_node_ext_dependency(env_name, node_name, env_name, dependency_name, id);
 }
 
 

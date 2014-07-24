@@ -41,7 +41,7 @@ Learner::event_task()
 {
     BOOST_LOG_FUNCTION();
 
-    this->q_wait(std::chrono::milliseconds(100));
+    this->q_wait(std::chrono::milliseconds(1000));
 
     stored::Request req;
     while(this->q_pop(req) && !this->get_shutdown()) {
@@ -152,7 +152,7 @@ void Learner::learn(stored::Request req)
             args.push_back(req.args(x));
         }
         try {
-            success = it->second(&range_, args);
+            success = it->second(&range_, args, req.proposer_id());
         }
         catch (range::IncorrectNumberOfArguments &e) {
             LOG(error, "invalid_number_of_arguments") << e.what();

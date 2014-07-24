@@ -129,14 +129,18 @@ initialize_range_cluster(boost::shared_ptr<::range::StoreDaemonConfig> &cfg,
     std::string proposers_cl { cfg->range_cell_name() + '.' + "proposers" };
     std::string learners_cl { cfg->range_cell_name() + '.' + "learners" };
 
-    r.create_env("_local_");
-    r.add_cluster_to_env("_local_", proposers_cl);
-    r.add_cluster_to_env("_local_", learners_cl);
+    try {
+        r.create_env("_local_");
+    } catch(range::Exception &e) { }
 
     for (std::string cluster : { accepters_cl, proposers_cl, learners_cl }) {
-        r.add_cluster_to_env("_local_", cluster);
+        try {
+            r.add_cluster_to_env("_local_", cluster);
+        } catch(range::Exception &e) { }
         for (std::string peer : peer_names) {
-            r.add_host_to_cluster("_local_", cluster, peer);
+            try {
+                r.add_host_to_cluster("_local_", cluster, peer);
+            } catch(range::Exception &e) { }
         }
     }
 }
