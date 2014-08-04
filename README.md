@@ -35,11 +35,11 @@ When used in this way, you can take a snapshot of an "environment", minus the ho
       
       
 ### Clusters:
-A cluster is a way to store node membership into groups. Depending on your backend module how this is stored may vary. In the case of the YAML module, a cluster is defined by the membership of the CLUSTER key
+A cluster is a way to store node membership into groups. 
     
-  * %cluster101 == nodes defined in /var/range/cluster101.yaml - Default key CLUSTER
-  * %cluster101:ALL or %cluster101:FOO == nodes defined in a specific key of ks301/nodes.cf
-  * %%all == assuming %all is a lust of clusters, the additional % will expand the list of clusters to node list that is their membership
+  * %cluster101 == cluster101
+  * %cluster101:ALL or %cluster101:FOO == nodes defined in a specific key of cluster101
+  * %%all == assuming %all is a list of clusters, the additional % will expand the list of clusters to node list that is their membership
   * *node == returns the cluster(s) that node is a member of
       
 ### Operatons:
@@ -63,7 +63,7 @@ A cluster is a way to store node membership into groups. Depending on your backe
       
 ### Functions:
 
-libcrange modules can define certain functions to look up data about hosts or clusters
+modules can define certain functions to look up data about hosts or clusters
 The following are builtin:
     
   * has(KEY;value) - looks for a cluster that has a key with some certain value
