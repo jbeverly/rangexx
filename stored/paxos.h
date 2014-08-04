@@ -59,6 +59,7 @@ class Proposer : public QueueWorkerThread<range::stored::Request, Proposer> {
 class Accepter : public QueueWorkerThread<range::stored::Request, Accepter> {
     public:
         explicit Accepter(boost::shared_ptr<::range::StoreDaemonConfig> cfg);
+        static void set_accepter_seq_n(uint64_t n);
     protected:
         virtual void event_task() override;
     private:
@@ -66,6 +67,8 @@ class Accepter : public QueueWorkerThread<range::stored::Request, Accepter> {
         boost::shared_ptr<::range::StoreDaemonConfig> cfg_;
         uint64_t promised_proposal_num_;
         uint64_t accepted_proposal_num_;
+
+        static uint64_t accepter_seq_n_;
 
         static boost::lockfree::spsc_queue<range::stored::Request, boost::lockfree::capacity<1024>> q_;
         static std::mutex blocker_;
@@ -92,6 +95,7 @@ struct PendingLearnedRequest {
 class Learner : public QueueWorkerThread<range::stored::Request, Learner> {
     public:
         Learner(boost::shared_ptr<::range::StoreDaemonConfig> cfg);
+        static bool is_replaying();
     protected:
         virtual void event_task() override;
     private:
@@ -102,6 +106,7 @@ class Learner : public QueueWorkerThread<range::stored::Request, Learner> {
         std::map<uint64_t, PendingLearnedRequest> pending_learned_requests;
 
         static const std::string request_queue_;
+        static bool is_replaying_;
         static boost::lockfree::spsc_queue<range::stored::Request, boost::lockfree::capacity<1024>> q_;
         static std::mutex blocker_;
         static std::condition_variable condition_;

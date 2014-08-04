@@ -39,9 +39,12 @@ Accepter::Accepter(boost::shared_ptr<::range::StoreDaemonConfig> cfg)
 void
 Accepter::event_task()
 {
-    BOOST_LOG_FUNCTION();
-    
     this->q_wait();
+    if(Learner::is_replaying()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        return;
+    }
+    BOOST_LOG_FUNCTION();
 
     stored::Request req;
     while(this->q_pop(req) && !this->get_shutdown()) {
@@ -145,6 +148,7 @@ void Accepter::accept(stored::Request req)
 
     // Now that we've accepted, send req to learners
     req.set_type(Request::Type::Request_Type_LEARN);
+    req.set_sequence_num(accepter_seq_n_++);
     req.set_crc(0);
     req.set_crc(range::util::crc32(req.SerializeAsString()));
 
