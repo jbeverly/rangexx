@@ -11,18 +11,19 @@ message Request {
 		HEARTBEAT = 64;
 	}
 
-	required uint32     crc                 = 1;
+	required uint32	 crc				 = 1;
 	required string		client_id			= 2;
-	required uint64		request_id          = 3;
-    required string     method				= 4;
-    repeated string		args                = 5;
-	optional uint64     timestamp			= 6;
-	optional Type		type                = 7;
+	required uint64		request_id		  = 3;
+	required string	 method				= 4;
+	repeated string		args				= 5;
+	optional uint64	 timestamp			= 6;
+	optional Type		type				= 7;
 	optional uint64		proposal_num		= 8;
-	optional uint32		proposer_id			= 9;
-	optional uint32     sender_addr         = 10;
-	optional uint32     sender_port         = 11;
-	optional uint64     version             = 12;
+	optional uint64		proposer_id			= 9;
+	optional uint32	 sender_addr		 = 10;
+	optional uint32	 sender_port		 = 11;
+	optional uint64	 version			 = 12;
+	optional uint64	 sequence_num		= 13;
 }
 
 message Ack {
@@ -30,25 +31,17 @@ message Ack {
 		ACK			= 1;
 		PROMISE		= 2;
 		NACK		= 4;
-		ACCEPTED    = 8;
+		ACCEPTED	= 8;
 	}
 
-    required bool		status				= 1;
+	required bool		status				= 1;
 	required string		client_id			= 2;
 	required uint64		request_id			= 3;
-    optional uint32		code				= 4;
-    optional string		reason				= 5;
+	optional uint32		code				= 4;
+	optional string		reason				= 5;
 	optional Type		type				= 6;
 	optional uint64		proposal_num		= 7;
-	optional uint32		proposer_id			= 8;
+	optional uint64		proposer_id			= 8;
 	optional uint64		next_proposal_num	= 9;
+	optional uint64		sequence_num		= 10;
 }
-    
-    
-        
-    
-        
-        
-        
-        
-        
