@@ -77,9 +77,10 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = test_integration$(EXEEXT) test_db$(EXEEXT) \
-	test_graph_iterator$(EXEEXT) test_pbuff_node$(EXEEXT) \
-	test_graphdb$(EXEEXT) test_compiler_range_scanner_v1$(EXEEXT) \
+check_PROGRAMS = test_db_txlog$(EXEEXT) test_integration$(EXEEXT) \
+	test_db$(EXEEXT) test_graph_iterator$(EXEEXT) \
+	test_pbuff_node$(EXEEXT) test_graphdb$(EXEEXT) \
+	test_compiler_range_scanner_v1$(EXEEXT) \
 	test_compiler_range_parser_v1$(EXEEXT) \
 	test_compiler_expanding_visitor$(EXEEXT) test_mq$(EXEEXT) \
 	test_write_api$(EXEEXT) test_read_api$(EXEEXT)
@@ -145,6 +146,10 @@ test_db_SOURCES = test_db.cpp
 test_db_OBJECTS = test_db.$(OBJEXT)
 test_db_LDADD = $(LDADD)
 test_db_DEPENDENCIES = $(top_builddir)/librange/librange.la
+test_db_txlog_SOURCES = test_db_txlog.cpp
+test_db_txlog_OBJECTS = test_db_txlog.$(OBJEXT)
+test_db_txlog_LDADD = $(LDADD)
+test_db_txlog_DEPENDENCIES = $(top_builddir)/librange/librange.la
 test_graph_iterator_SOURCES = test_graph_iterator.cpp
 test_graph_iterator_OBJECTS = test_graph_iterator.$(OBJEXT)
 test_graph_iterator_LDADD = $(LDADD)
@@ -211,15 +216,15 @@ am__v_CXXLD_1 =
 SOURCES = test_compiler_expanding_visitor.cpp \
 	test_compiler_range_parser_v1.cpp \
 	test_compiler_range_scanner_v1.cpp test_db.cpp \
-	test_graph_iterator.cpp test_graphdb.cpp test_integration.cpp \
-	test_mq.cpp test_pbuff_node.cpp test_read_api.cpp \
-	test_write_api.cpp
+	test_db_txlog.cpp test_graph_iterator.cpp test_graphdb.cpp \
+	test_integration.cpp test_mq.cpp test_pbuff_node.cpp \
+	test_read_api.cpp test_write_api.cpp
 DIST_SOURCES = test_compiler_expanding_visitor.cpp \
 	test_compiler_range_parser_v1.cpp \
 	test_compiler_range_scanner_v1.cpp test_db.cpp \
-	test_graph_iterator.cpp test_graphdb.cpp test_integration.cpp \
-	test_mq.cpp test_pbuff_node.cpp test_read_api.cpp \
-	test_write_api.cpp
+	test_db_txlog.cpp test_graph_iterator.cpp test_graphdb.cpp \
+	test_integration.cpp test_mq.cpp test_pbuff_node.cpp \
+	test_read_api.cpp test_write_api.cpp
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -677,6 +682,10 @@ test_db$(EXEEXT): $(test_db_OBJECTS) $(test_db_DEPENDENCIES) $(EXTRA_test_db_DEP
 	@rm -f test_db$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_db_OBJECTS) $(test_db_LDADD) $(LIBS)
 
+test_db_txlog$(EXEEXT): $(test_db_txlog_OBJECTS) $(test_db_txlog_DEPENDENCIES) $(EXTRA_test_db_txlog_DEPENDENCIES) 
+	@rm -f test_db_txlog$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(test_db_txlog_OBJECTS) $(test_db_txlog_LDADD) $(LIBS)
+
 test_graph_iterator$(EXEEXT): $(test_graph_iterator_OBJECTS) $(test_graph_iterator_DEPENDENCIES) $(EXTRA_test_graph_iterator_DEPENDENCIES) 
 	@rm -f test_graph_iterator$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(test_graph_iterator_OBJECTS) $(test_graph_iterator_LDADD) $(LIBS)
@@ -715,6 +724,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_compiler_range_parser_v1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_compiler_range_scanner_v1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_db.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_db_txlog.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_graph_iterator.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_graphdb.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_integration.Po@am__quote@
@@ -943,6 +953,13 @@ recheck: all $(check_PROGRAMS)
 	        am__force_recheck=am--force-recheck \
 	        TEST_LOGS="$$log_list"; \
 	exit $$?
+test_db_txlog.log: test_db_txlog$(EXEEXT)
+	@p='test_db_txlog$(EXEEXT)'; \
+	b='test_db_txlog'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 test_integration.log: test_integration$(EXEEXT)
 	@p='test_integration$(EXEEXT)'; \
 	b='test_integration'; \

@@ -75,7 +75,7 @@ BerkeleyDBCXXDb::BerkeleyDBCXXDb(const std::string &name,
         rval = env_->getEnv()->txn_begin(NULL, &txn, DB_TXN_SYNC | DB_TXN_WAIT | DB_TXN_SNAPSHOT);
     }
     catch(DbException &e) {
-        UnknownTransactionException(e.what());
+        THROW_STACK(UnknownTransactionException(e.what()));
     }
     try { 
         inst_->open(txn, name.c_str(), name.c_str(), DB_HASH,
@@ -146,7 +146,7 @@ BerkeleyDBCXXDb::start_txn()
     RANGE_LOG_FUNCTION();
     auto txn = current_txn_.lock();
     if(!txn) {
-        txn = boost::make_shared<BerkeleyDBCXXTxn>(backend_, shared_from_this());
+        txn = boost::make_shared<BerkeleyDBCXXTxn>(shared_from_this());
         current_txn_ = txn;
     }
     return boost::dynamic_pointer_cast<range::db::GraphTransaction>(txn);

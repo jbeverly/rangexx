@@ -14,45 +14,35 @@
  * You should have received a copy of the GNU General Public License
  * along with range++.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _RANGE_DB_BERKELEY_DBCXX_TXN_H
-#define _RANGE_DB_BERKELEY_DBCXX_TXN_H
+#ifndef _RANGEXX_DB_BERKELEYDB_RANGE_TXN_H
+#define _RANGEXX_DB_BERKELEYDB_RANGE_TXN_H
 
 #include "db_interface.h"
-#include "berkeley_db_types.h"
-
 #include "../core/log.h"
 
-#include "changelist.pb.h"
-
 namespace range { namespace db {
-class BerkeleyDBCXXDb;
+
 class BerkeleyDB;
 
 //##############################################################################
 //##############################################################################
-class BerkeleyDBCXXTxn : public GraphTransaction {
+class BerkeleyDBCXXRangeTxn : public RangeTxn
+{
     public:
-        typedef GraphInstanceInterface::change_t change_t;
-        typedef GraphInstanceInterface::changelist_t changelist_t;
+        //######################################################################
+        explicit BerkeleyDBCXXRangeTxn(boost::shared_ptr<BerkeleyDB> backend,
+                req_type_p change);
+        virtual ~BerkeleyDBCXXRangeTxn() noexcept override;
 
-        BerkeleyDBCXXTxn(boost::shared_ptr<BerkeleyDBCXXDb> db);
-        virtual ~BerkeleyDBCXXTxn() noexcept override;
-
-        virtual void abort(void) override;
-        virtual void commit(void) override;
-        virtual void flush(void) override;
-
-        size_t pending() const;
-        bool add_change(change_t);
-        bool get_record(record_type type, const std::string &key, std::string &value) const;
     private:
-        bool add_graph_changelist(ChangeList &changes);
+        void commit();
+        void abort();
+        boost::shared_ptr<BerkeleyDB> backend_;
+        req_type_p change_;
+        ::range::Emitter log;
 
-        std::unordered_map<std::string, change_t> pending_changes_;
-        boost::shared_ptr<BerkeleyDBCXXDb> db_;
-        range::Emitter log;
 };
-
 } /* namespace db */ } /* namespace range */
+
 
 #endif

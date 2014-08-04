@@ -18,6 +18,9 @@
 #include "graph_list.pb.h"
 #include <google/protobuf/message.h>
 
+#include "berkeley_dbcxx_txlog.h"
+#include "berkeley_dbcxx_range_txn.h"
+
 namespace range { namespace db {
 
 volatile bool BerkeleyDB::terminated_=false;
@@ -52,6 +55,7 @@ BerkeleyDB::backend_shutdown()
         inst_->shutdown(true);
         inst_ = nullptr;
     }
+    google::protobuf::ShutdownProtobufLibrary();
 }
 
 static ::range::EmitterModuleRegistration BerkeleyDBLogModule { "db.BerkeleyDB" };
@@ -95,6 +99,23 @@ BerkeleyDB::getGraphInstance(const std::string& name)
         return nullptr;
     }
     return BerkeleyDBCXXDb::get(name, shared_from_this(), db_config_, env_);
+}
+
+//##############################################################################
+//##############################################################################
+BerkeleyDB::txlog_instance_t
+BerkeleyDB::getTxLogInstance()
+{
+    return BerkeleyDBCXXTxLogDb::get(env_);
+}
+
+//##############################################################################
+//##############################################################################
+BerkeleyDB::txn_type_p
+BerkeleyDB::startRangeTransaction(txn_type::req_type_p change)
+{
+    auto txn = boost::make_shared<BerkeleyDBCXXRangeTxn>(shared_from_this(), change);
+    return txn;
 }
 
 //##############################################################################
@@ -269,6 +290,7 @@ BerkeleyDB::add_new_range_version()
     ts->set_msec(cur_time.tv_usec / 1000);
 
     changes.set_current_version(changes.current_version() + 1);
+    info_->commit_record(std::make_tuple(record_type::GRAPH_META, "range_changelist", 0, changes.SerializeAsString()));
 }
 
 //##############################################################################

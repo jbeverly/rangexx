@@ -32,6 +32,16 @@ struct NodeNotFoundException : public ::range::Exception {
 
 //##############################################################################
 //##############################################################################
+struct EdgeNotFoundException : public ::range::Exception {
+    EdgeNotFoundException(const std::string &what,
+        const std::string &event="graph.EdgeNotFoundException") 
+        : ::range::Exception(what, event)
+    { }
+};
+
+
+//##############################################################################
+//##############################################################################
 struct KeyNotFoundException : public ::range::Exception {
     KeyNotFoundException(const std::string &what,
         const std::string &event="graph.KeyNotFoundException")

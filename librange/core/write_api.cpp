@@ -24,23 +24,23 @@
 
 namespace range {
 
-#define SYMTABLE_ENTRY1(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args) -> bool { \
+#define SYMTABLE_ENTRY1(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args, uint64_t id) -> bool { \
         if(args.size() != 1) throw range::IncorrectNumberOfArguments("incorrect # of arguments"); \
-        return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1)(args[0]); }
+        return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1, std::placeholders::_2)(args[0], id); }
 
-#define SYMTABLE_ENTRY2(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args) -> bool { \
+#define SYMTABLE_ENTRY2(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args, uint64_t id) -> bool { \
         if(args.size() != 2) throw range::IncorrectNumberOfArguments("incorrect # of arguments"); \
-        return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1, std::placeholders::_2)(args[0], args[1]); }
+        return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)(args[0], args[1], id); }
 
-#define SYMTABLE_ENTRY3(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args) -> bool  { \
+#define SYMTABLE_ENTRY3(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args, uint64_t id) -> bool  { \
         if(args.size() != 3) throw range::IncorrectNumberOfArguments("incorrect # of arguments"); \
         return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1, std::placeholders::_2, \
-        std::placeholders::_3)(args[0], args[1], args[2]); }
+        std::placeholders::_3, std::placeholders::_4)(args[0], args[1], args[2], id); }
 
-#define SYMTABLE_ENTRY4(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args) -> bool { \
+#define SYMTABLE_ENTRY4(NAME) #NAME, [](RangeAPI_v1 *inst, std::vector<std::string> args, uint64_t id) -> bool { \
         if(args.size() != 4) throw range::IncorrectNumberOfArguments("incorrect # of arguments"); \
         return std::bind(&RangeAPI_v1::NAME, inst, std::placeholders::_1, std::placeholders::_2, \
-        std::placeholders::_3, std::placeholders::_4)(args[0], args[1], args[2], args[3]); }
+        std::placeholders::_3, std::placeholders::_4, std::placeholders::_5)(args[0], args[1], args[2], args[3], id); }
 
 
 //##############################################################################
@@ -64,7 +64,7 @@ const std::map<std::string, size_t> RangeAPI_v1::num_arguments {
     };
 
 //##############################################################################
-const std::map<std::string, std::function<bool(RangeAPI_v1*, std::vector<std::string>)>>
+const std::map<std::string, std::function<bool(RangeAPI_v1*, std::vector<std::string>, uint64_t)>>
     RangeAPI_v1::write_api_symtable { 
         { SYMTABLE_ENTRY1(create_env) },
         { SYMTABLE_ENTRY1(remove_env) },
@@ -85,23 +85,56 @@ const std::map<std::string, std::function<bool(RangeAPI_v1*, std::vector<std::st
     };
 
 
+//##############################################################################
+//##############################################################################
+static bool
+process_ack(stored::Ack &ack) {
+    if(ack.status()) {
+        return true;
+    }
+
+    typedef range::RangeAPI_v1::ErrorCode ec;
+
+    ec c = ec(ack.code());
+    switch (c) {
+        case ec::CreateNodeException:
+            THROW_STACK(CreateNodeException(ack.reason()));
+        case ec::EdgeNotFoundException:
+            THROW_STACK(graph::EdgeNotFoundException(ack.reason()));
+        case ec::IncorrectNodeTypeException:
+            THROW_STACK(graph::IncorrectNodeTypeException(ack.reason()));
+        case ec::InvalidEnvironmentException:
+            THROW_STACK(InvalidEnvironmentException(ack.reason()));
+        case ec::NodeExistsException:
+            THROW_STACK(NodeExistsException(ack.reason()));
+        case ec::NodeNotFoundException:
+            THROW_STACK(graph::NodeNotFoundException(ack.reason()));
+        case ec::UNKNOWN:
+            THROW_STACK(Exception(ack.reason()));
+    }
+    return false;
+}
 
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::create_env(const std::string &env_name)
+RangeAPI_v1::create_env(const std::string &env_name, uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name;
 
+    ::range::stored::WriteRequest req { cfg_, "create_env" };
+    req.add_arg(env_name);
+
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "create_env" };
-        req.add_arg(env_name);
         auto ack = req.send();
         if(!ack.status()) {
             LOG(notice, "failed") << ack.code() << ": " << ack.reason();
         }
-        return ack.status();
+        return process_ack(ack);
     }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
         auto txn = g->start_txn();
@@ -109,8 +142,7 @@ RangeAPI_v1::create_env(const std::string &env_name)
         if(n) {
             n->set_type(node_type::ENVIRONMENT);
         } else {
-            LOG(notice, "create_env.failed") << "already exists, or error";
-            return false;
+            THROW_STACK(CreateNodeException(env_name));
         }
     }
     return true;
@@ -119,28 +151,32 @@ RangeAPI_v1::create_env(const std::string &env_name)
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::remove_env(const std::string &env_name)
+RangeAPI_v1::remove_env(const std::string &env_name, uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name;
 
+    ::range::stored::WriteRequest req { cfg_, "remove_env" };
+    req.add_arg(env_name);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_env" };
-        req.add_arg(env_name);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
         auto txn = g->start_txn();
         auto n = g->get_node(env_name);
         if(n) {
             if(n->type() != node_type::ENVIRONMENT) {
-                LOG(debug9, "remove_env.incorrect_type") << graph::NodeIface::node_type_names.find(n->type())->second;
-                return false;
+                THROW_STACK(graph::IncorrectNodeTypeException(env_name + " has type " 
+                            + graph::NodeIface::node_type_names.find(n->type())->second
+                            + ", should be ENVIRONMENT"));
             }
             g->remove(n);
         } else {
-            return false;
+            THROW_STACK(graph::NodeNotFoundException(env_name));
         }
     }
     return true;
@@ -149,7 +185,8 @@ RangeAPI_v1::remove_env(const std::string &env_name)
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &cluster_name)
+RangeAPI_v1::add_cluster_to_env(const std::string &env_name,
+        const std::string &cluster_name, uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " cluster_name: "
         << cluster_name;
@@ -161,23 +198,33 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
 
     auto env = primary->get_node(env_name);
     if(!env) {
-        LOG(notice, "nonexistent_environment") <<  "env " << env_name << " doesn't exist";
-        return false;
+        THROW_STACK(InvalidEnvironmentException(env_name));
     }
 
     auto n = primary->get_node(prefixed_node_name(env_name, cluster_name));
 
-    if(env->type() != node_type::ENVIRONMENT || (n && n->type() != node_type::CLUSTER)) {
-        return false;
+    if(env->type() != node_type::ENVIRONMENT) {
+        THROW_STACK(graph::IncorrectNodeTypeException(env_name + " has type " 
+                    + graph::NodeIface::node_type_names.find(env->type())->second
+                    + ", should be ENVIRONMENT"));
+    } 
+    if (n && n->type() != node_type::CLUSTER) {
+        THROW_STACK(graph::IncorrectNodeTypeException(cluster_name + " has type " 
+                    + graph::NodeIface::node_type_names.find(env->type())->second
+                    + ", should be CLUSTER"));
     }
 
+    ::range::stored::WriteRequest req { cfg_, "add_cluster_to_env" };
+    req.add_arg(env_name);
+    req.add_arg(cluster_name);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "add_cluster_to_env" };
-        req.add_arg(env_name);
-        req.add_arg(cluster_name);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     if (!n) {
         LOG(notice, "nonexistent_cluster") << "node "
@@ -187,11 +234,13 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
             n->set_type(node_type::CLUSTER);
         }
         else {
-            return false;
+            THROW_STACK(CreateNodeException(prefixed_node_name(env_name, cluster_name)));
         }
     }
 
-    bool ret = env->add_forward_edge(n, true);
+    if(!env->add_forward_edge(n, true)) {
+        THROW_STACK(range::NodeExistsException(cluster_name));
+    }
 
     n = dependency->get_node(prefixed_node_name(env_name, cluster_name));
     if(!n) {
@@ -200,14 +249,15 @@ RangeAPI_v1::add_cluster_to_env(const std::string &env_name, const std::string &
             n->set_type(node_type::CLUSTER);
         } 
     }
-    return ret;
+    return true;
 }
 
 //##############################################################################
 //##############################################################################
 bool
 RangeAPI_v1::remove_cluster_from_env(const std::string &env_name,
-                                     const std::string &cluster_name)
+                                     const std::string &cluster_name,
+                                     uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " cluster_name: "
         << cluster_name;
@@ -218,27 +268,39 @@ RangeAPI_v1::remove_cluster_from_env(const std::string &env_name,
     auto env = primary->get_node(env_name);
     auto n = primary->get_node(prefixed_node_name(env_name, cluster_name));
 
-    if(!env || !n) {
-        return false;
+    if(!env) { THROW_STACK(InvalidEnvironmentException(env_name)); }
+    if(!n) {
+        THROW_STACK(graph::NodeNotFoundException(
+                    prefixed_node_name(env_name, cluster_name))); 
     }
 
-    if(env->type() != node_type::ENVIRONMENT || n->type() != node_type::CLUSTER) {
-        return false;
+    if(env->type() != node_type::ENVIRONMENT) {
+        THROW_STACK(graph::IncorrectNodeTypeException(env_name + " has type " 
+                    + graph::NodeIface::node_type_names.find(env->type())->second
+                    + ", should be ENVIRONMENT"));
     }
 
+    if(n->type() != node_type::CLUSTER) {
+        THROW_STACK(graph::IncorrectNodeTypeException(cluster_name + " has type " 
+                    + graph::NodeIface::node_type_names.find(n->type())->second
+                    + ", should be CLUSTER"));
+    }
+
+    ::range::stored::WriteRequest req { cfg_, "remove_cluster_from_env" };
+    req.add_arg(env_name);
+    req.add_arg(cluster_name);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_cluster_from_env" };
-        req.add_arg(env_name);
-        req.add_arg(cluster_name);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
-    if(env->remove_forward_edge(n, true)) {
-        return true;
+    if(!env->remove_forward_edge(n, true)) {
+        THROW_STACK(graph::EdgeNotFoundException(n->name()));
     }
-    return false;
-
+    return true;
 }
 
 //##############################################################################
@@ -246,7 +308,8 @@ RangeAPI_v1::remove_cluster_from_env(const std::string &env_name,
 bool
 RangeAPI_v1::add_cluster_to_cluster(const std::string &env_name,
                                     const std::string &parent_cluster,
-                                    const std::string &child_cluster)
+                                    const std::string &child_cluster,
+                                    uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " parent_cluster: "
         << parent_cluster << " child_cluster: " << child_cluster;
@@ -258,29 +321,41 @@ RangeAPI_v1::add_cluster_to_cluster(const std::string &env_name,
 
     auto parent = primary->get_node(prefixed_node_name(env_name, parent_cluster));
     if(!parent) {
-        return false;
+        THROW_STACK(graph::NodeNotFoundException(
+                    prefixed_node_name(env_name, parent_cluster)));
     }
     auto n = primary->get_node(prefixed_node_name(env_name, child_cluster));
 
-    if(parent->type() != node_type::CLUSTER || (n && n->type() != node_type::CLUSTER)) {
-        return false;
+    if(parent->type() != node_type::CLUSTER) { 
+        THROW_STACK(graph::IncorrectNodeTypeException(parent_cluster + " has type " 
+                    + graph::NodeIface::node_type_names.find(parent->type())->second
+                    + ", should be CLUSTER"));
+    }
+    if(n && n->type() != node_type::CLUSTER) {
+        THROW_STACK(graph::IncorrectNodeTypeException(child_cluster + " has type " 
+                    + graph::NodeIface::node_type_names.find(n->type())->second
+                    + ", should be CLUSTER"));
     }
 
+    ::range::stored::WriteRequest req { cfg_, "add_cluster_to_cluster" };
+    req.add_arg(env_name);
+    req.add_arg(parent_cluster);
+    req.add_arg(child_cluster);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "add_cluster_to_cluster" };
-        req.add_arg(env_name);
-        req.add_arg(parent_cluster);
-        req.add_arg(child_cluster);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     if (!n) {
         n = primary->create(prefixed_node_name(env_name, child_cluster));
         if(n) {
             n->set_type(node_type::CLUSTER);
         } else {
-            return false;
+            THROW_STACK(CreateNodeException(prefixed_node_name(env_name, child_cluster)));
         }
     }
 
@@ -301,7 +376,8 @@ RangeAPI_v1::add_cluster_to_cluster(const std::string &env_name,
 bool
 RangeAPI_v1::remove_cluster_from_cluster(const std::string &env_name,
                                          const std::string &parent_cluster,
-                                         const std::string &child_cluster)
+                                         const std::string &child_cluster,
+                                         uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " parent_cluster: "
         << parent_cluster << " child_cluster: " << child_cluster;
@@ -311,32 +387,51 @@ RangeAPI_v1::remove_cluster_from_cluster(const std::string &env_name,
 
     auto parent = primary->get_node(prefixed_node_name(env_name, parent_cluster));
     auto n = primary->get_node(prefixed_node_name(env_name, child_cluster));
-    if(!parent || !n) {
-        return false;
+
+    if(!parent) {
+        THROW_STACK(graph::NodeNotFoundException(
+                    prefixed_node_name(env_name, parent_cluster)));
     }
-    if(parent->type() != node_type::CLUSTER || n->type() != node_type::CLUSTER) {
-        return false;
+    if(!n) {
+        THROW_STACK(graph::NodeNotFoundException(
+                    prefixed_node_name(env_name, child_cluster)));
     }
 
+    if(parent->type() != node_type::CLUSTER) { 
+        THROW_STACK(graph::IncorrectNodeTypeException(parent_cluster + " has type " 
+                    + graph::NodeIface::node_type_names.find(parent->type())->second
+                    + ", should be CLUSTER"));
+    }
+    if(n && n->type() != node_type::CLUSTER) {
+        THROW_STACK(graph::IncorrectNodeTypeException(child_cluster + " has type " 
+                    + graph::NodeIface::node_type_names.find(n->type())->second
+                    + ", should be CLUSTER"));
+    }
+
+    ::range::stored::WriteRequest req { cfg_, "remove_cluster_from_cluster" };
+    req.add_arg(env_name);
+    req.add_arg(parent_cluster);
+    req.add_arg(child_cluster);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_cluster_from_cluster" };
-        req.add_arg(env_name);
-        req.add_arg(parent_cluster);
-        req.add_arg(child_cluster);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
-    if(parent->remove_forward_edge(n, true)) {
-        return true;
+    if(!parent->remove_forward_edge(n, true)) {
+        THROW_STACK(graph::EdgeNotFoundException(n->name()));
     }
-    return false;
+    return true;
 }
 
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::remove_cluster(const std::string &env_name, const std::string &cluster_name)
+RangeAPI_v1::remove_cluster(const std::string &env_name,
+        const std::string &cluster_name,
+        uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " cluster_name: " 
         << cluster_name;
@@ -347,19 +442,24 @@ RangeAPI_v1::remove_cluster(const std::string &env_name, const std::string &clus
     auto dtxn = dependency->start_txn();
     auto n = primary->get_node(prefixed_node_name(env_name, cluster_name));
     if(!n) {
-        return false;
+        THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, cluster_name)));
     }
     if(n->type() != node_type::CLUSTER) {
-        return false;
+        THROW_STACK(graph::IncorrectNodeTypeException(cluster_name + " has type " 
+                    + graph::NodeIface::node_type_names.find(n->type())->second
+                    + ", should be CLUSTER"));
     }
 
+    ::range::stored::WriteRequest req { cfg_, "remove_cluster" };
+    req.add_arg(env_name);
+    req.add_arg(cluster_name);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_cluster" };
-        req.add_arg(env_name);
-        req.add_arg(cluster_name);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     primary->remove(n);
     dependency->remove(n);
@@ -371,7 +471,8 @@ RangeAPI_v1::remove_cluster(const std::string &env_name, const std::string &clus
 bool
 RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
                                  const std::string &parent_cluster,
-                                 const std::string &hostname)
+                                 const std::string &hostname,
+                                 uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " parent_cluster: "
         << parent_cluster << " hostname " << hostname;
@@ -383,25 +484,33 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
 
     auto parent = primary->get_node(prefixed_node_name(env_name, parent_cluster));
     if(!parent) {
-        LOG(debug4, "parent_not_found") << hostname;
-        return false;
+        THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, parent_cluster)));
     }
 
     auto n = primary->get_node(hostname);
 
-    if(parent->type() != node_type::CLUSTER || (n && n->type() != node_type::HOST)) {
-        LOG(debug4, "invalid_parent_type") << hostname;
-        return false;
+    if(parent->type() != node_type::CLUSTER) {
+        THROW_STACK(graph::IncorrectNodeTypeException(parent_cluster + " has type " 
+                    + graph::NodeIface::node_type_names.find(parent->type())->second
+                    + ", should be CLUSTER"));
+    }
+    if (n && n->type() != node_type::HOST) {
+        THROW_STACK(graph::IncorrectNodeTypeException(hostname + " has type " 
+                    + graph::NodeIface::node_type_names.find(n->type())->second
+                    + ", should be HOST"));
     }
 
+    ::range::stored::WriteRequest req { cfg_, "add_host_to_cluster" };
+    req.add_arg(env_name);
+    req.add_arg(parent_cluster);
+    req.add_arg(hostname);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "add_host_to_cluster" };
-        req.add_arg(env_name);
-        req.add_arg(parent_cluster);
-        req.add_arg(hostname);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     if(n) {
         LOG(debug9, "found_host_being_added") << hostname;
@@ -413,8 +522,7 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
         for(auto v : n->reverse_edges()) {
             if (v->type() == node_type::CLUSTER) {
                 if (v->name().substr(0, env_name.size() + 1) != (env_name + '#')) {
-                    LOG(debug4, "host_belongs_to_another_environment") << hostname;
-                    return false;
+                    THROW_STACK(InvalidEnvironmentException(hostname + " exists in another environment"));
                 }
             }
         }
@@ -447,14 +555,12 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
         if(n) {
             n->set_type(node_type::HOST);
         } else {
-            LOG(error, "creating_new_host_failed") << hostname;
-            return false;
+            THROW_STACK(CreateNodeException(hostname));
         }
     }
 
     if(!parent->add_forward_edge(n, true)) {
-        LOG(debug4, "host_already_in_cluster") << hostname;
-        return false;
+        THROW_STACK(NodeExistsException(hostname));
     }
 
     n = dependency->get_node(hostname);
@@ -472,7 +578,8 @@ RangeAPI_v1::add_host_to_cluster(const std::string &env_name,
 bool
 RangeAPI_v1::remove_host_from_cluster(const std::string &env_name,
                                       const std::string &parent_cluster,
-                                      const std::string &hostname)
+                                      const std::string &hostname,
+                                      uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " parent_cluster "
         << parent_cluster << " hostname: " << hostname;
@@ -482,55 +589,73 @@ RangeAPI_v1::remove_host_from_cluster(const std::string &env_name,
     auto parent = primary->get_node(prefixed_node_name(env_name, parent_cluster));
     auto n = primary->get_node(hostname);
 
-    if(!parent || !n) {
-        return false;
+    if(!parent) {
+        THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, parent_cluster)));
     }
-    if(parent->type() != node_type::CLUSTER || n->type() != node_type::HOST) {
-        return false;
+    if(!n) {
+        THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, hostname)));
     }
 
+    if(parent->type() != node_type::CLUSTER) {
+        THROW_STACK(graph::IncorrectNodeTypeException(parent_cluster + " has type " 
+                    + graph::NodeIface::node_type_names.find(parent->type())->second
+                    + ", should be CLUSTER"));
+    }
+    if (n && n->type() != node_type::HOST) {
+        THROW_STACK(graph::IncorrectNodeTypeException(hostname + " has type " 
+                    + graph::NodeIface::node_type_names.find(n->type())->second
+                    + ", should be HOST"));
+    }
+
+
+    ::range::stored::WriteRequest req { cfg_, "remove_host_from_cluster" };
+    req.add_arg(env_name);
+    req.add_arg(parent_cluster);
+    req.add_arg(hostname);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_host_from_cluster" };
-        req.add_arg(env_name);
-        req.add_arg(parent_cluster);
-        req.add_arg(hostname);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
 
-    if(n->remove_reverse_edge(parent, true)) {
-        return true;
+    if(!n->remove_reverse_edge(parent, true)) {
+        THROW_STACK(graph::EdgeNotFoundException(hostname));
     }
-    return false;
+    return true;
 }
 
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::add_host(const std::string &hostname)
+RangeAPI_v1::add_host(const std::string &hostname, uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "hostname: " << hostname;
 
+    ::range::stored::WriteRequest req { cfg_, "add_host" };
+    req.add_arg(hostname);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "add_host" };
-        req.add_arg(hostname);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
 
     for (auto g : { graphdb("primary", -1), graphdb("dependency", -1) }) {
         auto gtxn = g->start_txn();
         auto n = g->get_node(hostname);
         if(n) {
-            return false;
+            THROW_STACK(NodeExistsException(n->name()));
         }
         n = g->create(hostname);
         if(n) {
             n->set_type(node_type::HOST);
         } else {
-            return false;
+            THROW_STACK(CreateNodeException(hostname));
         }
     }
     return true;
@@ -539,7 +664,9 @@ RangeAPI_v1::add_host(const std::string &hostname)
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::remove_host(const std::string &env_name, const std::string &hostname)
+RangeAPI_v1::remove_host(const std::string &env_name,
+        const std::string &hostname,
+        uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " hostname: " 
         << hostname;
@@ -551,7 +678,7 @@ RangeAPI_v1::remove_host(const std::string &env_name, const std::string &hostnam
     auto n = primary->get_node(hostname);
 
     if(!n) {
-        return false;
+        THROW_STACK(graph::NodeNotFoundException(hostname));
     }
 
 
@@ -569,7 +696,7 @@ RangeAPI_v1::remove_host(const std::string &env_name, const std::string &hostnam
                     if (env_name == v->name()) {
                         break;
                     } else {
-                        return false;
+                        THROW_STACK(InvalidEnvironmentException(env_name));
                     }
                 }
                 for(auto e : v->reverse_edges()) {
@@ -579,13 +706,16 @@ RangeAPI_v1::remove_host(const std::string &env_name, const std::string &hostnam
         }
     } 
 
+    ::range::stored::WriteRequest req { cfg_, "remove_host" };
+    req.add_arg(env_name);
+    req.add_arg(hostname);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_host" };
-        req.add_arg(env_name);
-        req.add_arg(hostname);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
 
     primary->remove(n);
@@ -598,7 +728,8 @@ RangeAPI_v1::remove_host(const std::string &env_name, const std::string &hostnam
 //##############################################################################
 bool
 RangeAPI_v1::add_node_key_value(const std::string &env_name, const std::string &node_name,
-                                const std::string &key, const std::string &value)
+                                const std::string &key, const std::string &value,
+                                uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
         << node_name << " key: " << key << " value " << value;
@@ -609,7 +740,7 @@ RangeAPI_v1::add_node_key_value(const std::string &env_name, const std::string &
     auto n = get_node(primary, env_name, node_name);
     //auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(!n) {
-        return false;
+        THROW_STACK(graph::NodeNotFoundException(env_name + '#' + node_name));
     }
     // A RMW lock would be nice... or conversely, an append/remove API on nodeiface... 
     auto tags = n->tags();
@@ -623,19 +754,22 @@ RangeAPI_v1::add_node_key_value(const std::string &env_name, const std::string &
 
     for (auto v : values) {
         if (v == value) {
-            return false;
+            THROW_STACK(NodeExistsException("value " + v + " already exists for key " + key));
         }
     }
 
+    ::range::stored::WriteRequest req { cfg_, "add_node_key_value" };
+    req.add_arg(env_name);
+    req.add_arg(node_name);
+    req.add_arg(key);
+    req.add_arg(value);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "add_node_key_value" };
-        req.add_arg(env_name);
-        req.add_arg(node_name);
-        req.add_arg(key);
-        req.add_arg(value);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
     values.push_back(value);
     return n->update_tag(key, values);
@@ -646,7 +780,8 @@ RangeAPI_v1::add_node_key_value(const std::string &env_name, const std::string &
 //##############################################################################
 bool
 RangeAPI_v1::remove_node_key_value(const std::string &env_name, const std::string &node_name,
-                                   const std::string &key, const std::string &value)
+                                   const std::string &key, const std::string &value,
+                                   uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
         << node_name << " key: " << key << " value " << value;
@@ -657,7 +792,7 @@ RangeAPI_v1::remove_node_key_value(const std::string &env_name, const std::strin
     auto n = get_node(primary, env_name, node_name);
     //auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(!n) {
-        return false;
+        THROW_STACK(graph::NodeNotFoundException(env_name + '#' + node_name));
     }
     // A RMW lock would be nice... or conversely, an append/remove API on nodeiface... 
     auto tags = n->tags();
@@ -677,27 +812,35 @@ RangeAPI_v1::remove_node_key_value(const std::string &env_name, const std::strin
             new_values.push_back(v);
         }
     }
-    if(new_values.size() != values.size()) {
-        if (cfg_->use_stored()) {
-            ::range::stored::WriteRequest req { cfg_, "remove_node_key_value" };
-            req.add_arg(env_name);
-            req.add_arg(node_name);
-            req.add_arg(key);
-            req.add_arg(value);
-            auto ack = req.send();
-            return ack.status();
-        }
-
-        return n->update_tag(key, new_values);
+    if(new_values.size() == values.size()) {
+        THROW_STACK(graph::NodeNotFoundException("nothing to remove"));
     }
-    return false;
+    ::range::stored::WriteRequest req { cfg_, "remove_node_key_value" };
+    req.add_arg(env_name);
+    req.add_arg(node_name);
+    req.add_arg(key);
+    req.add_arg(value);
+    if (cfg_->use_stored()) {
+        auto ack = req.send();
+        return process_ack(ack);
+    }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
+
+    if(!n->update_tag(key, new_values)) {
+        THROW_STACK(CreateNodeException("Unable to update tag"));
+    }
+    return true;
 }
 
 //##############################################################################
 //##############################################################################
 bool
-RangeAPI_v1::remove_key_from_node(const std::string &env_name, const std::string &node_name,
-                                  const std::string &key)
+RangeAPI_v1::remove_key_from_node(const std::string &env_name,
+        const std::string &node_name,
+        const std::string &key,
+        uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
         << node_name << " key: " << key;
@@ -708,20 +851,25 @@ RangeAPI_v1::remove_key_from_node(const std::string &env_name, const std::string
     auto n = get_node(primary, env_name, node_name);
     //auto n = primary->get_node(prefixed_node_name(env_name, node_name));
     if(!n) {
-        return false;
+        THROW_STACK(graph::NodeNotFoundException(env_name + '#' + node_name));
     }
 
+    ::range::stored::WriteRequest req { cfg_, "remove_key_from_node" };
+    req.add_arg(env_name);
+    req.add_arg(node_name);
+    req.add_arg(key);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_key_from_node" };
-        req.add_arg(env_name);
-        req.add_arg(node_name);
-        req.add_arg(key);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
-    bool ret = n->delete_tag(key);
-    return ret;
+    if(!n->delete_tag(key)) {
+        THROW_STACK(graph::EdgeNotFoundException(key));
+    }
+    return true;
 }
 
 //##############################################################################
@@ -730,7 +878,8 @@ bool
 RangeAPI_v1::add_node_ext_dependency(const std::string &env_name,
                                      const std::string &node_name,
                                      const std::string &dependency_env,
-                                     const std::string &dependency_name)
+                                     const std::string &dependency_name,
+                                     uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
         << node_name << " dependency_env: " << dependency_env
@@ -741,29 +890,37 @@ RangeAPI_v1::add_node_ext_dependency(const std::string &env_name,
     auto n = dep->get_node(prefixed_node_name(env_name, node_name));
     auto d = dep->get_node(prefixed_node_name(dependency_env, dependency_name));
 
-    if(!n || !d) {
-        return false;
+    if(!n) {
+        THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node_name)));
+    }
+    if(!d) {
+        THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, dependency_env)));
     }
 
     if(n->type() == node_type::ENVIRONMENT || n->type() == node_type::UNKNOWN) { // Environments can't have dependencies themselves, it wouldn't make any sense
-        return false;
+        THROW_STACK(graph::IncorrectNodeTypeException(node_name + " has type " 
+                    + graph::NodeIface::node_type_names.find(n->type())->second
+                    + ", but should not be ENVIRONMENT or UNKNOWN"));
     }
 
+    ::range::stored::WriteRequest req { cfg_, "add_node_ext_dependency" };
+    req.add_arg(env_name);
+    req.add_arg(node_name);
+    req.add_arg(dependency_env);
+    req.add_arg(dependency_name);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "add_node_ext_dependency" };
-        req.add_arg(env_name);
-        req.add_arg(node_name);
-        req.add_arg(dependency_env);
-        req.add_arg(dependency_name);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
 
-    if(n->add_forward_edge(d, true)) {
-        return true;
+    if(!n->add_forward_edge(d, true)) {
+        THROW_STACK(NodeExistsException("dependency already exists"));
     }
-    return false;
+    return true;
 }
 
 //##############################################################################
@@ -771,10 +928,11 @@ RangeAPI_v1::add_node_ext_dependency(const std::string &env_name,
 bool
 RangeAPI_v1::add_node_env_dependency(const std::string &env_name,
                                      const std::string &node_name,
-                                     const std::string &dependency_name)
+                                     const std::string &dependency_name,
+                                     uint64_t id)
 {
     BOOST_LOG_FUNCTION();
-    return add_node_ext_dependency(env_name, node_name, env_name, dependency_name);
+    return add_node_ext_dependency(env_name, node_name, env_name, dependency_name, id);
 }
 
 //##############################################################################
@@ -783,7 +941,8 @@ bool
 RangeAPI_v1::remove_node_ext_dependency(const std::string &env_name,
                                         const std::string &node_name,
                                         const std::string &dependency_env,
-                                        const std::string &dependency_name)
+                                        const std::string &dependency_name,
+                                        uint64_t id)
 {
     RANGE_LOG_TIMED_FUNCTION() << "env_name: " << env_name << " node_name: " 
         << node_name << " dependency_env: " << dependency_env
@@ -794,24 +953,30 @@ RangeAPI_v1::remove_node_ext_dependency(const std::string &env_name,
     auto n = dep->get_node(prefixed_node_name(env_name, node_name));
     auto d = dep->get_node(prefixed_node_name(dependency_env, dependency_name));
 
-    if(!n || !d) {
-        return false;
+    if(!n) {
+        THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, node_name)));
+    }
+    if(!d) {
+        THROW_STACK(graph::NodeNotFoundException(prefixed_node_name(env_name, dependency_env)));
     }
 
+    ::range::stored::WriteRequest req { cfg_, "remove_node_ext_dependency" };
+    req.add_arg(env_name);
+    req.add_arg(node_name);
+    req.add_arg(dependency_env);
+    req.add_arg(dependency_name);
     if (cfg_->use_stored()) {
-        ::range::stored::WriteRequest req { cfg_, "remove_node_ext_dependency" };
-        req.add_arg(env_name);
-        req.add_arg(node_name);
-        req.add_arg(dependency_env);
-        req.add_arg(dependency_name);
         auto ack = req.send();
-        return ack.status();
+        return process_ack(ack);
     }
+    auto r = req.req();
+    r->set_proposer_id(id);
+    auto rtxn = cfg_->db_backend()->startRangeTransaction(r);
 
-    if(n->remove_forward_edge(d)) {
-        return true;
+    if(!n->remove_forward_edge(d)) {
+        THROW_STACK(graph::EdgeNotFoundException(dependency_name));
     }
-    return false;
+    return true;
 }
 
 //##############################################################################
@@ -819,10 +984,11 @@ RangeAPI_v1::remove_node_ext_dependency(const std::string &env_name,
 bool
 RangeAPI_v1::remove_node_env_dependency(const std::string &env_name,
                                         const std::string &node_name,
-                                        const std::string &dependency_name)
+                                        const std::string &dependency_name,
+                                        uint64_t id)
 {
     BOOST_LOG_FUNCTION();
-    return remove_node_ext_dependency(env_name, node_name, env_name, dependency_name);
+    return remove_node_ext_dependency(env_name, node_name, env_name, dependency_name, id);
 }
 
 

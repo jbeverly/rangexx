@@ -71,7 +71,7 @@ add_unique_new_version(Type item, uint64_t new_version)
 //##############################################################################
 //##############################################################################
 template <typename Type>
-static inline void
+static inline bool
 update_unique_new_version(Type item, uint64_t cmp_version, uint64_t new_version)
 {
     range::Emitter log { ProtobufNodeLogModule };
@@ -79,12 +79,14 @@ update_unique_new_version(Type item, uint64_t cmp_version, uint64_t new_version)
     for(int vv_idx = item->versions_size() - 1; vv_idx >= 0; --vv_idx) {
         if (new_version == item->versions(vv_idx)) {
             LOG(debug9, "update_version_found") << "already has new version: " << new_version;
-            return;
+            return true;
         }
         if (cmp_version == item->versions(vv_idx)) {
             add_unique_new_version(item, new_version);
+            return true;
         }
     }
+    return false;
 }
 
 
@@ -113,7 +115,16 @@ update_tag_versions(range::db::NodeInfo& info, uint64_t cmp_version, uint64_t ne
     BOOST_LOG_FUNCTION();
     int keys_size = info.tags().keys_size();
     for (int key_idx = 0; key_idx < keys_size; ++key_idx) {
-        update_unique_new_version(info.mutable_tags()->mutable_keys(key_idx), cmp_version, new_version);
+        if(update_unique_new_version(info.mutable_tags()->mutable_keys(key_idx), cmp_version, new_version)) {
+            for(int vmap_idx = 0; vmap_idx < info.tags().keys(key_idx).versionmap_size(); ++vmap_idx) {
+                if(info.tags().keys(key_idx).versionmap(vmap_idx).list_version() == new_version) {
+                    return;
+                }
+            }
+            auto m = info.mutable_tags()->mutable_keys(key_idx)->add_versionmap();
+            m->set_list_version(new_version);
+            m->set_key_version(info.tags().keys(key_idx).key_version());
+        }
     }
 }
 
@@ -155,14 +166,14 @@ update_all_edge_versions(NodeInfo& info, uint64_t cmp_version, uint64_t new_vers
 //##############################################################################
 //##############################################################################
 static inline std::vector<std::string>
-get_map_value(uint64_t cmp_version, const NodeInfo_Tags_KeyValue& key) 
+get_map_value(uint64_t cmp_version, const NodeInfo_Tags_KeyValue &key) 
 {
     range::Emitter log { ProtobufNodeLogModule };
     BOOST_LOG_FUNCTION();
     std::vector<std::string> values;
 
     for (int values_idx = 0; values_idx < key.values_size(); ++values_idx) {
-        auto& value = key.values(values_idx);
+        auto &value = key.values(values_idx);
         for (int val_idx = value.versions_size() - 1; val_idx >= 0; --val_idx) {
             if (cmp_version == value.versions(val_idx)) {
                 values.push_back( value.data() );
@@ -354,7 +365,11 @@ ProtobufNode::tags() const
         for (int ver_idx = key.versions_size() - 1; ver_idx >= 0; --ver_idx) {
             uint64_t key_ver = key.versions(ver_idx);
             if (cmp_version == key_ver) {
-                tagtable[key.key()] = get_map_value(key.key_version(), key);
+                for(int keymap_idx = key.versionmap_size() - 1; keymap_idx >= 0; --keymap_idx) {
+                    if(key.versionmap(keymap_idx).list_version() == cmp_version) {
+                        tagtable[key.key()] = get_map_value(key.versionmap(keymap_idx).key_version(), key);
+                    }
+                }
             }
             if (cmp_version > key_ver) {
                 break;
@@ -602,17 +617,27 @@ ProtobufNode::update_tag(const std::string& key, const std::vector<std::string>&
 
     if(!kv) {
         kv = info.mutable_tags()->add_keys();
-        kv->set_key_version(-1);
-        kv->add_versions(new_list_version);
+        kv->set_key_version(0);
         kv->set_key(key);
     }
+
+    kv->add_versions(new_list_version);
+
+    uint64_t cmp_version = kv->key_version();
+    uint64_t new_version = cmp_version + 1;
+
+    kv->set_key_version(new_version);
 
     info.set_list_version(new_list_version);
     update_tag_versions(info, cmp_list_version, new_list_version);
     update_all_edge_versions(info, cmp_list_version, new_list_version);
 
-    uint64_t new_version = kv->key_version() + 1;
-    kv->set_key_version(new_version);
+    /*
+    auto vmap = kv->add_versionmap();
+    vmap->set_list_version(new_list_version);
+    vmap->set_key_version(new_version);
+    */
+
     for (auto value : values) {
         auto vptr = find_value(value, kv);
 

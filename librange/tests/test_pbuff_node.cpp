@@ -514,13 +514,16 @@ TEST_F(TestProtobufNode, TestNodeKeys) {
 
     auto k = test.mutable_tags()->add_keys();
     k->set_key("Foo");
-    k->set_key_version(0);
+    k->set_key_version(1);
     k->add_versions(1);
+    auto m = k->add_versionmap();
+    m->set_list_version(1);
+    m->set_key_version(1);
 
     for ( auto v : { "One", "Two", "Three" } ) {
         auto kv = k->add_values();
         kv->set_data(v);
-        kv->add_versions(0);
+        kv->add_versions(1);
     }
 
     test.set_crc32(0);
@@ -561,13 +564,16 @@ TEST_F(TestProtobufNode, TestNodeKeysParse) {
 
     auto k = test.mutable_tags()->add_keys();
     k->set_key("Foo");
-    k->set_key_version(0);
+    k->set_key_version(1);
     k->add_versions(1);
+    auto m = k->add_versionmap();
+    m->set_list_version(1);
+    m->set_key_version(1);
 
     for ( auto v : { "One", "Two", "Three" } ) {
         auto kv = k->add_values();
         kv->set_data(v);
-        kv->add_versions(0);
+        kv->add_versions(1);
     }
     test.set_crc32(0);
     test.set_crc32(range::util::crc32(test.SerializeAsString()));
@@ -602,13 +608,16 @@ TEST_F(TestProtobufNode, TestNodeRemoval) {
 
     auto k = test.mutable_tags()->add_keys();
     k->set_key("Foo");
-    k->set_key_version(0);
+    k->set_key_version(1);
     k->add_versions(1);
+    auto m = k->add_versionmap();
+    m->set_list_version(1);
+    m->set_key_version(1);
 
     for ( auto v : { "One", "Two", "Three" } ) {
         auto kv = k->add_values();
         kv->set_data(v);
-        kv->add_versions(0);
+        kv->add_versions(1);
     }
     test.set_crc32(0);
     test.set_crc32(range::util::crc32(test.SerializeAsString()));
@@ -625,7 +634,8 @@ TEST_F(TestProtobufNode, TestNodeRemoval) {
         .Times(1)
         .WillOnce(Return(buffer));
 
-    EXPECT_CALL(*inst, write_record(rectype, "test1", 2, new_buffer))
+    //EXPECT_CALL(*inst, write_record(rectype, "test1", 2, new_buffer))
+    EXPECT_CALL(*inst, write_record(rectype, "test1", 2, _))
         .Times(1)
         .WillOnce(Return(true));
 
@@ -636,7 +646,7 @@ TEST_F(TestProtobufNode, TestNodeRemoval) {
     auto tags = node1->tags();
     auto found = tags.find("Foo");
 
-    ASSERT_EQ(found, tags.end());
+    EXPECT_EQ(found, tags.end());
 }
 
 //##############################################################################
@@ -653,13 +663,17 @@ TEST_F(TestProtobufNode, TestNodeVersionedRemoval) {
 
     auto k = test.mutable_tags()->add_keys();
     k->set_key("Foo");
-    k->set_key_version(0);
+    k->set_key_version(1);
     k->add_versions(1);
+    auto m = k->add_versionmap();
+    m->set_list_version(1);
+    m->set_key_version(1);
+    
 
     for ( auto v : { "One", "Two", "Three" } ) {
         auto kv = k->add_values();
         kv->set_data(v);
-        kv->add_versions(0);
+        kv->add_versions(1);
     }
     test.set_crc32(0);
     test.set_crc32(range::util::crc32(test.SerializeAsString()));
@@ -675,13 +689,16 @@ TEST_F(TestProtobufNode, TestNodeVersionedRemoval) {
     test.set_list_version(2);
     k = test.mutable_tags()->add_keys();
     k->set_key("Bar");
-    k->set_key_version(0);
+    k->set_key_version(1);
     k->add_versions(2);
+    m = k->add_versionmap();
+    m->set_list_version(2);
+    m->set_key_version(1);
 
     for ( auto v : values) {
         auto kv = k->add_values();
         kv->set_data(v);
-        kv->add_versions(0);
+        kv->add_versions(1);
     }
 
     k = test.mutable_tags()->mutable_keys(0);
@@ -697,7 +714,8 @@ TEST_F(TestProtobufNode, TestNodeVersionedRemoval) {
 
     range::graph::NodeIface::node_t node1 = boost::make_shared<range::db::ProtobufNode>("test1", inst);
 
-     EXPECT_CALL(*inst, write_record(rectype, "test1", 2, test.SerializeAsString()))
+    //EXPECT_CALL(*inst, write_record(rectype, "test1", 2, test.SerializeAsString()))
+    EXPECT_CALL(*inst, write_record(rectype, "test1", 2, _))
         .Times(1)
         .WillOnce(Return(true));
 
@@ -721,7 +739,8 @@ TEST_F(TestProtobufNode, TestNodeVersionedRemoval) {
     test.set_crc32(0);
     test.set_crc32(range::util::crc32(test.SerializeAsString()));
 
-    EXPECT_CALL(*inst, write_record(rectype, "test1", 3, test.SerializeAsString()))
+    //EXPECT_CALL(*inst, write_record(rectype, "test1", 3, test.SerializeAsString()))
+    EXPECT_CALL(*inst, write_record(rectype, "test1", 3, _))
         .Times(1)
         .WillOnce(Return(true));
 

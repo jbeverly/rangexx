@@ -24,9 +24,8 @@ namespace range { namespace db {
 static ::range::EmitterModuleRegistration BerkeleyDBCXXTxnLogModule { "db.BerkeleyDBCXXTxn" };
 //##############################################################################
 //##############################################################################
-BerkeleyDBCXXTxn::BerkeleyDBCXXTxn(boost::shared_ptr<BerkeleyDB> backend,
-        boost::shared_ptr<BerkeleyDBCXXDb> db)
-    : backend_(backend), db_(db), log(BerkeleyDBCXXTxnLogModule)
+BerkeleyDBCXXTxn::BerkeleyDBCXXTxn(boost::shared_ptr<BerkeleyDBCXXDb> db)
+    : db_(db), log(BerkeleyDBCXXTxnLogModule)
 {
 }
 
@@ -99,7 +98,6 @@ BerkeleyDBCXXTxn::commit()
             }
         }
         if(node_changes) { 
-            backend_->add_new_range_version();
             this->add_graph_changelist(changes);
         }
         this->pending_changes_.clear();

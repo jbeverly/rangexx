@@ -243,12 +243,12 @@ class Request : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 proposal_num() const;
   inline void set_proposal_num(::google::protobuf::uint64 value);
 
-  // optional uint32 proposer_id = 9;
+  // optional uint64 proposer_id = 9;
   inline bool has_proposer_id() const;
   inline void clear_proposer_id();
   static const int kProposerIdFieldNumber = 9;
-  inline ::google::protobuf::uint32 proposer_id() const;
-  inline void set_proposer_id(::google::protobuf::uint32 value);
+  inline ::google::protobuf::uint64 proposer_id() const;
+  inline void set_proposer_id(::google::protobuf::uint64 value);
 
   // optional uint32 sender_addr = 10;
   inline bool has_sender_addr() const;
@@ -263,6 +263,20 @@ class Request : public ::google::protobuf::Message {
   static const int kSenderPortFieldNumber = 11;
   inline ::google::protobuf::uint32 sender_port() const;
   inline void set_sender_port(::google::protobuf::uint32 value);
+
+  // optional uint64 version = 12;
+  inline bool has_version() const;
+  inline void clear_version();
+  static const int kVersionFieldNumber = 12;
+  inline ::google::protobuf::uint64 version() const;
+  inline void set_version(::google::protobuf::uint64 value);
+
+  // optional uint64 sequence_num = 13;
+  inline bool has_sequence_num() const;
+  inline void clear_sequence_num();
+  static const int kSequenceNumFieldNumber = 13;
+  inline ::google::protobuf::uint64 sequence_num() const;
+  inline void set_sequence_num(::google::protobuf::uint64 value);
 
   // @@protoc_insertion_point(class_scope:range.stored.Request)
  private:
@@ -286,6 +300,10 @@ class Request : public ::google::protobuf::Message {
   inline void clear_has_sender_addr();
   inline void set_has_sender_port();
   inline void clear_has_sender_port();
+  inline void set_has_version();
+  inline void clear_has_version();
+  inline void set_has_sequence_num();
+  inline void clear_has_sequence_num();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -297,12 +315,14 @@ class Request : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::std::string> args_;
   ::google::protobuf::uint64 timestamp_;
   ::google::protobuf::uint64 proposal_num_;
-  ::google::protobuf::uint32 proposer_id_;
+  ::google::protobuf::uint64 proposer_id_;
   ::google::protobuf::uint32 sender_addr_;
   ::google::protobuf::uint32 sender_port_;
+  ::google::protobuf::uint64 version_;
+  ::google::protobuf::uint64 sequence_num_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(13 + 31) / 32];
 
   friend void  protobuf_AddDesc_store_2eproto();
   friend void protobuf_AssignDesc_store_2eproto();
@@ -419,12 +439,12 @@ class Ack : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 request_id() const;
   inline void set_request_id(::google::protobuf::uint64 value);
 
-  // optional uint64 code = 4;
+  // optional uint32 code = 4;
   inline bool has_code() const;
   inline void clear_code();
   static const int kCodeFieldNumber = 4;
-  inline ::google::protobuf::uint64 code() const;
-  inline void set_code(::google::protobuf::uint64 value);
+  inline ::google::protobuf::uint32 code() const;
+  inline void set_code(::google::protobuf::uint32 value);
 
   // optional string reason = 5;
   inline bool has_reason() const;
@@ -452,12 +472,12 @@ class Ack : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 proposal_num() const;
   inline void set_proposal_num(::google::protobuf::uint64 value);
 
-  // optional uint32 proposer_id = 8;
+  // optional uint64 proposer_id = 8;
   inline bool has_proposer_id() const;
   inline void clear_proposer_id();
   static const int kProposerIdFieldNumber = 8;
-  inline ::google::protobuf::uint32 proposer_id() const;
-  inline void set_proposer_id(::google::protobuf::uint32 value);
+  inline ::google::protobuf::uint64 proposer_id() const;
+  inline void set_proposer_id(::google::protobuf::uint64 value);
 
   // optional uint64 next_proposal_num = 9;
   inline bool has_next_proposal_num() const;
@@ -465,6 +485,13 @@ class Ack : public ::google::protobuf::Message {
   static const int kNextProposalNumFieldNumber = 9;
   inline ::google::protobuf::uint64 next_proposal_num() const;
   inline void set_next_proposal_num(::google::protobuf::uint64 value);
+
+  // optional uint64 sequence_num = 10;
+  inline bool has_sequence_num() const;
+  inline void clear_sequence_num();
+  static const int kSequenceNumFieldNumber = 10;
+  inline ::google::protobuf::uint64 sequence_num() const;
+  inline void set_sequence_num(::google::protobuf::uint64 value);
 
   // @@protoc_insertion_point(class_scope:range.stored.Ack)
  private:
@@ -486,21 +513,24 @@ class Ack : public ::google::protobuf::Message {
   inline void clear_has_proposer_id();
   inline void set_has_next_proposal_num();
   inline void clear_has_next_proposal_num();
+  inline void set_has_sequence_num();
+  inline void clear_has_sequence_num();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::std::string* client_id_;
-  ::google::protobuf::uint64 request_id_;
   bool status_;
-  int type_;
-  ::google::protobuf::uint64 code_;
+  ::google::protobuf::uint32 code_;
+  ::google::protobuf::uint64 request_id_;
   ::std::string* reason_;
   ::google::protobuf::uint64 proposal_num_;
+  ::google::protobuf::uint64 proposer_id_;
   ::google::protobuf::uint64 next_proposal_num_;
-  ::google::protobuf::uint32 proposer_id_;
+  ::google::protobuf::uint64 sequence_num_;
+  int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
 
   friend void  protobuf_AddDesc_store_2eproto();
   friend void protobuf_AssignDesc_store_2eproto();
@@ -811,7 +841,7 @@ inline void Request::set_proposal_num(::google::protobuf::uint64 value) {
   proposal_num_ = value;
 }
 
-// optional uint32 proposer_id = 9;
+// optional uint64 proposer_id = 9;
 inline bool Request::has_proposer_id() const {
   return (_has_bits_[0] & 0x00000100u) != 0;
 }
@@ -822,13 +852,13 @@ inline void Request::clear_has_proposer_id() {
   _has_bits_[0] &= ~0x00000100u;
 }
 inline void Request::clear_proposer_id() {
-  proposer_id_ = 0u;
+  proposer_id_ = GOOGLE_ULONGLONG(0);
   clear_has_proposer_id();
 }
-inline ::google::protobuf::uint32 Request::proposer_id() const {
+inline ::google::protobuf::uint64 Request::proposer_id() const {
   return proposer_id_;
 }
-inline void Request::set_proposer_id(::google::protobuf::uint32 value) {
+inline void Request::set_proposer_id(::google::protobuf::uint64 value) {
   set_has_proposer_id();
   proposer_id_ = value;
 }
@@ -875,6 +905,50 @@ inline ::google::protobuf::uint32 Request::sender_port() const {
 inline void Request::set_sender_port(::google::protobuf::uint32 value) {
   set_has_sender_port();
   sender_port_ = value;
+}
+
+// optional uint64 version = 12;
+inline bool Request::has_version() const {
+  return (_has_bits_[0] & 0x00000800u) != 0;
+}
+inline void Request::set_has_version() {
+  _has_bits_[0] |= 0x00000800u;
+}
+inline void Request::clear_has_version() {
+  _has_bits_[0] &= ~0x00000800u;
+}
+inline void Request::clear_version() {
+  version_ = GOOGLE_ULONGLONG(0);
+  clear_has_version();
+}
+inline ::google::protobuf::uint64 Request::version() const {
+  return version_;
+}
+inline void Request::set_version(::google::protobuf::uint64 value) {
+  set_has_version();
+  version_ = value;
+}
+
+// optional uint64 sequence_num = 13;
+inline bool Request::has_sequence_num() const {
+  return (_has_bits_[0] & 0x00001000u) != 0;
+}
+inline void Request::set_has_sequence_num() {
+  _has_bits_[0] |= 0x00001000u;
+}
+inline void Request::clear_has_sequence_num() {
+  _has_bits_[0] &= ~0x00001000u;
+}
+inline void Request::clear_sequence_num() {
+  sequence_num_ = GOOGLE_ULONGLONG(0);
+  clear_has_sequence_num();
+}
+inline ::google::protobuf::uint64 Request::sequence_num() const {
+  return sequence_num_;
+}
+inline void Request::set_sequence_num(::google::protobuf::uint64 value) {
+  set_has_sequence_num();
+  sequence_num_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -995,7 +1069,7 @@ inline void Ack::set_request_id(::google::protobuf::uint64 value) {
   request_id_ = value;
 }
 
-// optional uint64 code = 4;
+// optional uint32 code = 4;
 inline bool Ack::has_code() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
@@ -1006,13 +1080,13 @@ inline void Ack::clear_has_code() {
   _has_bits_[0] &= ~0x00000008u;
 }
 inline void Ack::clear_code() {
-  code_ = GOOGLE_ULONGLONG(0);
+  code_ = 0u;
   clear_has_code();
 }
-inline ::google::protobuf::uint64 Ack::code() const {
+inline ::google::protobuf::uint32 Ack::code() const {
   return code_;
 }
-inline void Ack::set_code(::google::protobuf::uint64 value) {
+inline void Ack::set_code(::google::protobuf::uint32 value) {
   set_has_code();
   code_ = value;
 }
@@ -1132,7 +1206,7 @@ inline void Ack::set_proposal_num(::google::protobuf::uint64 value) {
   proposal_num_ = value;
 }
 
-// optional uint32 proposer_id = 8;
+// optional uint64 proposer_id = 8;
 inline bool Ack::has_proposer_id() const {
   return (_has_bits_[0] & 0x00000080u) != 0;
 }
@@ -1143,13 +1217,13 @@ inline void Ack::clear_has_proposer_id() {
   _has_bits_[0] &= ~0x00000080u;
 }
 inline void Ack::clear_proposer_id() {
-  proposer_id_ = 0u;
+  proposer_id_ = GOOGLE_ULONGLONG(0);
   clear_has_proposer_id();
 }
-inline ::google::protobuf::uint32 Ack::proposer_id() const {
+inline ::google::protobuf::uint64 Ack::proposer_id() const {
   return proposer_id_;
 }
-inline void Ack::set_proposer_id(::google::protobuf::uint32 value) {
+inline void Ack::set_proposer_id(::google::protobuf::uint64 value) {
   set_has_proposer_id();
   proposer_id_ = value;
 }
@@ -1174,6 +1248,28 @@ inline ::google::protobuf::uint64 Ack::next_proposal_num() const {
 inline void Ack::set_next_proposal_num(::google::protobuf::uint64 value) {
   set_has_next_proposal_num();
   next_proposal_num_ = value;
+}
+
+// optional uint64 sequence_num = 10;
+inline bool Ack::has_sequence_num() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void Ack::set_has_sequence_num() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void Ack::clear_has_sequence_num() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void Ack::clear_sequence_num() {
+  sequence_num_ = GOOGLE_ULONGLONG(0);
+  clear_has_sequence_num();
+}
+inline ::google::protobuf::uint64 Ack::sequence_num() const {
+  return sequence_num_;
+}
+inline void Ack::set_sequence_num(::google::protobuf::uint64 value) {
+  set_has_sequence_num();
+  sequence_num_ = value;
 }
 
 

@@ -8,7 +8,8 @@ LIBADD = @GTEST_LIBS@ @GMOCK_LIBS@ $(top_builddir)/librange/librange.la
 
 AM_DEFAULT_SOURCE_EXT = .cpp
 
-check_PROGRAMS = test_integration \
+check_PROGRAMS = test_db_txlog \
+				 test_integration \
 				 test_db \
 				 test_graph_iterator \
 				 test_pbuff_node \

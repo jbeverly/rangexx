@@ -27,6 +27,9 @@
 
 #include "../graph/node_interface.h"
 #include "../graph/graph_interface.h"
+#include "../core/store.pb.h"
+
+#include "txlog_iterator.h"
 
 namespace range {
 namespace db {
@@ -167,6 +170,71 @@ class GraphInstanceInterface {
 
 //##############################################################################
 //##############################################################################
+class TxLogCursorInterface {
+    public:
+        typedef boost::shared_ptr<range::stored::Request> txn_t;
+        virtual ~TxLogCursorInterface() noexcept = default;
+        virtual txn_t get(uint32_t) = 0;
+        virtual txn_t next() = 0;
+        virtual txn_t prev() = 0;
+        virtual txn_t first() = 0;
+        virtual txn_t last() = 0;
+    protected:
+        TxLogCursorInterface() = default;
+};
+
+//##############################################################################
+//##############################################################################
+class TxLogInstanceInterface {
+    public:
+        typedef boost::shared_ptr<TxLogCursorInterface> cursor_t;        ///< alias for shared_ptr to cursor interfacetype
+        typedef boost::shared_ptr<range::stored::Request> txn_t;
+        typedef TxLogIterator iterator;
+        
+        //######################################################################
+        /// @param[in] version the version to try to find in the txlog
+        /// @return a graph_iterator for a particlar version
+        virtual iterator find(uint32_t version) = 0;
+
+        //######################################################################
+        /// @return a graph_iterator for first item in the txlog
+        virtual iterator begin() = 0;
+
+        //######################################################################
+        /// @return a graph_iterator for "end" (nullptr)
+        virtual iterator end() = 0;
+
+        //######################################################################
+        /// @param[in] change a Request for the change to record in the txlog
+        /// @return true on success, false if already recorded
+        virtual bool append_txn(const txn_t &change) = 0;
+
+        //######################################################################
+        /// @param version version which should become oldest version in txlog
+        ///                (version itself is NOT removed)
+        /// @return true if transactions older than version were in txlog, false otherwise
+        virtual bool prune_txns_prior_to(uint32_t version) = 0;
+
+        //######################################################################
+        virtual ~TxLogInstanceInterface() noexcept = default;
+    protected:
+        TxLogInstanceInterface() = default;
+};
+
+//##############################################################################
+//##############################################################################
+class RangeTxn {
+    public:
+        typedef range::stored::Request req_type;
+        typedef boost::shared_ptr<req_type> req_type_p;
+        virtual ~RangeTxn() noexcept = default;
+    protected:
+        RangeTxn() = default;
+};
+
+
+//##############################################################################
+//##############################################################################
 class BackendInterface {
     //##########################################################################
     //##########################################################################
@@ -174,11 +242,16 @@ class BackendInterface {
         typedef std::map<std::string, uint64_t> range_change_t;
         typedef std::vector<std::tuple<std::time_t, uint64_t, range_change_t>> range_changelist_t;
         typedef boost::shared_ptr<GraphInstanceInterface> graph_instance_t;
+        typedef boost::shared_ptr<TxLogInstanceInterface> txlog_instance_t;
+        typedef RangeTxn txn_type;
+        typedef boost::shared_ptr<txn_type> txn_type_p;
 
         //######################################################################
         virtual ~BackendInterface() = default;
 
         //######################################################################
+        virtual txlog_instance_t getTxLogInstance() = 0;
+        virtual txn_type_p startRangeTransaction(txn_type::req_type_p) = 0;
         virtual graph_instance_t getGraphInstance(const std::string& name) = 0;
         virtual graph_instance_t createGraphInstance(const std::string& name) = 0;
         virtual std::vector<std::string> listGraphInstances() const = 0;

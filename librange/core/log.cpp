@@ -208,11 +208,10 @@ EmitterModuleRegistration::EmitterModuleRegistration(const std::string &module_n
     : name(module_name)
 {
     std::lock_guard<std::mutex> guard { Emitter::registered_modules_lock_ };
-    if(!Emitter::registered_modules_) {
+    if(!Emitter::registered_modules_ || refcount_ == 0) {
         Emitter::registered_modules_ = std::unique_ptr<std::set<std::string>>(new std::set<std::string>());
     }
     if(Emitter::registered_modules_->find(module_name) == Emitter::registered_modules_->end()) {
-        std::cout << "adding module_name: " << module_name << std::endl;
         Emitter::registered_modules_->insert(module_name);
     }
     ++refcount_;

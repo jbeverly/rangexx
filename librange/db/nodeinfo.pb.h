@@ -40,6 +40,7 @@ class NodeInfo_Edges;
 class NodeInfo_Tags;
 class NodeInfo_Tags_KeyValue;
 class NodeInfo_Tags_KeyValue_Values;
+class NodeInfo_Tags_KeyValue_ListToVersionMap;
 
 // ===================================================================
 
@@ -328,6 +329,98 @@ class NodeInfo_Tags_KeyValue_Values : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
+class NodeInfo_Tags_KeyValue_ListToVersionMap : public ::google::protobuf::Message {
+ public:
+  NodeInfo_Tags_KeyValue_ListToVersionMap();
+  virtual ~NodeInfo_Tags_KeyValue_ListToVersionMap();
+
+  NodeInfo_Tags_KeyValue_ListToVersionMap(const NodeInfo_Tags_KeyValue_ListToVersionMap& from);
+
+  inline NodeInfo_Tags_KeyValue_ListToVersionMap& operator=(const NodeInfo_Tags_KeyValue_ListToVersionMap& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const NodeInfo_Tags_KeyValue_ListToVersionMap& default_instance();
+
+  void Swap(NodeInfo_Tags_KeyValue_ListToVersionMap* other);
+
+  // implements Message ----------------------------------------------
+
+  NodeInfo_Tags_KeyValue_ListToVersionMap* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const NodeInfo_Tags_KeyValue_ListToVersionMap& from);
+  void MergeFrom(const NodeInfo_Tags_KeyValue_ListToVersionMap& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // required uint64 list_version = 1;
+  inline bool has_list_version() const;
+  inline void clear_list_version();
+  static const int kListVersionFieldNumber = 1;
+  inline ::google::protobuf::uint64 list_version() const;
+  inline void set_list_version(::google::protobuf::uint64 value);
+
+  // required uint64 key_version = 2;
+  inline bool has_key_version() const;
+  inline void clear_key_version();
+  static const int kKeyVersionFieldNumber = 2;
+  inline ::google::protobuf::uint64 key_version() const;
+  inline void set_key_version(::google::protobuf::uint64 value);
+
+  // @@protoc_insertion_point(class_scope:range.db.NodeInfo.Tags.KeyValue.ListToVersionMap)
+ private:
+  inline void set_has_list_version();
+  inline void clear_has_list_version();
+  inline void set_has_key_version();
+  inline void clear_has_key_version();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint64 list_version_;
+  ::google::protobuf::uint64 key_version_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_nodeinfo_2eproto();
+  friend void protobuf_AssignDesc_nodeinfo_2eproto();
+  friend void protobuf_ShutdownFile_nodeinfo_2eproto();
+
+  void InitAsDefaultInstance();
+  static NodeInfo_Tags_KeyValue_ListToVersionMap* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class NodeInfo_Tags_KeyValue : public ::google::protobuf::Message {
  public:
   NodeInfo_Tags_KeyValue();
@@ -381,6 +474,7 @@ class NodeInfo_Tags_KeyValue : public ::google::protobuf::Message {
   // nested types ----------------------------------------------------
 
   typedef NodeInfo_Tags_KeyValue_Values Values;
+  typedef NodeInfo_Tags_KeyValue_ListToVersionMap ListToVersionMap;
 
   // accessors -------------------------------------------------------
 
@@ -396,17 +490,17 @@ class NodeInfo_Tags_KeyValue : public ::google::protobuf::Message {
   inline ::std::string* release_key();
   inline void set_allocated_key(::std::string* key);
 
-  // required uint64 key_version = 4;
+  // required uint64 key_version = 2;
   inline bool has_key_version() const;
   inline void clear_key_version();
-  static const int kKeyVersionFieldNumber = 4;
+  static const int kKeyVersionFieldNumber = 2;
   inline ::google::protobuf::uint64 key_version() const;
   inline void set_key_version(::google::protobuf::uint64 value);
 
-  // repeated .range.db.NodeInfo.Tags.KeyValue.Values values = 2;
+  // repeated .range.db.NodeInfo.Tags.KeyValue.Values values = 3;
   inline int values_size() const;
   inline void clear_values();
-  static const int kValuesFieldNumber = 2;
+  static const int kValuesFieldNumber = 3;
   inline const ::range::db::NodeInfo_Tags_KeyValue_Values& values(int index) const;
   inline ::range::db::NodeInfo_Tags_KeyValue_Values* mutable_values(int index);
   inline ::range::db::NodeInfo_Tags_KeyValue_Values* add_values();
@@ -415,10 +509,10 @@ class NodeInfo_Tags_KeyValue : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedPtrField< ::range::db::NodeInfo_Tags_KeyValue_Values >*
       mutable_values();
 
-  // repeated uint64 versions = 3;
+  // repeated uint64 versions = 4;
   inline int versions_size() const;
   inline void clear_versions();
-  static const int kVersionsFieldNumber = 3;
+  static const int kVersionsFieldNumber = 4;
   inline ::google::protobuf::uint64 versions(int index) const;
   inline void set_versions(int index, ::google::protobuf::uint64 value);
   inline void add_versions(::google::protobuf::uint64 value);
@@ -426,6 +520,18 @@ class NodeInfo_Tags_KeyValue : public ::google::protobuf::Message {
       versions() const;
   inline ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
       mutable_versions();
+
+  // repeated .range.db.NodeInfo.Tags.KeyValue.ListToVersionMap versionmap = 5;
+  inline int versionmap_size() const;
+  inline void clear_versionmap();
+  static const int kVersionmapFieldNumber = 5;
+  inline const ::range::db::NodeInfo_Tags_KeyValue_ListToVersionMap& versionmap(int index) const;
+  inline ::range::db::NodeInfo_Tags_KeyValue_ListToVersionMap* mutable_versionmap(int index);
+  inline ::range::db::NodeInfo_Tags_KeyValue_ListToVersionMap* add_versionmap();
+  inline const ::google::protobuf::RepeatedPtrField< ::range::db::NodeInfo_Tags_KeyValue_ListToVersionMap >&
+      versionmap() const;
+  inline ::google::protobuf::RepeatedPtrField< ::range::db::NodeInfo_Tags_KeyValue_ListToVersionMap >*
+      mutable_versionmap();
 
   // @@protoc_insertion_point(class_scope:range.db.NodeInfo.Tags.KeyValue)
  private:
@@ -440,9 +546,10 @@ class NodeInfo_Tags_KeyValue : public ::google::protobuf::Message {
   ::google::protobuf::uint64 key_version_;
   ::google::protobuf::RepeatedPtrField< ::range::db::NodeInfo_Tags_KeyValue_Values > values_;
   ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > versions_;
+  ::google::protobuf::RepeatedPtrField< ::range::db::NodeInfo_Tags_KeyValue_ListToVersionMap > versionmap_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_nodeinfo_2eproto();
   friend void protobuf_AssignDesc_nodeinfo_2eproto();
@@ -925,6 +1032,54 @@ NodeInfo_Tags_KeyValue_Values::mutable_versions() {
 
 // -------------------------------------------------------------------
 
+// NodeInfo_Tags_KeyValue_ListToVersionMap
+
+// required uint64 list_version = 1;
+inline bool NodeInfo_Tags_KeyValue_ListToVersionMap::has_list_version() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void NodeInfo_Tags_KeyValue_ListToVersionMap::set_has_list_version() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void NodeInfo_Tags_KeyValue_ListToVersionMap::clear_has_list_version() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void NodeInfo_Tags_KeyValue_ListToVersionMap::clear_list_version() {
+  list_version_ = GOOGLE_ULONGLONG(0);
+  clear_has_list_version();
+}
+inline ::google::protobuf::uint64 NodeInfo_Tags_KeyValue_ListToVersionMap::list_version() const {
+  return list_version_;
+}
+inline void NodeInfo_Tags_KeyValue_ListToVersionMap::set_list_version(::google::protobuf::uint64 value) {
+  set_has_list_version();
+  list_version_ = value;
+}
+
+// required uint64 key_version = 2;
+inline bool NodeInfo_Tags_KeyValue_ListToVersionMap::has_key_version() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void NodeInfo_Tags_KeyValue_ListToVersionMap::set_has_key_version() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void NodeInfo_Tags_KeyValue_ListToVersionMap::clear_has_key_version() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void NodeInfo_Tags_KeyValue_ListToVersionMap::clear_key_version() {
+  key_version_ = GOOGLE_ULONGLONG(0);
+  clear_has_key_version();
+}
+inline ::google::protobuf::uint64 NodeInfo_Tags_KeyValue_ListToVersionMap::key_version() const {
+  return key_version_;
+}
+inline void NodeInfo_Tags_KeyValue_ListToVersionMap::set_key_version(::google::protobuf::uint64 value) {
+  set_has_key_version();
+  key_version_ = value;
+}
+
+// -------------------------------------------------------------------
+
 // NodeInfo_Tags_KeyValue
 
 // required string key = 1;
@@ -997,7 +1152,7 @@ inline void NodeInfo_Tags_KeyValue::set_allocated_key(::std::string* key) {
   }
 }
 
-// required uint64 key_version = 4;
+// required uint64 key_version = 2;
 inline bool NodeInfo_Tags_KeyValue::has_key_version() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -1019,7 +1174,7 @@ inline void NodeInfo_Tags_KeyValue::set_key_version(::google::protobuf::uint64 v
   key_version_ = value;
 }
 
-// repeated .range.db.NodeInfo.Tags.KeyValue.Values values = 2;
+// repeated .range.db.NodeInfo.Tags.KeyValue.Values values = 3;
 inline int NodeInfo_Tags_KeyValue::values_size() const {
   return values_.size();
 }
@@ -1044,7 +1199,7 @@ NodeInfo_Tags_KeyValue::mutable_values() {
   return &values_;
 }
 
-// repeated uint64 versions = 3;
+// repeated uint64 versions = 4;
 inline int NodeInfo_Tags_KeyValue::versions_size() const {
   return versions_.size();
 }
@@ -1067,6 +1222,31 @@ NodeInfo_Tags_KeyValue::versions() const {
 inline ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
 NodeInfo_Tags_KeyValue::mutable_versions() {
   return &versions_;
+}
+
+// repeated .range.db.NodeInfo.Tags.KeyValue.ListToVersionMap versionmap = 5;
+inline int NodeInfo_Tags_KeyValue::versionmap_size() const {
+  return versionmap_.size();
+}
+inline void NodeInfo_Tags_KeyValue::clear_versionmap() {
+  versionmap_.Clear();
+}
+inline const ::range::db::NodeInfo_Tags_KeyValue_ListToVersionMap& NodeInfo_Tags_KeyValue::versionmap(int index) const {
+  return versionmap_.Get(index);
+}
+inline ::range::db::NodeInfo_Tags_KeyValue_ListToVersionMap* NodeInfo_Tags_KeyValue::mutable_versionmap(int index) {
+  return versionmap_.Mutable(index);
+}
+inline ::range::db::NodeInfo_Tags_KeyValue_ListToVersionMap* NodeInfo_Tags_KeyValue::add_versionmap() {
+  return versionmap_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::range::db::NodeInfo_Tags_KeyValue_ListToVersionMap >&
+NodeInfo_Tags_KeyValue::versionmap() const {
+  return versionmap_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::range::db::NodeInfo_Tags_KeyValue_ListToVersionMap >*
+NodeInfo_Tags_KeyValue::mutable_versionmap() {
+  return &versionmap_;
 }
 
 // -------------------------------------------------------------------

@@ -98,31 +98,37 @@ librange_compiler_la_SOURCES = compiler/RangeParser_v1.cpp \
 ################################################################################
 
 librange_db_la_includedir = $(includedir)/rangexx
-nobase_librange_db_la_include_HEADERS  = ./db/berkeley_dbcxx_backend.h \
-										 ./db/berkeley_dbcxx_cursor.h \
-										 ./db/berkeley_dbcxx_db.h \
-										 ./db/berkeley_dbcxx_env.h \
-										 ./db/berkeley_dbcxx_lock.h \
-										 ./db/berkeley_dbcxx_txn.h \
-										 ./db/berkeley_db_types.h \
-										 ./db/changelist.pb.h \
-										 ./db/config_interface.h \
-										 ./db/db_exceptions.h \
-										 ./db/db_interface.h \
-										 ./db/graph_list.pb.h \
-										 ./db/nodeinfo.pb.h \
-										 ./db/pbuff_node.h
+nobase_librange_db_la_include_HEADERS  = db/berkeley_dbcxx_db.h \
+										 db/db_exceptions.h \
+										 db/berkeley_dbcxx_range_txn.h \
+										 db/graph_list.pb.h \
+										 db/berkeley_dbcxx_txn.h \
+										 db/berkeley_dbcxx_txlog.h \
+										 db/berkeley_dbcxx_env.h \
+										 db/berkeley_db_types.h \
+										 db/db_interface.h \
+										 db/txlog_iterator.h \
+										 db/pbuff_node.h \
+										 db/berkeley_dbcxx_backend.h \
+										 db/nodeinfo.pb.h \
+										 db/berkeley_dbcxx_lock.h \
+										 db/changelist.pb.h \
+										 db/config_interface.h \
+										 db/berkeley_dbcxx_cursor.h
 
-librange_db_la_SOURCES = ./db/berkeley_dbcxx_cursor.cpp \
-						 ./db/berkeley_dbcxx_db.cpp \
-						 ./db/berkeley_dbcxx_env.cpp \
-						 ./db/berkeley_dbcxx_lock.cpp \
-						 ./db/berkeley_dbcxx_backend.cpp \
-						 ./db/berkeley_dbcxx_txn.cpp \
-						 ./db/changelist.pb.cpp \
-						 ./db/graph_list.pb.cpp \
-						 ./db/nodeinfo.pb.cpp \
-						 ./db/pbuff_node.cpp \
+librange_db_la_SOURCES = db/nodeinfo.pb.cpp \
+						 db/berkeley_dbcxx_txn.cpp \
+						 db/berkeley_dbcxx_env.cpp \
+						 db/berkeley_dbcxx_range_txn.cpp \
+						 db/berkeley_dbcxx_backend.cpp \
+						 db/berkeley_dbcxx_txlog.cpp \
+						 db/pbuff_node.cpp \
+						 db/changelist.pb.cpp \
+						 db/graph_list.pb.cpp \
+						 db/berkeley_dbcxx_lock.cpp \
+						 db/berkeley_dbcxx_db.cpp \
+						 db/berkeley_dbcxx_cursor.cpp \
+						 db/txlog_iterator.cpp \
 						 $(top_builddir)/range_config.h 
 
 #librange_db_la_LIBADD = # $(AM_LIBADD)

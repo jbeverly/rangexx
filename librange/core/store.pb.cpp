@@ -40,7 +40,7 @@ void protobuf_AssignDesc_store_2eproto() {
       "store.proto");
   GOOGLE_CHECK(file != NULL);
   Request_descriptor_ = file->message_type(0);
-  static const int Request_offsets_[11] = {
+  static const int Request_offsets_[13] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request, crc_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request, client_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request, request_id_),
@@ -52,6 +52,8 @@ void protobuf_AssignDesc_store_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request, proposer_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request, sender_addr_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request, sender_port_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request, version_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request, sequence_num_),
   };
   Request_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -66,7 +68,7 @@ void protobuf_AssignDesc_store_2eproto() {
       sizeof(Request));
   Request_Type_descriptor_ = Request_descriptor_->enum_type(0);
   Ack_descriptor_ = file->message_type(1);
-  static const int Ack_offsets_[9] = {
+  static const int Ack_offsets_[10] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Ack, status_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Ack, client_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Ack, request_id_),
@@ -76,6 +78,7 @@ void protobuf_AssignDesc_store_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Ack, proposal_num_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Ack, proposer_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Ack, next_proposal_num_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Ack, sequence_num_),
   };
   Ack_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -123,22 +126,24 @@ void protobuf_AddDesc_store_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\013store.proto\022\014range.stored\"\320\002\n\007Request\022"
+    "\n\013store.proto\022\014range.stored\"\367\002\n\007Request\022"
     "\013\n\003crc\030\001 \002(\r\022\021\n\tclient_id\030\002 \002(\t\022\022\n\nreque"
     "st_id\030\003 \002(\004\022\016\n\006method\030\004 \002(\t\022\014\n\004args\030\005 \003("
     "\t\022\021\n\ttimestamp\030\006 \001(\004\022(\n\004type\030\007 \001(\0162\032.ran"
     "ge.stored.Request.Type\022\024\n\014proposal_num\030\010"
-    " \001(\004\022\023\n\013proposer_id\030\t \001(\r\022\023\n\013sender_addr"
-    "\030\n \001(\r\022\023\n\013sender_port\030\013 \001(\r\"a\n\004Type\022\013\n\007R"
-    "EQUEST\020\001\022\013\n\007PREPARE\020\002\022\013\n\007PROPOSE\020\004\022\t\n\005LE"
-    "ARN\020\010\022\n\n\006REPLAY\020\020\022\014\n\010FAILOVER\020 \022\r\n\tHEART"
-    "BEAT\020@\"\374\001\n\003Ack\022\016\n\006status\030\001 \002(\010\022\021\n\tclient"
-    "_id\030\002 \002(\t\022\022\n\nrequest_id\030\003 \002(\004\022\014\n\004code\030\004 "
-    "\001(\004\022\016\n\006reason\030\005 \001(\t\022$\n\004type\030\006 \001(\0162\026.rang"
-    "e.stored.Ack.Type\022\024\n\014proposal_num\030\007 \001(\004\022"
-    "\023\n\013proposer_id\030\010 \001(\r\022\031\n\021next_proposal_nu"
-    "m\030\t \001(\004\"4\n\004Type\022\007\n\003ACK\020\001\022\013\n\007PROMISE\020\002\022\010\n"
-    "\004NACK\020\004\022\014\n\010ACCEPTED\020\010", 621);
+    " \001(\004\022\023\n\013proposer_id\030\t \001(\004\022\023\n\013sender_addr"
+    "\030\n \001(\r\022\023\n\013sender_port\030\013 \001(\r\022\017\n\007version\030\014"
+    " \001(\004\022\024\n\014sequence_num\030\r \001(\004\"a\n\004Type\022\013\n\007RE"
+    "QUEST\020\001\022\013\n\007PREPARE\020\002\022\013\n\007PROPOSE\020\004\022\t\n\005LEA"
+    "RN\020\010\022\n\n\006REPLAY\020\020\022\014\n\010FAILOVER\020 \022\r\n\tHEARTB"
+    "EAT\020@\"\222\002\n\003Ack\022\016\n\006status\030\001 \002(\010\022\021\n\tclient_"
+    "id\030\002 \002(\t\022\022\n\nrequest_id\030\003 \002(\004\022\014\n\004code\030\004 \001"
+    "(\r\022\016\n\006reason\030\005 \001(\t\022$\n\004type\030\006 \001(\0162\026.range"
+    ".stored.Ack.Type\022\024\n\014proposal_num\030\007 \001(\004\022\023"
+    "\n\013proposer_id\030\010 \001(\004\022\031\n\021next_proposal_num"
+    "\030\t \001(\004\022\024\n\014sequence_num\030\n \001(\004\"4\n\004Type\022\007\n\003"
+    "ACK\020\001\022\013\n\007PROMISE\020\002\022\010\n\004NACK\020\004\022\014\n\010ACCEPTED"
+    "\020\010", 682);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "store.proto", &protobuf_RegisterTypes);
   Request::default_instance_ = new Request();
@@ -200,6 +205,8 @@ const int Request::kProposalNumFieldNumber;
 const int Request::kProposerIdFieldNumber;
 const int Request::kSenderAddrFieldNumber;
 const int Request::kSenderPortFieldNumber;
+const int Request::kVersionFieldNumber;
+const int Request::kSequenceNumFieldNumber;
 #endif  // !_MSC_VER
 
 Request::Request()
@@ -225,9 +232,11 @@ void Request::SharedCtor() {
   timestamp_ = GOOGLE_ULONGLONG(0);
   type_ = 1;
   proposal_num_ = GOOGLE_ULONGLONG(0);
-  proposer_id_ = 0u;
+  proposer_id_ = GOOGLE_ULONGLONG(0);
   sender_addr_ = 0u;
   sender_port_ = 0u;
+  version_ = GOOGLE_ULONGLONG(0);
+  sequence_num_ = GOOGLE_ULONGLONG(0);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -286,9 +295,11 @@ void Request::Clear() {
     proposal_num_ = GOOGLE_ULONGLONG(0);
   }
   if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
-    proposer_id_ = 0u;
+    proposer_id_ = GOOGLE_ULONGLONG(0);
     sender_addr_ = 0u;
     sender_port_ = 0u;
+    version_ = GOOGLE_ULONGLONG(0);
+    sequence_num_ = GOOGLE_ULONGLONG(0);
   }
   args_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -438,13 +449,13 @@ bool Request::MergePartialFromCodedStream(
         break;
       }
 
-      // optional uint32 proposer_id = 9;
+      // optional uint64 proposer_id = 9;
       case 9: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_proposer_id:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
                  input, &proposer_id_)));
           set_has_proposer_id();
         } else {
@@ -479,6 +490,38 @@ bool Request::MergePartialFromCodedStream(
                    ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
                  input, &sender_port_)));
           set_has_sender_port();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(96)) goto parse_version;
+        break;
+      }
+
+      // optional uint64 version = 12;
+      case 12: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_version:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &version_)));
+          set_has_version();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(104)) goto parse_sequence_num;
+        break;
+      }
+
+      // optional uint64 sequence_num = 13;
+      case 13: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_sequence_num:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &sequence_num_)));
+          set_has_sequence_num();
         } else {
           goto handle_uninterpreted;
         }
@@ -557,9 +600,9 @@ void Request::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(8, this->proposal_num(), output);
   }
 
-  // optional uint32 proposer_id = 9;
+  // optional uint64 proposer_id = 9;
   if (has_proposer_id()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(9, this->proposer_id(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(9, this->proposer_id(), output);
   }
 
   // optional uint32 sender_addr = 10;
@@ -570,6 +613,16 @@ void Request::SerializeWithCachedSizes(
   // optional uint32 sender_port = 11;
   if (has_sender_port()) {
     ::google::protobuf::internal::WireFormatLite::WriteUInt32(11, this->sender_port(), output);
+  }
+
+  // optional uint64 version = 12;
+  if (has_version()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(12, this->version(), output);
+  }
+
+  // optional uint64 sequence_num = 13;
+  if (has_sequence_num()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(13, this->sequence_num(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -635,9 +688,9 @@ void Request::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(8, this->proposal_num(), target);
   }
 
-  // optional uint32 proposer_id = 9;
+  // optional uint64 proposer_id = 9;
   if (has_proposer_id()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(9, this->proposer_id(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(9, this->proposer_id(), target);
   }
 
   // optional uint32 sender_addr = 10;
@@ -648,6 +701,16 @@ void Request::SerializeWithCachedSizes(
   // optional uint32 sender_port = 11;
   if (has_sender_port()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(11, this->sender_port(), target);
+  }
+
+  // optional uint64 version = 12;
+  if (has_version()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(12, this->version(), target);
+  }
+
+  // optional uint64 sequence_num = 13;
+  if (has_sequence_num()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(13, this->sequence_num(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -711,10 +774,10 @@ int Request::ByteSize() const {
 
   }
   if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
-    // optional uint32 proposer_id = 9;
+    // optional uint64 proposer_id = 9;
     if (has_proposer_id()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
           this->proposer_id());
     }
 
@@ -730,6 +793,20 @@ int Request::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::UInt32Size(
           this->sender_port());
+    }
+
+    // optional uint64 version = 12;
+    if (has_version()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+          this->version());
+    }
+
+    // optional uint64 sequence_num = 13;
+    if (has_sequence_num()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+          this->sequence_num());
     }
 
   }
@@ -799,6 +876,12 @@ void Request::MergeFrom(const Request& from) {
     if (from.has_sender_port()) {
       set_sender_port(from.sender_port());
     }
+    if (from.has_version()) {
+      set_version(from.version());
+    }
+    if (from.has_sequence_num()) {
+      set_sequence_num(from.sequence_num());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -834,6 +917,8 @@ void Request::Swap(Request* other) {
     std::swap(proposer_id_, other->proposer_id_);
     std::swap(sender_addr_, other->sender_addr_);
     std::swap(sender_port_, other->sender_port_);
+    std::swap(version_, other->version_);
+    std::swap(sequence_num_, other->sequence_num_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
@@ -886,6 +971,7 @@ const int Ack::kTypeFieldNumber;
 const int Ack::kProposalNumFieldNumber;
 const int Ack::kProposerIdFieldNumber;
 const int Ack::kNextProposalNumFieldNumber;
+const int Ack::kSequenceNumFieldNumber;
 #endif  // !_MSC_VER
 
 Ack::Ack()
@@ -907,12 +993,13 @@ void Ack::SharedCtor() {
   status_ = false;
   client_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   request_id_ = GOOGLE_ULONGLONG(0);
-  code_ = GOOGLE_ULONGLONG(0);
+  code_ = 0u;
   reason_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   type_ = 1;
   proposal_num_ = GOOGLE_ULONGLONG(0);
-  proposer_id_ = 0u;
+  proposer_id_ = GOOGLE_ULONGLONG(0);
   next_proposal_num_ = GOOGLE_ULONGLONG(0);
+  sequence_num_ = GOOGLE_ULONGLONG(0);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -961,7 +1048,7 @@ void Ack::Clear() {
       }
     }
     request_id_ = GOOGLE_ULONGLONG(0);
-    code_ = GOOGLE_ULONGLONG(0);
+    code_ = 0u;
     if (has_reason()) {
       if (reason_ != &::google::protobuf::internal::kEmptyString) {
         reason_->clear();
@@ -969,10 +1056,11 @@ void Ack::Clear() {
     }
     type_ = 1;
     proposal_num_ = GOOGLE_ULONGLONG(0);
-    proposer_id_ = 0u;
+    proposer_id_ = GOOGLE_ULONGLONG(0);
   }
   if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
     next_proposal_num_ = GOOGLE_ULONGLONG(0);
+    sequence_num_ = GOOGLE_ULONGLONG(0);
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -1032,13 +1120,13 @@ bool Ack::MergePartialFromCodedStream(
         break;
       }
 
-      // optional uint64 code = 4;
+      // optional uint32 code = 4;
       case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_code:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
                  input, &code_)));
           set_has_code();
         } else {
@@ -1102,13 +1190,13 @@ bool Ack::MergePartialFromCodedStream(
         break;
       }
 
-      // optional uint32 proposer_id = 8;
+      // optional uint64 proposer_id = 8;
       case 8: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_proposer_id:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
                  input, &proposer_id_)));
           set_has_proposer_id();
         } else {
@@ -1127,6 +1215,22 @@ bool Ack::MergePartialFromCodedStream(
                    ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
                  input, &next_proposal_num_)));
           set_has_next_proposal_num();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(80)) goto parse_sequence_num;
+        break;
+      }
+
+      // optional uint64 sequence_num = 10;
+      case 10: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_sequence_num:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &sequence_num_)));
+          set_has_sequence_num();
         } else {
           goto handle_uninterpreted;
         }
@@ -1171,9 +1275,9 @@ void Ack::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(3, this->request_id(), output);
   }
 
-  // optional uint64 code = 4;
+  // optional uint32 code = 4;
   if (has_code()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(4, this->code(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(4, this->code(), output);
   }
 
   // optional string reason = 5;
@@ -1196,14 +1300,19 @@ void Ack::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(7, this->proposal_num(), output);
   }
 
-  // optional uint32 proposer_id = 8;
+  // optional uint64 proposer_id = 8;
   if (has_proposer_id()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(8, this->proposer_id(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(8, this->proposer_id(), output);
   }
 
   // optional uint64 next_proposal_num = 9;
   if (has_next_proposal_num()) {
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(9, this->next_proposal_num(), output);
+  }
+
+  // optional uint64 sequence_num = 10;
+  if (has_sequence_num()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(10, this->sequence_num(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -1234,9 +1343,9 @@ void Ack::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(3, this->request_id(), target);
   }
 
-  // optional uint64 code = 4;
+  // optional uint32 code = 4;
   if (has_code()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(4, this->code(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(4, this->code(), target);
   }
 
   // optional string reason = 5;
@@ -1260,14 +1369,19 @@ void Ack::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(7, this->proposal_num(), target);
   }
 
-  // optional uint32 proposer_id = 8;
+  // optional uint64 proposer_id = 8;
   if (has_proposer_id()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(8, this->proposer_id(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(8, this->proposer_id(), target);
   }
 
   // optional uint64 next_proposal_num = 9;
   if (has_next_proposal_num()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(9, this->next_proposal_num(), target);
+  }
+
+  // optional uint64 sequence_num = 10;
+  if (has_sequence_num()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(10, this->sequence_num(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -1300,10 +1414,10 @@ int Ack::ByteSize() const {
           this->request_id());
     }
 
-    // optional uint64 code = 4;
+    // optional uint32 code = 4;
     if (has_code()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+        ::google::protobuf::internal::WireFormatLite::UInt32Size(
           this->code());
     }
 
@@ -1327,10 +1441,10 @@ int Ack::ByteSize() const {
           this->proposal_num());
     }
 
-    // optional uint32 proposer_id = 8;
+    // optional uint64 proposer_id = 8;
     if (has_proposer_id()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
           this->proposer_id());
     }
 
@@ -1341,6 +1455,13 @@ int Ack::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::UInt64Size(
           this->next_proposal_num());
+    }
+
+    // optional uint64 sequence_num = 10;
+    if (has_sequence_num()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+          this->sequence_num());
     }
 
   }
@@ -1399,6 +1520,9 @@ void Ack::MergeFrom(const Ack& from) {
     if (from.has_next_proposal_num()) {
       set_next_proposal_num(from.next_proposal_num());
     }
+    if (from.has_sequence_num()) {
+      set_sequence_num(from.sequence_num());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -1432,6 +1556,7 @@ void Ack::Swap(Ack* other) {
     std::swap(proposal_num_, other->proposal_num_);
     std::swap(proposer_id_, other->proposer_id_);
     std::swap(next_proposal_num_, other->next_proposal_num_);
+    std::swap(sequence_num_, other->sequence_num_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

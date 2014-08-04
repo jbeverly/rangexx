@@ -88,6 +88,14 @@ struct CursorException : public Exception {
     { }
 };
 
+//##############################################################################
+//##############################################################################
+struct TransactionLogException : public range::db::Exception {
+    TransactionLogException(const std::string &what,
+            const std::string &event="db.TransactionLogException") :
+        range::db::Exception(what, event) { }
+};
+
 
 
 } // namespace db
