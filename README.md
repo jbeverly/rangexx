@@ -6,7 +6,7 @@ Range++ is a distributed fault-tolerant high-performance graph-database and dire
 Range++ has a compatible expression syntax, and supports libcrange's HTTP "API" (both list, and range modes), and so is compatible with all Yahoo SECO modules, Salt, and other tools which support libcrange.
 
 ## How is Range++ like Chubby?
-Range++ implements PAXOS atomic broadcast for guaranteed ordering, and fault tolerance; meaning it is suitable for use in leader-election for clusters, and **non-service-impacting** distributed locking. (Do **NOT** use range++, or any distributed lock service, in any way that could direction or indirectly impact serving)
+Range++ implements PAXOS atomic broadcast for guaranteed ordering, and fault tolerance; meaning it is suitable for use in leader-election for clusters, and **non-service-impacting** distributed locking. (Do **NOT** use range++, or any distributed lock service, in any way that could directly or indirectly impact serving.)
 
 ## How is Range++ Different from libcrange?
 In addition to providing API compatibility with libcrange, Range++ also provides a full semantic REST API, convenient graph operations, has a native atomic-write API with full version history retention, and the ability to query that history directly. Also, as Range++'s graph structure has both in- and out-edges, queries that were very expensive in libcrange (clusters, for example) are trivial in range++. With a large number of clusters (> 50,000), the difference in performance is staggering (minutes vs milliseconds)
